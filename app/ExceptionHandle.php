@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace app;
 
 use think\db\exception\DataNotFoundException;

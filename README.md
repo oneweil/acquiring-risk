@@ -56,9 +56,13 @@ http://localhost:8000
 composer update topthink/framework
 ~~~
 
-## 命名规范
+## 编码规范
 
-`ThinkPHP`遵循PSR-2命名规范和PSR-4自动加载规范。
+本项目遵循 [ThinkPHP 8 开发规范](https://doc.thinkphp.cn/v8_0/development_specifications.html) 与 PSR-12（PSR-2 的后续标准）。
+
+- 编辑器缩进与换行：`.editorconfig`
+- 自动格式化：`composer cs-fix`（检查：`composer cs-check`）
+- 命名与目录约定：`.cursor/rules/thinkphp-naming.mdc`
 
 ## 参与开发
 
