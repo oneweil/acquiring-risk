@@ -1,0 +1,186 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="orderFilterForm"></form>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='订单实时监控'}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4 col-xl-1">
+          <input type="text" form="orderFilterForm" name="merchant_id" class="form-control form-control-sm" placeholder="商户号" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <input type="text" form="orderFilterForm" name="order_no" class="form-control form-control-sm" placeholder="商户订单号" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="orderFilterForm" name="currency" class="form-select form-select-sm">
+            <option value="">全部币种</option>
+            {volist name="filter_options.currency" id="opt"}
+            <option value="{$opt}">{$opt}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="orderFilterForm" name="risk_level" class="form-select form-select-sm">
+            <option value="">全部风险等级</option>
+            {volist name="filter_options.risk_level" id="opt"}
+            <option value="{$opt}">{$opt}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="orderFilterForm" name="status" class="form-select form-select-sm">
+            <option value="">全部状态</option>
+            {volist name="filter_options.status" id="opt"}
+            <option value="{$opt}">{$opt}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+          <div class="btn-list">
+            <button type="submit" form="orderFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="orderFilterReset" class="btn btn-sm">重置</button>
+            <button type="button" id="orderLiveBtn" class="btn btn-success btn-sm">
+              <i class="ti ti-player-play me-1"></i>开启实时刷新
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter table-selectable card-table table-nowrap">
+        <thead>
+          <tr>
+            <th class="w-1">
+              <input class="form-check-input m-0 align-middle" type="checkbox" id="orderSelectAll" aria-label="全选">
+            </th>
+            <th>
+              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">商户</button>
+            </th>
+            <th>
+              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">订单</button>
+            </th>
+            <th>
+              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">交易</button>
+            </th>
+            <th>
+              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">卡 / 地理</button>
+            </th>
+            <th>3DS</th>
+            <th>风险</th>
+            <th>
+              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">状态</button>
+            </th>
+            <th class="w-1"></th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody">
+          <tr>
+            <td colspan="9" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="orderTableFooter">
+      <p class="m-0 text-secondary" id="orderTableSummary">加载中…</p>
+      <div class="ms-auto" id="orderTablePager"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="listDetailModal" tabindex="-1" aria-labelledby="listDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="listDetailModalLabel">订单详情</h5>
+          <div class="text-secondary small">完整交易信息与风控决策链路</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <div class="modal-body" id="listDetailModalBody">
+        <div class="text-center text-secondary py-4">加载中…</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js"></script>
+<script src="/static/js/admin/order.js?v=1.0.1"></script>
+<script>
+OrderPage.init();
+
+ListPage.init({
+  detailUrl: '/admin/order/detail',
+  renderDetail: function (data) {
+    var esc = ListPage.escapeHtml;
+    var row = function (label, val) {
+      return '<div class="col-sm-6 col-lg-4"><div class="detail-item"><div class="datagrid-title">' + esc(label) + '</div><div class="datagrid-content">' + val + '</div></div></div>';
+    };
+    var riskBadge = '<span class="badge ' + esc(data._risk_badge || '') + '">' + esc(data.risk_level) + '</span>';
+    var statusBadge = '<span class="badge ' + esc(data._status_badge || '') + '">' + esc(data.status) + '</span>';
+
+    return ''
+      + '<section class="detail-section"><h3 class="detail-section-title">基本信息</h3><div class="row g-3">'
+      + row('商户订单号', '<span class="font-monospace">' + esc(data.order_no) + '</span>')
+      + row('通道订单号', '<span class="font-monospace">' + esc(data.channel_no) + '</span>')
+      + row('商户号', esc(data.merchant_id))
+      + row('商户名称', esc(data.merchant_name))
+      + row('交易时间', esc(data.trade_time))
+      + row('交易金额', esc(data.currency + ' ' + Number(data.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })))
+      + row('交易状态', statusBadge)
+      + row('交易网站', esc(data.website))
+      + '</div></section>'
+      + '<section class="detail-section"><h3 class="detail-section-title">卡信息与持卡人</h3><div class="row g-3">'
+      + row('卡号', esc(data.card_no))
+      + row('卡 BIN', esc(data.card_bin))
+      + row('卡类型', esc(data.card_type))
+      + row('发卡国', esc(data.card_country))
+      + row('AVS 结果', esc(data.avs_result))
+      + row('CVV 结果', esc(data.cvv_result))
+      + row('3DS 验证', esc(data.three_ds))
+      + row('ECI 值', esc(data.eci))
+      + row('持卡人邮箱', esc(data.email))
+      + row('交易 IP', esc(data.ip))
+      + row('IP 国家', esc(data.ip_country))
+      + row('账单国家', esc(data.billing_country))
+      + row('收货国家', esc(data.shipping_country))
+      + row('MCC', esc(data.mcc))
+      + row('VPN/Proxy', data.is_proxy ? '是' : '否')
+      + '</div></section>'
+      + '<section class="detail-section mb-0"><h3 class="detail-section-title">风控结果</h3><div class="row g-3">'
+      + row('风险等级', riskBadge)
+      + row('命中规则', esc(data.hit_rule))
+      + row('处置策略', esc(data.action))
+      + '</div></section>';
+  },
+  mapDetail: function (data) {
+    var riskMap = { '极高风险': 'bg-purple text-purple-fg', '高风险': 'bg-red text-red-fg', '中风险': 'bg-yellow text-yellow-fg', '低风险': 'bg-green text-green-fg' };
+    var statusMap = { '成功': 'bg-green text-green-fg', '拦截': 'bg-red text-red-fg', '审核中': 'bg-yellow text-yellow-fg', '失败': 'bg-secondary text-secondary-fg' };
+    data._risk_badge = riskMap[data.risk_level] || 'bg-secondary text-secondary-fg';
+    data._status_badge = statusMap[data.status] || 'bg-secondary text-secondary-fg';
+    return data;
+  }
+});
+</script>
+{/block}

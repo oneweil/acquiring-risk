@@ -1,0 +1,26 @@
+<!-- 首屏前解析主题，避免闪烁；跟随系统深浅色 -->
+<script>
+  (() => {
+    'use strict';
+    const root = document.documentElement;
+    if (root.getAttribute('data-theme-mode') === 'off') {
+      return;
+    }
+    const STORAGE_KEY = 'theme';
+    let stored = null;
+    try {
+      stored = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {}
+    const authored = root.getAttribute('data-bs-theme');
+    let resolved = 'light';
+    if (stored === 'dark' || stored === 'light') {
+      resolved = stored;
+    } else if (authored === 'dark' || authored === 'light') {
+      resolved = authored;
+    } else if (globalThis.matchMedia('(prefers-color-scheme: dark)').matches) {
+      resolved = 'dark';
+    }
+    root.setAttribute('data-bs-theme', resolved);
+    root.style.colorScheme = resolved;
+  })();
+</script>

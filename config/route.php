@@ -24,8 +24,8 @@ return [
     'remove_slash'          => false,
     // 默认的路由变量规则
     'default_route_pattern' => '[\w\.]+',
-    // URL伪静态后缀
-    'url_html_suffix'       => 'html',
+    // URL伪静态后缀（后台建议留空，避免 Nginx 与 url() 生成地址不一致）
+    'url_html_suffix'       => '',
     // 访问控制器层名称
     'controller_layer'      => 'controller',
     // 空控制器名

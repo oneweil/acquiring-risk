@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>{$title|default='后台'} - 国际信用卡收单风控系统</title>
+  {include file="/admin/layout/theme-init" /}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="/static/tabler/css/tabler.min.css">
+  <link rel="stylesheet" href="/static/tabler/icons/tabler-icons.min.css">
+  <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+<body>
+  <div class="page">
+    <aside class="navbar navbar-vertical navbar-expand-sm" data-bs-theme="dark">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="切换导航">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <h1 class="navbar-brand navbar-brand-autodark">
+          <a href="/admin/dashboard" class="text-decoration-none d-flex align-items-center">
+            <span class="fw-bold text-white">信用卡收单风控</span>
+          </a>
+        </h1>
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+          {include file="/admin/layout/sidebar" /}
+        </div>
+      </div>
+    </aside>
+
+    <div class="page-wrapper">
+      <header class="navbar navbar-expand-md d-print-none">
+        <div class="container-fluid">
+          <div class="navbar-nav flex-row order-md-last ms-auto align-items-center">
+            <div class="nav-item d-none d-md-flex">
+              <span class="nav-link text-secondary py-0">
+                <span class="status-dot status-dot-animated bg-green me-1"></span>实时监控中
+              </span>
+            </div>
+            <div class="nav-item d-none d-md-flex me-3">
+              <span class="nav-link text-secondary py-0">
+                <i class="ti ti-bell me-1"></i>待处理预警 <span class="badge bg-red text-red-fg">0</span>
+              </span>
+            </div>
+            <div class="nav-item dropdown">
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="用户菜单">
+                <span class="avatar avatar-sm bg-primary-lt"><i class="ti ti-user"></i></span>
+                <div class="d-none d-xl-block ps-2">
+                  <div>{$username|default='管理员'}</div>
+                  <div class="mt-1 small text-secondary">管理员</div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <a class="dropdown-item" href="/logout"><i class="ti ti-logout me-2"></i>退出登录</a>
+              </div>
+            </div>
+          </div>
+          <div class="collapse navbar-collapse">
+            <div class="navbar-nav">
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <div class="container-fluid">
+          {block name="content"}{/block}
+        </div>
+      </div>
+
+      <footer class="footer footer-transparent d-print-none">
+        <div class="container-fluid">
+          <div class="row text-secondary align-items-center small">
+            <div class="col-auto">国际信用卡收单风控系统</div>
+            <div class="col-auto ms-auto">Tabler</div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/static/tabler/js/tabler.min.js"></script>
+  {block name="script"}{/block}
+</body>
+</html>

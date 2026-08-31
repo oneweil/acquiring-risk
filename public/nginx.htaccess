@@ -1,0 +1,12 @@
+# phpstudy / Nginx 伪静态（ThinkPHP 8）
+# 用法：网站 → 设置 → 伪静态 → 粘贴以下内容 → 保存 → 重启 Nginx
+#
+# 重要：网站根目录（运行目录）必须指向项目的 public 目录：
+#   D:/phpstudy_pro/WWW/doopsun-risk/public
+
+location / {
+    if (!-e $request_filename) {
+        rewrite ^(.*)$ /index.php?s=/$1 last;
+        break;
+    }
+}

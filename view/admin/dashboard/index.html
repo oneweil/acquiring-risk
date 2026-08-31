@@ -1,0 +1,198 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<div class="row row-cards mb-3" id="dashKpiRow">
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">今日交易笔数</div>
+        <div class="h1 mb-0 mt-1" id="kpiOrders">—</div>
+        <div class="text-secondary small mt-1">实时累计</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">今日交易金额 (USD)</div>
+        <div class="h1 mb-0 mt-1" id="kpiAmount">—</div>
+        <div class="text-secondary small mt-1">等值汇总</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm border-danger">
+      <div class="card-body">
+        <div class="text-secondary">待处理预警</div>
+        <div class="h1 mb-0 mt-1 text-danger" id="kpiAlerts">—</div>
+        <div class="text-secondary small mt-1">需人工介入</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">拦截率</div>
+        <div class="h1 mb-0 mt-1" id="kpiBlockRate">—</div>
+        <div class="text-secondary small mt-1">今日拦截 / 总笔数</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">待审商户</div>
+        <div class="h1 mb-0 mt-1" id="kpiPendingMerchants">—</div>
+        <div class="text-secondary small mt-1">同步后待风控审核</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">活跃商户数</div>
+        <div class="h1 mb-0 mt-1" id="kpiActiveMerchants">—</div>
+        <div class="text-secondary small mt-1">状态正常</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">高风险订单</div>
+        <div class="h1 mb-0 mt-1" id="kpiHighRisk">—</div>
+        <div class="text-secondary small mt-1">今日命中</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">3DS 验证率</div>
+        <div class="h1 mb-0 mt-1" id="kpi3dsRate">—</div>
+        <div class="text-secondary small mt-1" id="kpi3dsHint">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards mb-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="ti ti-bolt text-warning me-1"></i>实时订单流
+        </h3>
+        <div class="card-actions">
+          <a href="/admin/order" class="btn btn-ghost-primary btn-sm">查看全部</a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="dash-live-feed" id="liveFeed"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">今日风险分布</h3>
+      </div>
+      <div class="card-body">
+        <div id="riskDonutChart" class="position-relative"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">最新预警</h3>
+    <div class="card-actions">
+      <span class="text-secondary small">自动命中风控规则产生</span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-vcenter table-hover card-table table-striped mb-0">
+      <thead>
+        <tr>
+          <th>预警时间</th>
+          <th>商户号</th>
+          <th>订单号</th>
+          <th>金额</th>
+          <th>风险等级</th>
+          <th>命中规则</th>
+          <th>处置策略</th>
+          <th>状态</th>
+          <th>STR报送</th>
+          <th class="w-1 text-center">操作</th>
+        </tr>
+      </thead>
+      <tbody id="dashAlertBody">
+        <tr>
+          <td colspan="10" class="text-center text-secondary py-4">加载中…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="alertHandleModal" tabindex="-1" aria-labelledby="alertHandleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="alertHandleModalLabel">人工审核</h5>
+          <div class="text-secondary small" id="alertHandleModalSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <div class="modal-body">
+        <section class="detail-section">
+          <h3 class="detail-section-title">命中规则及配置处置策略</h3>
+          <div class="table-responsive">
+            <table class="table table-sm table-vcenter mb-0">
+              <thead>
+                <tr>
+                  <th>规则</th>
+                  <th>名称</th>
+                </tr>
+              </thead>
+              <tbody id="alertHitRulesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="alert alert-info mb-3" id="alertExecNotice" role="alert"></div>
+
+        <div class="mb-3">
+          <label class="form-label">已执行处置策略</label>
+          <div id="alertCurrentMeasure"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="alertResult">审核结论</label>
+          <select class="form-select" id="alertResult">
+            <option>维持审核中</option>
+            <option>审核通过，确认放行</option>
+            <option>审核拒绝，拦截交易</option>
+            <option>误报关闭</option>
+          </select>
+          <div class="form-hint" id="alertMeasureHint">人工审核挂起交易；确认无风险后「审核通过，确认放行」，确认有风险后「审核拒绝，拦截交易」</div>
+        </div>
+        <div>
+          <label class="form-label" for="alertRemark">处理备注</label>
+          <textarea class="form-control" id="alertRemark" rows="3" placeholder="请输入处理说明"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-primary" id="alertSubmitBtn">提交审核</button>
+      </div>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/apexcharts/apexcharts.min.js"></script>
+<script src="/static/js/admin/dashboard.js"></script>
+{/block}

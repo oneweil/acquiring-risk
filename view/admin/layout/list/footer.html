@@ -1,0 +1,12 @@
+  </div>
+  {notempty name="list"}
+  <div class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="text-secondary small">
+      共 <strong>{$list->total()}</strong> 条记录，第 {$list->currentPage()} / {$list->lastPage()} 页
+    </div>
+    <div>{$list|raw}</div>
+  </div>
+  {else/}
+  <div class="card-footer text-secondary small">暂无数据</div>
+  {/notempty}
+</div>

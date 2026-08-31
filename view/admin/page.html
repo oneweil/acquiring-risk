@@ -1,0 +1,27 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<div class="page-header d-print-none mb-3">
+  <div class="row g-2 align-items-center">
+    <div class="col">
+      <div class="page-pretitle">后台管理</div>
+      <h2 class="page-title">{$title}</h2>
+    </div>
+    <div class="col-auto ms-auto">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/admin/dashboard">首页</a></li>
+        <li class="breadcrumb-item active">{$title}</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body text-center py-5">
+    <div class="mb-3">
+      <i class="ti ti-tools icon icon-lg text-secondary"></i>
+    </div>
+    <p class="text-secondary mb-0">「{$title}」页面占位，后续迭代开发。</p>
+  </div>
+</div>
+{/block}

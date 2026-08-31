@@ -12,6 +12,8 @@ return [
     'auto_rule'     => 1,
     // 模板目录名
     'view_dir_name' => 'view',
+    // 固定视图根目录，避免 admin 多层控制器把 view_path 解析成 view/admin/
+    'view_path'     => root_path() . 'view' . DIRECTORY_SEPARATOR,
     // 模板后缀
     'view_suffix'   => 'html',
     // 模板文件名分隔符

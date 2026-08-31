@@ -1,0 +1,116 @@
+<ul class="navbar-nav pt-lg-3">
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {in name='menu' value='dashboard,order,alert'}active{/in}"
+       href="#navbar-monitor"
+       data-bs-toggle="dropdown"
+       data-bs-auto-close="false"
+       role="button"
+       aria-expanded="true">
+      <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-activity"></i></span>
+      <span class="nav-link-title">监控中心</span>
+    </a>
+    <div class="dropdown-menu show">
+      <a class="dropdown-item {eq name='menu' value='dashboard'}active{/eq}" href="/admin/dashboard">
+        <i class="ti ti-chart-line me-2"></i>风控总览
+      </a>
+      <a class="dropdown-item {eq name='menu' value='order'}active{/eq}" href="/admin/order">
+        <i class="ti ti-receipt me-2"></i>订单监控
+      </a>
+      <a class="dropdown-item {eq name='menu' value='alert'}active{/eq}" href="/admin/alert">
+        <i class="ti ti-bell me-2"></i>预警中心
+      </a>
+    </div>
+  </li>
+
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {in name='menu' value='onboarding,merchant,merchant_risk_level,merchant_risk'}active{/in}"
+       href="#navbar-merchant"
+       data-bs-toggle="dropdown"
+       data-bs-auto-close="false"
+       role="button"
+       aria-expanded="true">
+      <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-building"></i></span>
+      <span class="nav-link-title">商户管理</span>
+    </a>
+    <div class="dropdown-menu show">
+      <a class="dropdown-item {eq name='menu' value='merchant'}active{/eq}" href="/admin/merchant">
+        <i class="ti ti-building me-2"></i>商户列表
+      </a>
+      <a class="dropdown-item {eq name='menu' value='merchant_risk_level'}active{/eq}" href="/admin/merchant_risk_level">
+        <i class="ti ti-stack-2 me-2"></i>商户风险等级规则
+      </a>
+      <a class="dropdown-item {eq name='menu' value='merchant_risk'}active{/eq}" href="/admin/merchant_risk">
+        <i class="ti ti-chart-bar me-2"></i>商户评估规则
+      </a>
+    </div>
+  </li>
+
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {in name='menu' value='str_report,str_push_rule,edd'}active{/in}"
+       href="#navbar-compliance"
+       data-bs-toggle="dropdown"
+       data-bs-auto-close="false"
+       role="button"
+       aria-expanded="true">
+      <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-file-text"></i></span>
+      <span class="nav-link-title">合规报送</span>
+    </a>
+    <div class="dropdown-menu show">
+      <a class="dropdown-item {eq name='menu' value='str_report'}active{/eq}" href="/admin/str_report">
+        <i class="ti ti-file-text me-2"></i>STR 报送
+      </a>
+      <a class="dropdown-item {eq name='menu' value='str_push_rule'}active{/eq}" href="/admin/str_push_rule">
+        <i class="ti ti-shield-exclamation me-2"></i>STR 推送规则
+      </a>
+      <a class="dropdown-item {eq name='menu' value='edd'}active{/eq}" href="/admin/edd">
+        <i class="ti ti-id me-2"></i>EDD 强化尽调
+      </a>
+    </div>
+  </li>
+
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {in name='menu' value='rule,disposition,blacklist'}active{/in}"
+       href="#navbar-rules"
+       data-bs-toggle="dropdown"
+       data-bs-auto-close="false"
+       role="button"
+       aria-expanded="true">
+      <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-adjustments"></i></span>
+      <span class="nav-link-title">规则配置</span>
+    </a>
+    <div class="dropdown-menu show">
+      <a class="dropdown-item {eq name='menu' value='rule'}active{/eq}" href="/admin/rule">
+        <i class="ti ti-adjustments me-2"></i>风控规则
+      </a>
+      <a class="dropdown-item {eq name='menu' value='disposition'}active{/eq}" href="/admin/disposition">
+        <i class="ti ti-clipboard-check me-2"></i>处置策略
+      </a>
+      <a class="dropdown-item {eq name='menu' value='blacklist'}active{/eq}" href="/admin/blacklist">
+        <i class="ti ti-circle-off me-2"></i>黑名单
+      </a>
+    </div>
+  </li>
+
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle {in name='menu' value='user,role,audit_log'}active{/in}"
+       href="#navbar-system"
+       data-bs-toggle="dropdown"
+       data-bs-auto-close="false"
+       role="button"
+       aria-expanded="true">
+      <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-settings"></i></span>
+      <span class="nav-link-title">系统管理</span>
+    </a>
+    <div class="dropdown-menu show">
+      <a class="dropdown-item {eq name='menu' value='user'}active{/eq}" href="/admin/user">
+        <i class="ti ti-users me-2"></i>用户管理
+      </a>
+      <a class="dropdown-item {eq name='menu' value='role'}active{/eq}" href="/admin/role">
+        <i class="ti ti-user-cog me-2"></i>角色权限
+      </a>
+      <a class="dropdown-item {eq name='menu' value='audit_log'}active{/eq}" href="/admin/audit_log">
+        <i class="ti ti-notebook me-2"></i>日志记录
+      </a>
+    </div>
+  </li>
+</ul>

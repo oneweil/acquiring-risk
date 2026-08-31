@@ -12,5 +12,4 @@ Thumbs.db
 /.project
 .php-cs-fixer.cache
 .php-cs-fixer.php
-/*.htaccess
 .php-cs-fixer.dist.php

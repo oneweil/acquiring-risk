@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>登录 - 国际信用卡收单风控系统</title>
+  {include file="/admin/layout/theme-init" /}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="/static/tabler/css/tabler.min.css">
+  <link rel="stylesheet" href="/static/tabler/icons/tabler-icons.min.css">
+  <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+<body class="d-flex flex-column">
+  <div class="page page-center">
+    <div class="container container-tight py-4">
+      <div class="text-center mb-4">
+        <a href="/login" class="navbar-brand navbar-brand-autodark" aria-label="风控系统">
+          <span class="avatar avatar-sm bg-primary text-white me-2"><i class="ti ti-shield-lock"></i></span>
+          <span class="fs-3 fw-bold">国际信用卡收单风控系统</span>
+        </a>
+      </div>
+
+      <div class="card card-md">
+        <div class="card-body">
+          <h2 class="h2 text-center mb-4">登录您的账号</h2>
+
+          {notempty name="error"}
+          <div class="alert alert-danger" role="alert">
+            <div class="d-flex">
+              <div><i class="ti ti-alert-circle icon alert-icon"></i></div>
+              <div>用户名或密码错误，请重试</div>
+            </div>
+          </div>
+          {/notempty}
+
+          <form action="/login" method="post" autocomplete="off">
+            <div class="mb-3">
+              <label class="form-label" for="username">用户名</label>
+              <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autofocus>
+            </div>
+            <div class="mb-2">
+              <label class="form-label" for="password">密码</label>
+              <div class="input-group input-group-flat">
+                <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required>
+                <span class="input-group-text">
+                  <a href="#" class="link-secondary" id="togglePwd" aria-label="显示密码" title="显示密码">
+                    <i class="ti ti-eye" id="togglePwdIcon"></i>
+                  </a>
+                </span>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-check">
+                <input type="checkbox" class="form-check-input" name="remember" value="1">
+                <span class="form-check-label">在此设备上记住我</span>
+              </label>
+            </div>
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100">登录</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+
+      <div class="text-center text-secondary mt-1 small">
+        © 2025 德普盈网络服务(杭州)有限公司&nbsp;&nbsp;浙备:2025034318号
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('togglePwd').addEventListener('click', function (e) {
+      e.preventDefault();
+      var pwd = document.getElementById('password');
+      var icon = document.getElementById('togglePwdIcon');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.className = 'ti ti-eye-off';
+        this.setAttribute('aria-label', '隐藏密码');
+        this.setAttribute('title', '隐藏密码');
+      } else {
+        pwd.type = 'password';
+        icon.className = 'ti ti-eye';
+        this.setAttribute('aria-label', '显示密码');
+        this.setAttribute('title', '显示密码');
+      }
+    });
+  </script>
+  <script src="/static/tabler/js/tabler.min.js"></script>
+</body>
+</html>
