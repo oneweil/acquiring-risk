@@ -205,7 +205,6 @@
 | type | enum | IP/邮箱/卡号/国家/网站/手机号（库内英文：ip/email/card/country/website/phone） |
 | value | string | |
 | reason | text | |
-| risk_level | enum | |
 | effective_date | date | |
 | expiry | date \| null | null=长期 |
 | status | enum | 生效中 / 已失效 |

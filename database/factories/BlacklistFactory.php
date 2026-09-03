@@ -39,7 +39,6 @@ class BlacklistFactory
             'type'           => $type,
             'value'          => $this->valueForType($type),
             'reason'         => mb_substr($this->faker->sentence(6), 0, 255),
-            'risk_level'     => $this->faker->randomElement(Blacklist::RISK_LEVELS),
             'effective_date' => $effective,
             'expiry_date'    => $longTerm ? null : $this->faker->dateTimeBetween('+7 days', '+180 days')->format('Y-m-d'),
             'status'         => $this->faker->boolean(85) ? 1 : 0,

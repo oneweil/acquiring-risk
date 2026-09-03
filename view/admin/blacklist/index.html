@@ -50,7 +50,6 @@
             <th>类型</th>
             <th>值</th>
             <th>原因</th>
-            <th>风险等级</th>
             <th>生效时间</th>
             <th>到期</th>
             <th>状态</th>
@@ -59,7 +58,7 @@
         </thead>
         <tbody id="blacklistTableBody">
           <tr>
-            <td colspan="9" class="text-center text-secondary py-5">
+            <td colspan="8" class="text-center text-secondary py-5">
               <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
             </td>
           </tr>
@@ -104,14 +103,6 @@
               <input type="text" class="form-control" name="value" id="blValue" maxlength="128" placeholder="如 185.220.101.42" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label required" for="blRiskLevel">风险等级</label>
-              <select class="form-select" name="risk_level" id="blRiskLevel" required>
-                {volist name="filter_options.risk_level" id="label"}
-                <option value="{$key}" {if $key == 'high'}selected{/if}>{$label}</option>
-                {/volist}
-              </select>
-            </div>
-            <div class="col-md-6">
               <label class="form-label" for="blExpiryMode">到期</label>
               <select class="form-select" name="expiry_mode" id="blExpiryMode">
                 <option value="long">长期</option>
@@ -147,7 +138,7 @@
 
 {block name="script"}
 <script src="/static/js/admin/list-page.js?v=1.2.0"></script>
-<script src="/static/js/admin/blacklist.js?v=1.2.0"></script>
+<script src="/static/js/admin/blacklist.js?v=1.3.0"></script>
 <script>
 BlacklistPage.init();
 </script>

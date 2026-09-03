@@ -73,7 +73,7 @@ risk_disposition (
 
 -- 黑名单
 risk_blacklist (
-  id, type, value, reason, risk_level,
+  id, type, value, reason,
   effective_date, expiry, status,
   created_at, updated_at
 )

@@ -65,7 +65,6 @@ class BlacklistRepository
             'type'           => $data['type'],
             'value'          => $data['value'],
             'reason'         => $data['reason'],
-            'risk_level'     => $data['risk_level'],
             'effective_date' => $data['effective_date'],
             'expiry_date'    => $data['expiry_date'],
             'status'         => $data['status'] ? 1 : 0,
@@ -92,7 +91,6 @@ class BlacklistRepository
             'type'        => $data['type'],
             'value'       => $data['value'],
             'reason'      => $data['reason'],
-            'risk_level'  => $data['risk_level'],
             'expiry_date' => $data['expiry_date'],
             'status'      => $data['status'] ? 1 : 0,
         ]);

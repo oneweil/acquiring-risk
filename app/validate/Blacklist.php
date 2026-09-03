@@ -18,7 +18,6 @@ class Blacklist extends Validate
         'type'        => 'require|checkType',
         'value'       => 'require|max:128',
         'reason'      => 'require|max:255',
-        'risk_level'  => 'require|checkRiskLevel',
         'expiry_mode' => 'require|in:long,custom',
         'expiry_date' => 'requireIf:expiry_mode,custom|checkExpiryDate',
         'status'      => 'require|checkStatus',
@@ -33,7 +32,6 @@ class Blacklist extends Validate
         'value.max'             => '黑名单值最长 128 字符',
         'reason.require'        => '请填写原因说明',
         'reason.max'            => '原因说明最长 255 字符',
-        'risk_level.require'    => '风险等级无效',
         'expiry_mode.require'   => '请选择到期方式',
         'expiry_mode.in'        => '到期方式无效',
         'expiry_date.requireIf' => '请填写有效的到期日期',
@@ -47,7 +45,7 @@ class Blacklist extends Validate
 
     protected $scene = [
         'list' => ['type', 'keyword', 'page', 'pageSize'],
-        'save' => ['type', 'value', 'reason', 'risk_level', 'expiry_mode', 'expiry_date', 'status'],
+        'save' => ['type', 'value', 'reason', 'expiry_mode', 'expiry_date', 'status'],
     ];
 
     /**
@@ -86,7 +84,6 @@ class Blacklist extends Validate
             'type'           => trim((string) ($data['type'] ?? '')),
             'value'          => trim((string) ($data['value'] ?? '')),
             'reason'         => trim((string) ($data['reason'] ?? '')),
-            'risk_level'     => trim((string) ($data['risk_level'] ?? '')),
             'effective_date' => date('Y-m-d'),
             'expiry_date'    => $expiryDate,
             'status'         => (bool) $status,
@@ -136,13 +133,6 @@ class Blacklist extends Validate
         }
 
         return in_array($type, BlacklistModel::TYPES, true) ? true : '类型无效';
-    }
-
-    protected function checkRiskLevel(mixed $value): bool|string
-    {
-        $level = trim((string) $value);
-
-        return in_array($level, BlacklistModel::RISK_LEVELS, true) ? true : '风险等级无效';
     }
 
     protected function checkExpiryDate(mixed $value, mixed $rule, array $data = []): bool|string

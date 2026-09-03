@@ -14,7 +14,6 @@ use think\Model;
  * @property string      $type
  * @property string      $value
  * @property string      $reason
- * @property string      $risk_level
  * @property string      $effective_date
  * @property string|null $expiry_date
  * @property int|bool    $status
@@ -42,16 +41,5 @@ class Blacklist extends Model
         'country' => '国家',
         'website' => '网站',
         'phone'   => '手机号',
-    ];
-
-    /** @var list<string> */
-    public const RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
-
-    /** @var array<string, string> */
-    public const RISK_LEVEL_LABELS = [
-        'low'      => '低风险',
-        'medium'   => '中风险',
-        'high'     => '高风险',
-        'critical' => '极高风险',
     ];
 }

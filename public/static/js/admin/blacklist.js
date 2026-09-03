@@ -15,12 +15,7 @@ var BlacklistPage = (function () {
     modal: null
   };
 
-  var RISK_LT = {
-    low: 'bg-green-lt',
-    medium: 'bg-yellow-lt',
-    high: 'bg-red-lt',
-    critical: 'bg-purple-lt'
-  };
+  var COLSPAN = 8;
 
   var STATUS_LT = {
     '生效中': 'bg-green-lt',
@@ -52,7 +47,7 @@ var BlacklistPage = (function () {
     var tbody = document.getElementById('blacklistTableBody');
     if (!tbody || !loading) return;
     tbody.innerHTML =
-      '<tr><td colspan="9" class="text-center text-secondary py-5">'
+      '<tr><td colspan="' + COLSPAN + '" class="text-center text-secondary py-5">'
       + '<div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…'
       + '</td></tr>';
   }
@@ -62,12 +57,11 @@ var BlacklistPage = (function () {
     if (!tbody) return;
 
     if (!items.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-5">暂无黑名单数据</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + COLSPAN + '" class="text-center text-secondary py-5">暂无黑名单数据</td></tr>';
       return;
     }
 
     tbody.innerHTML = items.map(function (row) {
-      var riskCls = RISK_LT[row.risk_level] || 'bg-secondary-lt';
       var statusCls = STATUS_LT[row.status_label] || 'bg-secondary-lt';
       var expiry = row.expiry_date ? escapeHtml(row.expiry_date) : '长期';
       var payload = encodeURIComponent(JSON.stringify(row));
@@ -78,7 +72,6 @@ var BlacklistPage = (function () {
         +   '<td>' + escapeHtml(row.type_label) + '</td>'
         +   '<td class="font-monospace">' + escapeHtml(row.value) + '</td>'
         +   '<td class="text-secondary text-wrap" style="max-width:240px;">' + escapeHtml(row.reason) + '</td>'
-        +   '<td><span class="badge ' + riskCls + '">' + escapeHtml(row.risk_level_label) + '</span></td>'
         +   '<td class="text-secondary">' + escapeHtml(row.effective_date) + '</td>'
         +   '<td class="text-secondary">' + expiry + '</td>'
         +   '<td><span class="badge ' + statusCls + '">' + escapeHtml(row.status_label) + '</span></td>'
@@ -139,7 +132,7 @@ var BlacklistPage = (function () {
         if (json.code !== 0 || !json.data) {
           var tbody = document.getElementById('blacklistTableBody');
           if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-5">'
+            tbody.innerHTML = '<tr><td colspan="' + COLSPAN + '" class="text-center text-danger py-5">'
               + escapeHtml(json.msg || '加载失败') + '</td></tr>';
           }
           return;
@@ -153,7 +146,7 @@ var BlacklistPage = (function () {
         state.loading = false;
         var tbody = document.getElementById('blacklistTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-5">网络错误，请稍后重试</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="' + COLSPAN + '" class="text-center text-danger py-5">网络错误，请稍后重试</td></tr>';
         }
       });
   }
@@ -176,11 +169,6 @@ var BlacklistPage = (function () {
     if (form) form.reset();
     var idEl = document.getElementById('blId');
     if (idEl) idEl.value = '';
-    var risk = document.getElementById('blRiskLevel');
-    if (risk) {
-      var highOpt = risk.querySelector('option[value="high"]');
-      if (highOpt) risk.value = 'high';
-    }
     var status = document.getElementById('blStatus');
     if (status) status.value = '1';
     var mode = document.getElementById('blExpiryMode');
@@ -206,8 +194,6 @@ var BlacklistPage = (function () {
     if (typeEl) typeEl.value = row.type || '';
     var valueEl = document.getElementById('blValue');
     if (valueEl) valueEl.value = row.value || '';
-    var riskEl = document.getElementById('blRiskLevel');
-    if (riskEl) riskEl.value = row.risk_level || 'high';
     var reasonEl = document.getElementById('blReason');
     if (reasonEl) reasonEl.value = row.reason || '';
     var statusEl = document.getElementById('blStatus');

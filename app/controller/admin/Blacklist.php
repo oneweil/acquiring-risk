@@ -22,8 +22,7 @@ class Blacklist extends AdminBase
     {
         return $this->renderList('/admin/blacklist/index', [
             'filter_options' => [
-                'type'       => BlacklistModel::TYPE_LABELS,
-                'risk_level' => BlacklistModel::RISK_LEVEL_LABELS,
+                'type' => BlacklistModel::TYPE_LABELS,
             ],
             'list_card_title' => '黑名单管理',
         ]);
