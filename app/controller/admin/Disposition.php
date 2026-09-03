@@ -44,7 +44,8 @@ class Disposition extends AdminBase
 
         $filters   = DispositionValidate::toListFilters($params);
         $page      = (int) ($params['page'] ?? 1);
-        $paginator = (new DispositionRepository())->search($filters, $page);
+        $pageSize  = DispositionValidate::toListPageSize($params);
+        $paginator = (new DispositionRepository())->search($filters, $page, $pageSize);
 
         return $this->success(DispositionResource::paginate($paginator));
     }

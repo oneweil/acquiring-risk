@@ -24,6 +24,7 @@ class Blacklist extends Validate
         'status'      => 'require|checkStatus',
         'keyword'     => 'max:128',
         'page'        => 'integer|gt:0',
+        'pageSize'    => 'integer|in:10,20,50',
     ];
 
     protected $message = [
@@ -40,10 +41,12 @@ class Blacklist extends Validate
         'keyword.max'           => '关键词最长 128 字符',
         'page.integer'          => '页码无效',
         'page.gt'               => '页码无效',
+        'pageSize.integer'      => '每页条数无效',
+        'pageSize.in'           => '每页条数无效',
     ];
 
     protected $scene = [
-        'list' => ['type', 'keyword', 'page'],
+        'list' => ['type', 'keyword', 'page', 'pageSize'],
         'save' => ['type', 'value', 'reason', 'risk_level', 'expiry_mode', 'expiry_date', 'status'],
     ];
 
@@ -52,7 +55,7 @@ class Blacklist extends Validate
      */
     public function sceneList()
     {
-        return $this->only(['type', 'keyword', 'page'])
+        return $this->only(['type', 'keyword', 'page', 'pageSize'])
             ->remove('type', 'require');
     }
 
@@ -91,17 +94,38 @@ class Blacklist extends Validate
     }
 
     /**
-     * 列表筛选参数整理
+     * 列表筛选：仅保留非空条件
      *
      * @param array<string, mixed> $data
-     * @return array{type: string, keyword: string}
+     * @return array{type?: string, keyword?: string}
      */
     public static function toListFilters(array $data): array
     {
-        return [
-            'type'    => trim((string) ($data['type'] ?? '')),
-            'keyword' => trim((string) ($data['keyword'] ?? '')),
-        ];
+        $filters = [];
+
+        $type = trim((string) ($data['type'] ?? ''));
+        if ($type !== '') {
+            $filters['type'] = $type;
+        }
+
+        $keyword = trim((string) ($data['keyword'] ?? ''));
+        if ($keyword !== '') {
+            $filters['keyword'] = $keyword;
+        }
+
+        return $filters;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function toListPageSize(array $data): int
+    {
+        $size = (int) ($data['pageSize'] ?? 0);
+
+        return in_array($size, [10, 20, 50], true)
+            ? $size
+            : (int) config('paginate.list_rows', 10);
     }
 
     protected function checkType(mixed $value): bool|string

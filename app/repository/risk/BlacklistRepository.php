@@ -13,7 +13,7 @@ use think\Paginator;
 class BlacklistRepository
 {
     /**
-     * @param array{type?: string, keyword?: string} $filters
+     * @param array{type?: string, keyword?: string} $filters 已由 Validate::toListFilters 整理
      *
      * @throws DbException
      */
@@ -21,14 +21,12 @@ class BlacklistRepository
     {
         $query = Blacklist::order('id', 'desc');
 
-        $type = trim((string) ($filters['type'] ?? ''));
-        if ($type !== '' && in_array($type, Blacklist::TYPES, true)) {
-            $query->where('type', $type);
+        if (isset($filters['type'])) {
+            $query->where('type', $filters['type']);
         }
 
-        $keyword = trim((string) ($filters['keyword'] ?? ''));
-        if ($keyword !== '') {
-            $like = '%' . addcslashes($keyword, '%_\\') . '%';
+        if (isset($filters['keyword'])) {
+            $like = '%' . addcslashes((string) $filters['keyword'], '%_\\') . '%';
             $query->where(function ($q) use ($like): void {
                 $q->whereLike('value', $like)->whereLike('reason', $like, 'OR');
             });

@@ -23,6 +23,7 @@ class Disposition extends Validate
         'push_alert'  => 'require|checkBool',
         'status'      => 'require|checkBool',
         'page'        => 'integer|gt:0',
+        'pageSize'    => 'integer|in:10,20,50',
     ];
 
     protected $message = [
@@ -42,16 +43,18 @@ class Disposition extends Validate
         'status.require'      => '状态无效',
         'page.integer'        => '页码无效',
         'page.gt'             => '页码无效',
+        'pageSize.integer'    => '每页条数无效',
+        'pageSize.in'         => '每页条数无效',
     ];
 
     protected $scene = [
-        'list' => ['risk_level', 'scope', 'status', 'page'],
+        'list' => ['risk_level', 'scope', 'status', 'page', 'pageSize'],
         'save' => ['code', 'name', 'description', 'risk_level', 'scope', 'priority', 'is_block', 'push_alert', 'status'],
     ];
 
     public function sceneList()
     {
-        return $this->only(['risk_level', 'scope', 'status', 'page'])
+        return $this->only(['risk_level', 'scope', 'status', 'page', 'pageSize'])
             ->remove('risk_level', 'require')
             ->remove('scope', 'require')
             ->remove('status', 'require');
@@ -102,6 +105,18 @@ class Disposition extends Validate
         }
 
         return $filters;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function toListPageSize(array $data): int
+    {
+        $size = (int) ($data['pageSize'] ?? 0);
+
+        return in_array($size, [10, 20, 50], true)
+            ? $size
+            : (int) config('paginate.list_rows', 10);
     }
 
     protected function checkCode(mixed $value): bool|string

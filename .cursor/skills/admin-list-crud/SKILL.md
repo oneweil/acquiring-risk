@@ -35,8 +35,8 @@ description: >-
 | 层 | 职责 | 不要做 |
 |---|---|---|
 | Controller | 取参、校验、调 repo、包 Resource、返回 JSON/View | 私有 normalize；直接拼列表展示字段 |
-| Validate | 规则 + 场景；通过后的 `toListFilters` / `toSaveData` | 写库 |
-| Repository | DB 查询与写入；`paginate([...])` | 返回带中文 label 的展示 DTO |
+| Validate | 规则 + 场景；`toListFilters`（仅非空键）/ `toListPageSize` / `toSaveData` | 写库 |
+| Repository | `isset` 后 `where`；`paginate([$list_rows=>$pageSize])` | 再校验枚举；返回中文 label DTO |
 | Resource | API 对外形状与 `*_label` | 业务写库 |
 | Model | 表映射、枚举常量 | 把 label 塞进 `$append`（除非确有必要） |
 
@@ -44,7 +44,8 @@ description: >-
 
 - 页面：`GET /admin/{module}` → `AdminBase::renderList('/admin/{module}/index', …)`
 - 列表：`GET /admin/{module}/list` → `{ code: 0, msg, data }`  
-  `data` = ThinkPHP 分页器数组，且 `data` 键为 Resource 集合（见 `JsonResource::paginate`）：至少含 `data`、`total`、`per_page`、`current_page`、`last_page`
+  query：`page` + **`pageSize`（仅 10/20/50）** + 筛选  
+  `data` = ThinkPHP 分页器数组，`data` 键为 Resource 集合：`data`/`total`/`per_page`/`current_page`/`last_page`
 - 保存：`POST /admin/{module}/save` → 成功 `success(row, '保存成功')`；校验失败 `fail(msg, 422, null, 422)`
 - 枚举：库内/接口 value **英文**；UI 用 label
 
@@ -62,33 +63,35 @@ Route::get('{module}', 'admin.{Module}/index');
 // list
 $params = $this->request->get();
 // validate → scene('list') → fail 422
-$filters = {Module}Validate::toListFilters($params);
-$page    = (int) ($params['page'] ?? 1); // page 已校验 integer|gt:0，勿再 max(1,…)
-return $this->success({Module}Resource::paginate($repo->search($filters, $page)));
+$filters  = {Module}Validate::toListFilters($params);
+$page     = (int) ($params['page'] ?? 1);
+$pageSize = {Module}Validate::toListPageSize($params);
+return $this->success({Module}Resource::paginate($repo->search($filters, $page, $pageSize)));
 
 // save
 // validate → scene('save') → toSaveData → create/update → Resource::make
 ```
 
-- 控制器**不要**留 `normalizePayload` 一类私有整理方法（放 Validate）
+- 控制器**不要**留 `normalizePayload`
 - 列表 `page` 可空；缺省 `(int) ($params['page'] ?? 1)` 即可
 
 ## Validate
 
-- `list`：筛选字段可空；枚举用自定义 `check*`；`page` => `integer|gt:0`（无 require）
-- `save`：业务必填；`requireIf` 等按字段来
-- 用 `sceneList()` / `sceneSave()` 或 `$scene` + `remove`，保证 list 去掉不该 require 的规则
+- `list`：筛选可空；枚举 `check*`；`page` => `integer|gt:0`；`pageSize` => `integer|in:10,20,50`
+- `save`：业务必填
+- `sceneList()` 去掉筛选字段的 `require`
+- `toListFilters` 只 `isset` 有值的键（空字符串不放入）
 
 ## 前端
 
-对照 `view/admin/blacklist/index.html`、`public/static/js/admin/blacklist.js`：
+对照黑名单 / 处置策略：
 
-- Tabler；筛选 form + 表格 + footer 分页 + Modal 表单同页
-- JS 读分页用 `current_page` / `last_page` / `data`（行数组），勿用旧的 `items` / `page_size`
+- Tabler；筛选 + 表格 + footer（摘要 + **pageSize 下拉** + 分页）+ Modal
+- `ListPage.renderPageSizeDropdown`；选项 **10 / 20 / 50 条/页**（无 100）
+- JS 读 `current_page` / `last_page` / `per_page` / `data`；URL 同步 `page`/`pageSize`/筛选
 - HTML 转义：`ListPage.escapeHtml`
-- 筛选/分页同步 URL query
 - option **value=英文**；无硬删时用状态失效
-
+- 不需要关键字搜索的模块（如 disposition）不要加 keyword
 ## 数据层
 
 - 表结构只走 `think-migration`；模拟数据用 Factory + Seeder，**迁移里禁止 insert 业务数据**

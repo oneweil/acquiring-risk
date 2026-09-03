@@ -68,8 +68,11 @@
     </div>
 
     <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="blacklistTableFooter">
-      <p class="m-0 text-secondary" id="blacklistTableSummary">加载中…</p>
-      <div class="ms-auto" id="blacklistTablePager"></div>
+      <div id="blacklistPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="blacklistTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="blacklistTablePager"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -143,8 +146,8 @@
 {/block}
 
 {block name="script"}
-<script src="/static/js/admin/list-page.js"></script>
-<script src="/static/js/admin/blacklist.js?v=1.0.1"></script>
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/blacklist.js?v=1.2.0"></script>
 <script>
 BlacklistPage.init();
 </script>

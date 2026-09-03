@@ -61,7 +61,6 @@
             <th>优先级</th>
             <th>策略编码</th>
             <th>策略名称</th>
-            <th>说明</th>
             <th>风险等级</th>
             <th>作用域</th>
             <th>是否阻断</th>
@@ -73,7 +72,7 @@
         </thead>
         <tbody id="dispositionTableBody">
           <tr>
-            <td colspan="11" class="text-center text-secondary py-5">
+            <td colspan="10" class="text-center text-secondary py-5">
               <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
             </td>
           </tr>
@@ -82,8 +81,11 @@
     </div>
 
     <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="dispositionTableFooter">
-      <p class="m-0 text-secondary" id="dispositionTableSummary">加载中…</p>
-      <div class="ms-auto" id="dispositionTablePager"></div>
+      <div id="dispositionPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="dispositionTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="dispositionTablePager"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -168,8 +170,8 @@
 {/block}
 
 {block name="script"}
-<script src="/static/js/admin/list-page.js"></script>
-<script src="/static/js/admin/disposition.js?v=1.0.0"></script>
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/disposition.js?v=1.2.1"></script>
 <script>
 DispositionPage.init();
 </script>

@@ -9,6 +9,7 @@ var BlacklistPage = (function () {
 
   var state = {
     page: 1,
+    pageSize: 10,
     loading: false,
     saving: false,
     modal: null
@@ -92,11 +93,17 @@ var BlacklistPage = (function () {
     var footer = document.getElementById('blacklistTableFooter');
     var summary = document.getElementById('blacklistTableSummary');
     var pager = document.getElementById('blacklistTablePager');
+    var sizeWrap = document.getElementById('blacklistPageSize');
     if (!footer || !summary || !pager) return;
 
     var total = data.total;
     var page = data.current_page;
     var lastPage = data.last_page;
+    var perPage = data.per_page || state.pageSize;
+    state.pageSize = ListPage.normalizePageSize(perPage);
+    if (sizeWrap) {
+      sizeWrap.innerHTML = ListPage.renderPageSizeDropdown(state.pageSize);
+    }
 
     if (total <= 0) {
       summary.textContent = '暂无数据';
@@ -104,42 +111,8 @@ var BlacklistPage = (function () {
       return;
     }
 
-    summary.innerHTML = '共 <strong>' + total + '</strong> 条记录，第 ' + page + ' / ' + lastPage + ' 页';
-
-    if (lastPage <= 1) {
-      pager.innerHTML = '';
-      return;
-    }
-
-    var html = '<ul class="pagination pagination-sm mb-0">';
-    html += pageItem(page - 1, '上一页', page <= 1);
-    var windowSize = 2;
-    var start = Math.max(1, page - windowSize);
-    var end = Math.min(lastPage, page + windowSize);
-    if (start > 1) {
-      html += pageItem(1, '1', false, page === 1);
-      if (start > 2) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
-    }
-    for (var p = start; p <= end; p++) {
-      html += pageItem(p, String(p), false, p === page);
-    }
-    if (end < lastPage) {
-      if (end < lastPage - 1) html += '<li class="page-item disabled"><span class="page-link">…</span></li>';
-      html += pageItem(lastPage, String(lastPage), false, page === lastPage);
-    }
-    html += pageItem(page + 1, '下一页', page >= lastPage);
-    html += '</ul>';
-    pager.innerHTML = html;
-  }
-
-  function pageItem(page, label, disabled, active) {
-    if (disabled) {
-      return '<li class="page-item disabled"><span class="page-link">' + escapeHtml(label) + '</span></li>';
-    }
-    if (active) {
-      return '<li class="page-item active" aria-current="page"><span class="page-link">' + escapeHtml(label) + '</span></li>';
-    }
-    return '<li class="page-item"><a class="page-link" href="#" data-page="' + page + '">' + escapeHtml(label) + '</a></li>';
+    summary.textContent = '共 ' + total + ' 条记录';
+    pager.innerHTML = ListPage.renderPaginationHtml(page, lastPage);
   }
 
   function loadList(page) {
@@ -149,6 +122,7 @@ var BlacklistPage = (function () {
 
     var params = getFilters();
     params.set('page', String(state.page));
+    params.set('pageSize', String(state.pageSize));
 
     var qs = params.toString();
     var nextUrl = qs ? (window.location.pathname + '?' + qs) : window.location.pathname;
@@ -338,6 +312,19 @@ var BlacklistPage = (function () {
       });
     }
 
+    var sizeWrap = document.getElementById('blacklistPageSize');
+    if (sizeWrap) {
+      sizeWrap.addEventListener('click', function (e) {
+        var link = e.target.closest('a[data-page-size]');
+        if (!link) return;
+        e.preventDefault();
+        var size = ListPage.normalizePageSize(link.getAttribute('data-page-size'));
+        if (size === state.pageSize) return;
+        state.pageSize = size;
+        loadList(1);
+      });
+    }
+
     var addBtn = document.getElementById('blacklistAddBtn');
     if (addBtn) {
       addBtn.addEventListener('click', function (e) {
@@ -380,6 +367,7 @@ var BlacklistPage = (function () {
     });
     var page = parseInt(params.get('page') || '1', 10);
     state.page = isNaN(page) ? 1 : Math.max(1, page);
+    state.pageSize = ListPage.normalizePageSize(params.get('pageSize') || '10');
   }
 
   function init() {
