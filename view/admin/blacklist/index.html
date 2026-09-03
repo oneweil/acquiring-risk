@@ -1,0 +1,151 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="blacklistFilterForm"></form>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='黑名单管理'}</h3>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-primary btn-sm" id="blacklistAddBtn">
+            <i class="ti ti-plus me-1"></i>新增黑名单
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="blacklistFilterForm" name="type" class="form-select form-select-sm">
+            <option value="">全部类型</option>
+            {volist name="filter_options.type" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+          <input type="text" form="blacklistFilterForm" name="keyword" class="form-control form-control-sm" placeholder="搜索值 / 原因" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+          <div class="btn-list">
+            <button type="submit" form="blacklistFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="blacklistFilterReset" class="btn btn-sm">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>编号</th>
+            <th>类型</th>
+            <th>值</th>
+            <th>原因</th>
+            <th>风险等级</th>
+            <th>生效时间</th>
+            <th>到期</th>
+            <th>状态</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="blacklistTableBody">
+          <tr>
+            <td colspan="9" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="blacklistTableFooter">
+      <p class="m-0 text-secondary" id="blacklistTableSummary">加载中…</p>
+      <div class="ms-auto" id="blacklistTablePager"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="blacklistModal" tabindex="-1" aria-labelledby="blacklistModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="blacklistModalLabel">新增黑名单</h5>
+          <div class="text-secondary small">添加 IP / 卡号 / 邮箱等拦截主体</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <form id="blacklistForm">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="blId" value="">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required" for="blType">类型</label>
+              <select class="form-select" name="type" id="blType" required>
+                {volist name="filter_options.type" id="label"}
+                <option value="{$key}">{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="blValue">值</label>
+              <input type="text" class="form-control" name="value" id="blValue" maxlength="128" placeholder="如 185.220.101.42" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="blRiskLevel">风险等级</label>
+              <select class="form-select" name="risk_level" id="blRiskLevel" required>
+                {volist name="filter_options.risk_level" id="label"}
+                <option value="{$key}" {if $key == 'high'}selected{/if}>{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="blExpiryMode">到期</label>
+              <select class="form-select" name="expiry_mode" id="blExpiryMode">
+                <option value="long">长期</option>
+                <option value="custom">指定日期</option>
+              </select>
+            </div>
+            <div class="col-md-6" id="blExpiryDateWrap" style="display:none;">
+              <label class="form-label" for="blExpiryDate">到期日期</label>
+              <input type="date" class="form-control" name="expiry_date" id="blExpiryDate">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="blStatus">状态</label>
+              <select class="form-select" name="status" id="blStatus">
+                <option value="1">生效中</option>
+                <option value="0">已失效</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label required" for="blReason">原因说明</label>
+              <textarea class="form-control" name="reason" id="blReason" rows="3" maxlength="255" placeholder="如 Tor 节点 / 确认盗刷拒付" required></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary" id="blacklistSaveBtn">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js"></script>
+<script src="/static/js/admin/blacklist.js?v=1.0.1"></script>
+<script>
+BlacklistPage.init();
+</script>
+{/block}

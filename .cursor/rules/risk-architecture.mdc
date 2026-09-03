@@ -1,0 +1,32 @@
+---
+description: 风控双库边界、evaluate 决策与人工审核约定
+alwaysApply: true
+---
+
+# 风控架构与业务边界
+
+详细说明见 `docs/`（尤其 `06-architecture.md`、`README.md`）；本规则只约束实现时不可违反的约定。
+
+## 双库
+
+- 默认连接 `mysql`：风控库（`.env` 中 `DB_PREFIX=risk_`）
+- 连接 `doopsun_db`：收单主站只读/联查源
+- **禁止跨库 SQL JOIN**；需要关联时在应用层分别查询后组装（类似预加载）
+- 订单监控主源 = `doopsun` 订单表；评估结果存风控库，用 `order_no` 关联，不冗余主站已有字段
+
+## evaluate
+
+- 入口：`POST /api/v1/risk/evaluate`
+- 同步决策仅：`pass` / `decline` / `challenge_3ds`
+- **单笔订单不挂起待人工审核**（无 `manual_review` 订单态）
+- 调用时机：订单已有稳定 `orderid` 之后、授权完成之前
+
+## 人工审核
+
+- **仅商户级**（入网、交易量暴涨/暴跌暂停交易与结算等）
+- 不针对单笔订单人审
+
+## 文档 vs 规则
+
+- 长文、字段表、路线图 → `docs/`
+- Agent 短指令 → `.cursor/rules/`，勿把整份 docs 复制进 rules

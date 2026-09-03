@@ -1,0 +1,28 @@
+---
+description: 表结构用 migration；模拟数据用 factory + seed，禁止在迁移里插业务数据
+globs: database/**/*
+alwaysApply: false
+---
+
+# 迁移与模拟数据
+
+## Migration（`think-migration`）
+
+- 建表/改表用 `php think migrate:create` → `database/migrations/` → `migrate:run`
+- 字段均写 `comment`；引擎 InnoDB、`utf8mb4`
+- 默认连接是风控库；**不要**对 `doopsun_db` 跑本项目迁移
+- 因 `DB_PREFIX=risk_`，迁移里表名写逻辑名（如 `blacklist`），物理表为 `risk_blacklist`；**不要**写成 `risk_blacklist` 以免变成 `risk_risk_blacklist`
+
+## Seed / Factory
+
+- **迁移的 `up()` 禁止 insert 业务/演示数据**
+- 模拟数据：`database/factories/*Factory.php` + `database/seeds/*Seeder.php`
+- 执行：`php think seed:run --seed=XxxSeeder`
+- Seeder 宜可重复执行（先清空目标表再写入）
+- Factory 用 `fakerphp/faker`；卡号等敏感样例按产品约定（完整卡号或脱敏）明确写清，勿混用
+
+## 字段习惯
+
+- 业务枚举：**库内英文**（如 `type=ip`，`risk_level=high`）
+- 布尔状态：`TINYINT(1)` / boolean（1 生效 / 0 失效），JSON 可用 `true/false`
+- UI 中文通过 label map，不入库中文枚举值

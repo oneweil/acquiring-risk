@@ -202,7 +202,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | string | BL001 |
-| type | enum | IP/邮箱/卡号/国家/网站/设备指纹/手机号 |
+| type | enum | IP/邮箱/卡号/国家/网站/手机号（库内英文：ip/email/card/country/website/phone） |
 | value | string | |
 | reason | text | |
 | risk_level | enum | |

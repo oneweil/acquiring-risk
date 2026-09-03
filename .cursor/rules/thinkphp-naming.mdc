@@ -6,7 +6,7 @@ alwaysApply: false
 
 # ThinkPHP 8 命名
 
-遵循 [官方开发规范](https://doc.thinkphp.cn/v8_0/development_specifications.html)。目录即命名空间（PSR-4）。
+遵循 [官方开发规范](https://doc.thinkphp.cn/v8_0/development_specifications.html)；本地对照 [`docs/thinkphp/v8/DevelopmentSpecification.md`](docs/thinkphp/v8/DevelopmentSpecification.md)。目录即命名空间（PSR-4）。
 
 - 目录：`小写+下划线`；类文件大驼峰，且与类名一致
 - 类：`User`、`UserType`；控制器/模型**不加** `Controller`/`Model` 后缀

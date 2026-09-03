@@ -14,6 +14,7 @@
 | [05-rules-catalog.md](./05-rules-catalog.md) | 交易风控规则 R001–R042 目录 |
 | [06-architecture.md](./06-architecture.md) | 架构边界与库表草案（与 doopsun 关系） |
 | [07-solo-dev-roadmap.md](./07-solo-dev-roadmap.md) | **单人开发路线图**（按周任务清单） |
+| [thinkphp/](./thinkphp/README.md) | **ThinkPHP 8 本地手册知识库**（供 Cursor 索引；权威见 [官网](https://doc.thinkphp.cn/v8_0/preface.html)） |
 
 ## 系统定位
 
@@ -67,3 +68,4 @@
 4. 规则引擎实现时，以 **05-rules-catalog** 为初始规则集。
 5. 建表与读 doopsun 时，参考 **06-architecture**。
 6. **单人开发**按 **[07-solo-dev-roadmap](./07-solo-dev-roadmap.md)** 执行，不要先做用户/角色。
+7. 写 ThinkPHP 框架代码时，先查 **[thinkphp/](./thinkphp/README.md)**（或对话里 `@docs/thinkphp`），细则不要塞进 `.cursor/rules`。

@@ -1,0 +1,33 @@
+---
+description: ThinkPHP 8 以本地 docs/thinkphp 为知识库；写框架代码前先检索手册
+globs: app/**/*.php,config/**/*.php,route/**/*.php,database/**/*
+alwaysApply: false
+---
+
+# ThinkPHP 文档知识库用法
+
+本项目框架手册在 [`docs/thinkphp/`](docs/thinkphp/README.md)（Markdown，可被 Cursor 索引）。权威在线版：[ThinkPHP 8 官方手册](https://doc.thinkphp.cn/v8_0/preface.html)。
+
+## Agent 必须遵守
+
+- 实现 / 修改 ThinkPHP 能力（路由、模型、查询、分页、验证、迁移、响应等）时：
+  1. **先检索** `docs/thinkphp/v8/` 对应章节（可用 `@docs/thinkphp`）
+  2. 按手册 API 编写，**不要**用 Laravel 习惯硬套（如假定存在官方 JsonResource）
+  3. 本地与官网冲突时以 **官网** 为准，并可提示更新本地镜像
+- **不要**把整本手册塞进 rules 或对话长粘贴；细则在 `docs/thinkphp`，本规则只约束「去哪里查」
+
+## 本仓库高频对照
+
+| 需求 | 先读 |
+|------|------|
+| 命名 / 目录 | `DevelopmentSpecification.md` + 规则 `thinkphp-naming` |
+| 列表分页 | `QueryBuilderPagedQuery.md` → 用 `paginate()`，勿手算 last_page |
+| 模型输出 / 隐藏字段 | `ModelModelOutput.md` |
+| 迁移 | `DatabaseMigrationTool.md` + 规则 `db-migration-seed` |
+| JSON 响应 | 后台用 `AdminBase::success` / `fail`；API 用 `ApiBase` 同类方法 |
+| 资源路由 ≠ API Resource | `ResourceRouting.md` 是 REST 路由，不是 Laravel Resource 层 |
+
+## 与业务文档分工
+
+- 框架怎么用 → `docs/thinkphp/`
+- 风控业务 / 双库 / 页面 → `docs/01–07` 与规则 `risk-architecture` 等

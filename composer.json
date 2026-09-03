@@ -24,20 +24,26 @@
         "topthink/framework": "^8.0",
         "topthink/think-orm": "^3.0|^4.0",
         "topthink/think-filesystem": "^2.0|^3.0",
-        "topthink/think-view": "^2.0"
+        "topthink/think-view": "^2.0",
+        "topthink/think-migration": "^3.1"
     },
     "require-dev": {
         "topthink/think-dumper": "^1.0",
         "topthink/think-trace": "^2.0",
-        "friendsofphp/php-cs-fixer": "^3.64"
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "fakerphp/faker": "^1.24"
     },
     "autoload": {
         "psr-4": {
-            "app\\": "app"
+            "app\\": "app",
+            "database\\factories\\": "database/factories/"
         },
         "psr-0": {
             "": "extend/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {}
     },
     "config": {
         "preferred-install": "dist"
