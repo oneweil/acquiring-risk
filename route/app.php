@@ -41,6 +41,8 @@ Route::group('admin', function () {
     Route::get('str_push_rule', 'admin.StrPushRule/index');
     Route::get('edd', 'admin.Edd/index');
     Route::get('rule', 'admin.Rule/index');
+    Route::get('disposition/list', 'admin.Disposition/list');
+    Route::post('disposition/save', 'admin.Disposition/save');
     Route::get('disposition', 'admin.Disposition/index');
     Route::get('blacklist/list', 'admin.Blacklist/list');
     Route::post('blacklist/save', 'admin.Blacklist/save');

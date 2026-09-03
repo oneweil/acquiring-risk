@@ -1,0 +1,176 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="dispositionFilterForm"></form>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='处置策略库'}</h3>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-primary btn-sm" id="dispositionAddBtn">
+            <i class="ti ti-plus me-1"></i>新增策略
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="dispositionFilterForm" name="risk_level" class="form-select form-select-sm">
+            <option value="">全部风险等级</option>
+            {volist name="filter_options.risk_level" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="dispositionFilterForm" name="scope" class="form-select form-select-sm">
+            <option value="">全部作用域</option>
+            {volist name="filter_options.scope" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="dispositionFilterForm" name="status" class="form-select form-select-sm">
+            <option value="">全部状态</option>
+            <option value="1">启用</option>
+            <option value="0">停用</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+          <div class="btn-list">
+            <button type="submit" form="dispositionFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="dispositionFilterReset" class="btn btn-sm">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>优先级</th>
+            <th>策略编码</th>
+            <th>策略名称</th>
+            <th>说明</th>
+            <th>风险等级</th>
+            <th>作用域</th>
+            <th>是否阻断</th>
+            <th>推送预警</th>
+            <th>今日触发次数</th>
+            <th>状态</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="dispositionTableBody">
+          <tr>
+            <td colspan="11" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="dispositionTableFooter">
+      <p class="m-0 text-secondary" id="dispositionTableSummary">加载中…</p>
+      <div class="ms-auto" id="dispositionTablePager"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="dispositionModal" tabindex="-1" aria-labelledby="dispositionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="dispositionModalLabel">新增处置策略</h5>
+          <div class="text-secondary small">配置策略执行参数</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <form id="dispositionForm">
+        <div class="modal-body">
+          <input type="hidden" name="id" id="dispId" value="">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required" for="dispCode">策略编码</label>
+              <input type="text" class="form-control" name="code" id="dispCode" maxlength="64" placeholder="如 DECLINE" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="dispName">策略名称</label>
+              <input type="text" class="form-control" name="name" id="dispName" maxlength="64" placeholder="如 拒绝交易" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label required" for="dispDescription">说明</label>
+              <textarea class="form-control" name="description" id="dispDescription" rows="2" maxlength="255" placeholder="策略说明" required></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="dispRiskLevel">风险等级</label>
+              <select class="form-select" name="risk_level" id="dispRiskLevel" required>
+                {volist name="filter_options.risk_level" id="label"}
+                <option value="{$key}" {if $key == 'high'}selected{/if}>{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="dispScope">作用域</label>
+              <select class="form-select" name="scope" id="dispScope" required>
+                {volist name="filter_options.scope" id="label"}
+                <option value="{$key}" {if $key == 'transaction'}selected{/if}>{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="dispPriority">优先级</label>
+              <input type="number" class="form-control" name="priority" id="dispPriority" min="0" value="10" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="dispStatus">状态</label>
+              <select class="form-select" name="status" id="dispStatus">
+                <option value="1">启用</option>
+                <option value="0">停用</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="dispIsBlock">是否阻断</label>
+              <select class="form-select" name="is_block" id="dispIsBlock">
+                <option value="0">否</option>
+                <option value="1">是</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="dispPushAlert">推送预警</label>
+              <select class="form-select" name="push_alert" id="dispPushAlert">
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary" id="dispositionSaveBtn">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js"></script>
+<script src="/static/js/admin/disposition.js?v=1.0.0"></script>
+<script>
+DispositionPage.init();
+</script>
+{/block}

@@ -43,7 +43,7 @@ class Blacklist extends AdminBase
         }
 
         $filters   = BlacklistValidate::toListFilters($params);
-        $page      = max(1, (int) ($params['page'] ?? 1));
+        $page      = (int) ($params['page'] ?? 1);
         $paginator = (new BlacklistRepository())->search($filters, $page);
 
         return $this->success(BlacklistResource::paginate($paginator));

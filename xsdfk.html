@@ -648,12 +648,11 @@
             <div class="rule-item" data-default-measure="3DS强验"><div>同一卡号跨 ≥ <input class="input-sm" value="3"> 个不同商户 <input class="input-sm" value="1"> 小时内交易<div class="rule-desc">识别卡号流转 / 共享卡池风险</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active" onclick="this.classList.toggle('active')"></div></div></div>
           </div>
           <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-network-wired" style="margin-right:6px;color:#2563eb;"></i>IP / 设备 / 身份频率（Device &amp; Identity Velocity）</div>
+            <div class="rule-card-head"><i class="fas fa-network-wired" style="margin-right:6px;color:#2563eb;"></i>IP / 身份频率（Identity Velocity）</div>
             <div class="rule-head-row"><div>规则内容</div><div>处置策略</div><div>风险等级</div><div>启用</div></div>
             <div class="rule-item" data-rule-id="R006"><div>同一 IP <input class="input-sm" value="15"> 分钟内不同卡号尝试 ≥ <input class="input-sm" value="5"> 张<div class="rule-desc">典型卡测试特征：单IP多卡号轮询</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-default-measure="拒绝交易"><div>同一 IP <input class="input-sm" value="60"> 分钟内授权失败 ≥ <input class="input-sm" value="5"> 次<div class="rule-desc">撞库 / 暴力试卡拦截</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active" onclick="this.classList.toggle('active')"></div></div></div>
             <div class="rule-item" data-rule-id="R022"><div>同一邮箱 <input class="input-sm" value="24"> 小时内关联 ≥ <input class="input-sm" value="3"> 张不同卡号<div class="rule-desc">识别批量注册 / 多卡绑定</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
-            <div class="rule-item" data-default-measure="仅预警"><div>同一设备指纹 <input class="input-sm" value="1"> 小时内交易 ≥ <input class="input-sm" value="10"> 笔<div class="rule-desc">设备级 Velocity，防 Bot 批量下单</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle" onclick="this.classList.toggle('active')"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-clock" style="margin-right:6px;color:#2563eb;"></i>交易时间点（Time Pattern）</div>
@@ -712,15 +711,18 @@
             <div class="rule-item" data-rule-id="R041"><div>拒付率 &gt; <input class="input-sm mrl-threshold" data-key="chargebackWarn" value="0.9"> %（Visa VAMP 预警线）<div class="rule-desc">未达识别线时强制提升至中风险；加入观察名单</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R042"><div>欺诈率 &gt; <input class="input-sm mrl-threshold" data-key="fraudWarn" value="0.5"> %（VFMP / EFM）<div class="rule-desc">仅已入网商户复评；人工审核 / 调单</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R026"><div>商户当日交易量 ≥ 近30日均值 × <input class="input-sm" value="500"> %（异常放量）<div class="rule-desc">Account Takeover / 商户账户被盗</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R025"><div>交易网站 URL 不在商户报备域名白名单内<div class="rule-desc">防钓鱼站 / 未授权接入（白名单校验，非黑名单类型）</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-default-measure="仅预警"><div>退款率 &gt; <input class="input-sm" value="20"> % 且 交易笔数 ≥ <input class="input-sm" value="100">（滚动30天）<div class="rule-desc">异常退款；洗钱或虚假交易信号</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle" onclick="this.classList.toggle('active')"></div></div></div>
             <div class="rule-item" data-default-measure="人工审核"><div>高风险 MCC（5967/5999/7273 等）单笔 &gt; <input class="input-md" value="1000"> USD<div class="rule-desc">按商户类别码（MCC）差异化限额</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active" onclick="this.classList.toggle('active')"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-ban" style="margin-right:6px;color:#2563eb;"></i>黑名单与 negative file</div>
             <div class="rule-head-row"><div>规则内容</div><div>处置策略</div><div>风险等级</div><div>启用</div></div>
-            <div class="rule-item" data-rule-id="R002"><div>卡号 / BIN 命中内部或卡组 negative file<div class="rule-desc">历史拒付确认盗刷、欺诈卡号</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
-            <div class="rule-item" data-default-measure="拒绝交易"><div>IP / 设备指纹 / 邮箱 / 手机号命中黑名单<div class="rule-desc">关联历史欺诈行为主体</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active" onclick="this.classList.toggle('active')"></div></div></div>
-            <div class="rule-item" data-rule-id="R025"><div>交易网站 URL 不在商户报备域名白名单内<div class="rule-desc">防钓鱼站 / 未授权接入</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R027"><div>IP 命中黑名单<div class="rule-desc">类型「IP」；交易来源 IP 命中「黑名单管理」生效条目</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R038"><div>邮箱命中黑名单<div class="rule-desc">类型「邮箱」；下单邮箱命中黑名单生效条目</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R002"><div>卡号命中黑名单 / negative file<div class="rule-desc">类型「卡号」；卡号或 BIN 命中内部黑名单或卡组 negative file</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R018"><div>国家命中黑名单<div class="rule-desc">类型「国家」；发卡国 / IP国家 / 账单国 / 收货国命中黑名单国家</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R043"><div>网站命中黑名单<div class="rule-desc">类型「网站」；交易网站域名命中黑名单生效条目</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
           </div>
         </div>
         <div style="display:flex;justify-content:center;gap:12px;margin-top:16px;">
@@ -893,7 +895,7 @@
       <div class="card">
         <div class="title">黑名单管理</div>
         <div class="toolbar">
-          <select id="blFilterType"><option value="">全部类型</option><option>IP</option><option>邮箱</option><option>卡号</option><option>国家</option><option>网站</option><option>设备指纹</option><option>手机号</option></select>
+          <select id="blFilterType"><option value="">全部类型</option><option>IP</option><option>邮箱</option><option>卡号</option><option>国家</option><option>网站</option></select>
           <input id="blSearchValue" placeholder="搜索值" />
           <button class="primary" onclick="filterBlacklist()">查询</button>
           <button class="primary" onclick="openBlacklistModal('add')"><i class="fas fa-plus"></i> 新增黑名单</button>
@@ -1174,7 +1176,7 @@
             <div class="field"><label>类型</label>
               <select id="blType">
                 <option>IP</option><option>邮箱</option><option>卡号</option><option>国家</option>
-                <option>网站</option><option>设备指纹</option><option>手机号</option>
+                <option>网站</option>
               </select>
             </div>
             <div class="field"><label>值</label><input id="blValue" placeholder="如 185.220.101.42" /></div>
@@ -3951,11 +3953,47 @@
       return hits >= 1 && SANCTION_COUNTRIES.includes(m.country);
     }
 
+    function getActiveBlacklistValues(type) {
+      return BLACKLIST
+        .filter(b => b.type === type && b.status === "生效中")
+        .map(b => String(b.value || "").trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    function hitBlacklistValues(type, candidates, opts) {
+      const blocked = getActiveBlacklistValues(type);
+      if (!blocked.length) return false;
+      const list = (candidates || []).filter(Boolean).map(c => String(c).trim().toLowerCase());
+      if (!list.length) return false;
+      if (opts && opts.cardLike) {
+        return list.some(c => {
+          const digits = c.replace(/\D/g, "");
+          const last4 = digits.slice(-4);
+          return blocked.some(b => {
+            const bd = b.replace(/\D/g, "");
+            if (!bd) return b === c;
+            if (digits && (digits === bd || digits.includes(bd) || bd.includes(digits))) return true;
+            if (last4 && bd.slice(-4) === last4) return true;
+            return b === c;
+          });
+        });
+      }
+      return list.some(c => blocked.some(b => c === b || c.includes(b) || b.includes(c)));
+    }
+
     const RULES = [
       { id: "R001", category: "地理与制裁", name: "OFAC制裁国家命中", desc: "OFAC / 制裁名单国家（CU/IR/KP/SY/RU 等）发卡或 IP 来源", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
         check: o => SANCTION_COUNTRIES.includes(o.cardCountry) || SANCTION_COUNTRIES.includes(o.ipCountry) },
-      { id: "R002", category: "黑名单", name: "黑名单卡号/IP命中", desc: "卡号 / BIN / IP / 邮箱命中内部或卡组 negative file", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
-        check: o => o.blacklistHit },
+      { id: "R027", category: "黑名单", name: "黑名单IP命中", desc: "交易 IP 命中黑名单管理中类型「IP」的生效条目", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
+        check: o => hitBlacklistValues("IP", [o.ip]) },
+      { id: "R038", category: "黑名单", name: "黑名单邮箱命中", desc: "下单邮箱命中黑名单管理中类型「邮箱」的生效条目", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
+        check: o => hitBlacklistValues("邮箱", [o.email]) },
+      { id: "R002", category: "黑名单", name: "黑名单卡号命中", desc: "卡号 / BIN 命中黑名单管理中类型「卡号」或卡组 negative file", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
+        check: o => hitBlacklistValues("卡号", [o.cardNo, o.cardBin], { cardLike: true }) || !!o.blacklistHit },
+      { id: "R018", category: "黑名单", name: "黑名单国家命中", desc: "发卡国 / IP国家 / 账单国 / 收货国命中黑名单管理中类型「国家」的生效条目", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
+        check: o => hitBlacklistValues("国家", [o.cardCountry, o.ipCountry, o.billingCountry, o.shippingCountry]) },
+      { id: "R043", category: "黑名单", name: "黑名单网站命中", desc: "交易网站域名命中黑名单管理中类型「网站」的生效条目", riskLevel: "极高风险", measure: "拒绝交易", enabled: true,
+        check: o => hitBlacklistValues("网站", [o.website, (o.website || "").split("/")[0]]) },
       { id: "R003", category: "AVS/CVV/3DS", name: "CVV验证失败", desc: "CVV 验证失败或未提供（CVC Check: Fail / Not Provided）", riskLevel: "高风险", measure: "拒绝交易", enabled: true,
         check: o => o.cvvResult === "No Match" || o.cvvResult === "Not Provided" },
       { id: "R004", category: "欺诈行为", name: "VPN/Proxy/Tor节点", desc: "检测到 VPN / Proxy / Tor 节点 IP", riskLevel: "高风险", measure: "3DS强验", enabled: true,

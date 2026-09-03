@@ -1,29 +1,33 @@
 ---
-description: 后台列表页 Tabler + AJAX 模式（对齐订单监控）
+description: 后台列表页 Tabler + AJAX 模式（对齐黑名单）
 globs: view/admin/**/*,public/static/js/admin/**/*,app/controller/admin/**/*,route/app.php
 alwaysApply: false
 ---
 
 # 后台 Admin UI
 
-参考实现：`view/admin/order/index.html`、`public/static/js/admin/order.js`、`app/controller/admin/Order.php`。
+参考实现：`app/controller/admin/Blacklist.php`、`view/admin/blacklist/index.html`、`public/static/js/admin/blacklist.js`。  
+新模块脚手架用项目 Skill：`.cursor/skills/admin-list-crud/SKILL.md`。
 
 ## 页面
 
 - 已实现菜单用 `AdminBase::renderList()`，勿长期停在 `renderPage()` 占位
 - Tabler 布局；列表筛选 + 服务端分页 + AJAX 拉数
 - 筛选/表单 option 的 **value 用英文枚举**，label 用中文
-- 列表展示可用后端 `*_label` 或前端常量 map
+- 列表展示用 Resource 的 `*_label`（或前端 map）；勿依赖 Model `$append` 塞 label
 
 ## 接口约定
 
 - 列表：`GET /admin/{module}/list` → JSON
 - 保存：`POST /admin/{module}/save` → JSON
-- 响应形状：`{ code: 0, msg, data: { items, total, page, page_size, last_page } }`（列表）
+- 统一：`AdminBase::success` / `fail`；校验失败 HTTP 422
+- 列表 `data`：ThinkPHP 分页形状（`data` 行数组 + `total` / `per_page` / `current_page` / `last_page`），经 `XxxResource::paginate`
+- 校验：Validate `list`/`save` 场景；入参整理放 Validate（`toListFilters` / `toSaveData`），控制器勿写 `normalizePayload`
 - `route/app.php` 中 **更长路径写在短路径之前**（如 `blacklist/list` 在 `blacklist` 前）
 
 ## 前端
 
 - 模块 JS：`public/static/js/admin/{module}.js`，HTML 转义优先 `ListPage.escapeHtml`
+- 分页字段用 `current_page` / `last_page` / `data`，与黑名单一致
 - 分页、筛选同步 URL query，便于刷新保持状态
 - Modal 新增/编辑与列表同页；无硬删时用状态失效即可
