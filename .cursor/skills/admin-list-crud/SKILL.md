@@ -34,7 +34,8 @@ description: >-
 
 | 层 | 职责 | 不要做 |
 |---|---|---|
-| Controller | 取参、校验、调 repo、包 Resource、返回 JSON/View | 私有 normalize；直接拼列表展示字段 |
+| Controller | 取参、校验、调 Service/Repo、包 Resource、返回 JSON/View | **禁止新增 private/protected 业务方法**；直接拼列表展示字段 |
+| Service | 跨 Repo 组装、批量编排（如 rule 分组 list payload） | HTTP / Validate |
 | Validate | 规则 + 场景；`toListFilters`（仅非空键）/ `toListPageSize` / `toSaveData` | 写库 |
 | Repository | `isset` 后 `where`；`paginate([$list_rows=>$pageSize])` | 再校验枚举；返回中文 label DTO |
 | Resource | API 对外形状与 `*_label` | 业务写库 |

@@ -114,4 +114,35 @@ class DispositionRepository
 
         return $query->count() > 0;
     }
+
+    /**
+     * 启用中的策略（规则页下拉），按 priority 升序
+     *
+     * @return list<Disposition>
+     *
+     * @throws DbException
+     */
+    public function listEnabledOrdered(): array
+    {
+        return Disposition::where('status', 1)
+            ->order('priority', 'asc')
+            ->order('id', 'asc')
+            ->select()
+            ->all();
+    }
+
+    /**
+     * @return array<string, Disposition> code => model
+     *
+     * @throws DbException
+     */
+    public function mapByCode(): array
+    {
+        $map = [];
+        foreach (Disposition::select() as $row) {
+            $map[(string) $row->code] = $row;
+        }
+
+        return $map;
+    }
 }

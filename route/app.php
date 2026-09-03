@@ -40,6 +40,9 @@ Route::group('admin', function () {
     Route::get('str_report', 'admin.StrReport/index');
     Route::get('str_push_rule', 'admin.StrPushRule/index');
     Route::get('edd', 'admin.Edd/index');
+    Route::get('rule/list', 'admin.Rule/list');
+    Route::post('rule/save', 'admin.Rule/save');
+    Route::post('rule/reset', 'admin.Rule/reset');
     Route::get('rule', 'admin.Rule/index');
     Route::get('disposition/list', 'admin.Disposition/list');
     Route::post('disposition/save', 'admin.Disposition/save');

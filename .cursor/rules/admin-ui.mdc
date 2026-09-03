@@ -16,8 +16,10 @@ alwaysApply: false
 | Validate | `list`/`save` 场景；枚举与 `page`/`pageSize` 校验；`toListFilters` / `toListPageSize` / `toSaveData` | 写库 |
 | Repository | `isset($filters[k])` 后直接 `where`；`paginate` | 再 `in_array` 校验枚举；拼 `*_label` |
 | Resource | 对外字段与 `*_label`；列表 `XxxResource::paginate` | 写库 |
-| Controller | 校验 → filters/page/pageSize → repo → Resource；`success`/`fail` | `normalizePayload` 私有方法 |
+| Service | 跨 Repo 组装、批量写回后再拼 list payload 等编排 | HTTP / Validate |
+| Controller | 校验 → 调 Service/Repo → Resource；`success`/`fail` | **禁止新增 private/protected 业务方法**（组装逻辑放 Service） |
 
+- 控制器**只保留**公开 action（`index`/`list`/`save`…）；基类 `AdminBase` 的 protected 辅助除外
 - `toListFilters`：**只放入非空条件**（勿返回一堆空字符串）
 - 列表 `page` 已校验则用 `(int) ($params['page'] ?? 1)`，勿再 `max(1, …)` 重复兜底业务校验
 

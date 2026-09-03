@@ -1,0 +1,45 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <h3 class="card-title mb-1">{$list_card_title|default='规则条件配置'}</h3>
+        <div class="text-secondary">对齐 Visa VAMP / Mastercard ECP / PSD2 SCA 等行业标准</div>
+      </div>
+      <div class="btn-list">
+        <button type="button" class="btn" id="ruleResetBtn">重置默认</button>
+        <button type="button" class="btn btn-primary" id="ruleSaveBtn">保存配置</button>
+      </div>
+    </div>
+    <div class="alert alert-info mt-3 mb-0 flex-column align-items-start gap-1" role="alert">
+      <div>配置各风控规则的触发条件及处置策略；风险等级由所选策略在「处置策略库」中自动带出，无需重复配置。规则命中后自动执行绑定策略；多条命中时取最高风险等级、最严处置策略。</div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge bg-blue-lt">PCI-DSS</span>
+        <span class="badge bg-blue-lt">PSD2 SCA</span>
+        <span class="badge bg-blue-lt">Visa VAMP</span>
+        <span class="badge bg-blue-lt">3DS 2.x</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="ruleGroups" class="row row-cards">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body text-center text-secondary py-5">
+        <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+      </div>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/rule.js?v=1.3.0"></script>
+<script>
+RulePage.init();
+</script>
+{/block}
