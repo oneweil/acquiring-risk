@@ -236,8 +236,7 @@ CRM 推送入网资料或风控定时拉取。
 | POST | `/admin/merchant/reassess` | 单个/批量重评 |
 | GET | `/admin/merchant_risk/config` | 评估规则配置 |
 | POST | `/admin/merchant_risk/save` | 保存评估规则 |
-| GET | `/admin/merchant_risk_level/config` | 等级规则 |
-| POST | `/admin/merchant_risk_level/save` | 保存等级规则 |
+| POST | `/admin/merchant_risk_level/save` | 保存等级规则（首屏配置由页面 render 注入，无独立 config 接口） |
 
 **POST /admin/onboarding/review**
 

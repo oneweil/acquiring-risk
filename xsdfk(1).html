@@ -176,8 +176,11 @@
 
     .mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: none; align-items: center; justify-content: center; z-index: 20; }
     .mask.on { display: flex; }
+    #attachPreviewMask { z-index: 40; }
     .modal { width: 860px; max-height: 85vh; background: #fff; border-radius: 10px; display: flex; flex-direction: column; border: 1px solid var(--line); box-shadow: 0 20px 40px rgba(15, 23, 42, .2); }
     .modal.sm { width: 520px; }
+    .modal.md { width: 640px; }
+    .modal.lg { width: 980px; }
     .mh { min-height: 62px; border-bottom: 1px solid var(--line); background: #f8fafc; display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-radius: 10px 10px 0 0; }
     .mh-title { font-weight: 700; color: #111827; }
     .mh-sub { font-size: 12px; color: #667085; margin-top: 2px; }
@@ -231,9 +234,14 @@
     .upload-zone:hover, .upload-zone.dragover { border-color: #93c5fd; background: #eff6ff; }
     .upload-zone i { font-size: 32px; color: #94a3b8; margin-bottom: 8px; }
     .upload-zone .hint { font-size: 12px; color: #64748b; margin-top: 6px; }
-    .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px; }
+    .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px dashed #e5e7eb; font-size: 13px; }
     .checklist-item:last-child { border-bottom: none; }
     .checklist-item input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--blue); }
+    .edd-check-main { flex: 1; min-width: 0; }
+    .edd-check-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .edd-file-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .edd-file-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #eef1f5; border-radius: 6px; padding: 6px 8px; }
+    .edd-file-row .attach-name span { max-width: 220px; }
     .edd-progress { height: 6px; border-radius: 999px; background: #e5e7eb; overflow: hidden; margin-top: 8px; }
     .edd-progress-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2563eb, #10b981); transition: width .4s; }
     .str-type-ltr { background: #3b82f6; }
@@ -399,7 +407,7 @@
       <div class="card">
         <div class="title">商户入网管理 <span class="title-sub">数据由外部系统同步，本系统进行风险等级评估与审核</span></div>
         <div class="rules-banner">
-          商户入网资料（企业信息、KYC、网站合规、PCI、合规筛查、<b>附件材料</b>等）从 <b>商户 CRM / 入网系统</b> 自动同步。同步完成后执行<b>入网评估</b>（不含拒付率/欺诈率/退款率/交易放量），生成综合评分与风险等级，供人工审核决策。
+          商户入网资料（企业信息、网站合规、合规筛查、<b>附件材料</b>等）从 <b>商户 CRM / 入网系统</b> 自动同步。同步完成后执行<b>入网评估</b>（不含拒付率/欺诈率/退款率/交易放量），生成综合评分与风险等级，供人工审核决策。
         </div>
         <div class="steps">
           <div class="step done"><div class="step-num"><i class="fas fa-check" style="font-size:12px;"></i></div><div class="step-label">外部系统同步</div></div>
@@ -415,7 +423,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>商户号</th><th>商户名称</th><th>行业</th><th>注册国家</th><th>同步时间</th><th>KYC状态</th><th>风险评级</th><th>风险等级</th><th>状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>商户号</th><th>商户名称</th><th>行业</th><th>注册国家</th><th>同步时间</th><th>风险评级</th><th>风险等级</th><th>状态</th><th>操作</th></tr></thead>
             <tbody id="onboardBody"></tbody>
           </table>
         </div>
@@ -439,10 +447,10 @@
           <input id="mSearchId" placeholder="商户号" />
           <input id="mSearchName" placeholder="商户名称" />
           <select id="mFilterRisk"><option value="">全部风险等级</option><option>低风险</option><option>中风险</option><option>高风险</option></select>
-          <select id="mFilterReview"><option value="">全部审核状态</option><option>批准入驻</option><option>条件通过</option><option>拒绝入驻</option></select>
+          <select id="mFilterReview"><option value="">全部审核状态</option><option>通过</option><option>不通过</option></select>
           <select id="mFilterStatus"><option value="">全部收单状态</option><option>正常</option><option>观察</option><option>受限</option><option>暂停</option><option>未开通</option></select>
           <button class="primary" onclick="filterMerchants()">查询</button>
-          <button onclick="assessAllMerchants(); toast('已重新评估全部商户')">重新评估</button>
+          <button onclick="assessAllMerchants({ archive: true }); toast('已重新评估全部商户')">重新评估</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -509,8 +517,8 @@
           </div>
         </div>
         <div class="toolbar" style="margin-top:14px;margin-bottom:0;">
-          <button class="primary" onclick="saveMerchantRiskLevelConfig(); assessAllMerchants(); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('风险等级规则已保存并重新计算')">保存等级规则</button>
-          <button onclick="assessAllMerchants(); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('已按当前规则重新评估全部商户')">重新评估全部商户</button>
+          <button class="primary" onclick="saveMerchantRiskLevelConfig(); assessAllMerchants({ archive: true }); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('风险等级规则已保存并重新计算')">保存等级规则</button>
+          <button onclick="assessAllMerchants({ archive: true }); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('已按当前规则重新评估全部商户')">重新评估全部商户</button>
         </div>
       </div>
     </div>
@@ -520,93 +528,80 @@
       <div class="card">
         <div class="title">商户评估规则 <span class="title-sub">各维度评分与权重；等级映射见「商户风险等级规则」</span></div>
         <div class="rules-banner">
-          <b>入网评估</b>：外部系统同步后，依据行业、KYC、网站合规、PCI、合规筛查、注册地等可获取信息计分，<b>不含拒付率/欺诈率/退款率/交易放量</b>（尚无交易历史）。<br>
+          <b>入网评估</b>：外部系统同步后，依据行业、网站合规、合规筛查、注册地、<b>注册时长（按商户注册时间）</b>等可获取信息计分，<b>不含拒付率/欺诈率/退款率/交易放量</b>（尚无交易历史）。<br>
           <b>已入网复评</b>：产生交易后按完整规则集（含拒付率、欺诈率、退款率、交易放量异常等）定期复评。综合评分与风险等级映射请配置 <a href="javascript:void(0)" onclick="switchPage('merchant-risk-level')" style="color:#2563eb;font-weight:600">商户风险等级规则</a>。
           <div class="rules-tags">
             <span class="rules-tag">入网评估</span>
             <span class="rules-tag">Visa VAMP</span>
             <span class="rules-tag">VFMP / EFM</span>
-            <span class="rules-tag">KYC/AML</span>
+            <span class="rules-tag">AML</span>
           </div>
         </div>
         <div class="score-panel" style="margin-bottom:16px;">
           <h4>入网评估维度（无交易历史）</h4>
-          <div class="score-formula" id="onboardingDimSummary">行业风险、KYC 质量、经营时长、注册地风险；权重由完整规则集自动折算（排除拒付率/欺诈率）</div>
+          <div class="score-formula" id="onboardingDimSummary">行业风险、注册时长、注册地风险；权重由完整规则集自动折算（排除拒付率/欺诈率）</div>
         </div>
         <div class="rule-grid">
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-industry" style="margin-right:6px;color:#2563eb;"></i>行业风险（Industry / MCC）</div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>行业 = 虚拟商品（MCC 5967/5999 等）<div class="rule-desc">数字商品 / 礼品卡；拒付难追回，行业基线高风险</div></div><div><input class="input-sm ma-industry" data-industry="虚拟商品" value="85"></div><div><span class="ma-dim-weight" data-dim="industry">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>行业 = 跨境电商<div class="rule-desc">跨境物流与三国不一致高发</div></div><div><input class="input-sm ma-industry" data-industry="跨境电商" value="55"></div><div><span class="ma-dim-weight" data-dim="industry">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>行业 = 软件 SaaS<div class="rule-desc">订阅模式，Chargeback 相对较低</div></div><div><input class="input-sm ma-industry" data-industry="软件SaaS" value="35"></div><div><span class="ma-dim-weight" data-dim="industry">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>行业 = 旅游<div class="rule-desc">季节性波动；部分 MCC 受限</div></div><div><input class="input-sm ma-industry" data-industry="旅游" value="40"></div><div><span class="ma-dim-weight" data-dim="industry">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>行业 = 实体零售<div class="rule-desc">实物交付，可追踪物流</div></div><div><input class="input-sm ma-industry" data-industry="实体零售" value="30"></div><div><span class="ma-dim-weight" data-dim="industry">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>其他未列明行业（默认）<div class="rule-desc">取行业映射表未命中时的兜底分值</div></div><div><input class="input-sm ma-industry-default" value="50"></div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>行业 = 虚拟商品（MCC 5967/5999 等）<div class="rule-desc">数字商品 / 礼品卡；拒付难追回，行业基线高风险</div></div><div><input class="input-sm ma-industry" data-industry="虚拟商品" value="85"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>行业 = 跨境电商<div class="rule-desc">跨境物流与三国不一致高发</div></div><div><input class="input-sm ma-industry" data-industry="跨境电商" value="55"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>行业 = 软件 SaaS<div class="rule-desc">订阅模式，Chargeback 相对较低</div></div><div><input class="input-sm ma-industry" data-industry="软件SaaS" value="35"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>行业 = 旅游<div class="rule-desc">季节性波动；部分 MCC 受限</div></div><div><input class="input-sm ma-industry" data-industry="旅游" value="40"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>行业 = 实体零售<div class="rule-desc">实物交付，可追踪物流</div></div><div><input class="input-sm ma-industry" data-industry="实体零售" value="30"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>其他未列明行业（默认）<div class="rule-desc">取行业映射表未命中时的兜底分值</div></div><div><input class="input-sm ma-industry-default" value="50"></div><div><span class="ma-dim-weight" data-dim="industry">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-undo" style="margin-right:6px;color:#2563eb;"></i>拒付率（Chargeback Rate · Visa VAMP）<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">— 仅已入网商户复评</span></div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>维度原始分 = 滚动30天拒付率(%) × <input class="input-sm ma-mul" data-key="chargebackMul" value="40">（上限100）<div class="rule-desc">例：拒付率 1.0% → 原始分 40</div></div><div>公式</div><div><span class="ma-dim-weight" data-dim="chargeback">25</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>拒付率 &gt; <input class="input-sm ma-threshold" data-key="chargebackWarn" value="0.9"> %（Visa VAMP Early Warning）<div class="rule-desc">预警线；建议加入观察名单</div></div><div>参考</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>拒付率 &gt; <input class="input-sm ma-threshold" data-key="chargebackId" value="1.5"> %（Visa VAMP Identification）<div class="rule-desc">识别线；Mastercard ECP Excessive ≥ 1.5%</div></div><div>参考</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天拒付率 ≤ <input class="input-sm ma-rate-tier" data-dim="chargeback" data-tier="0" value="0.5"> %<div class="rule-desc">低拒付；正常经营区间</div></div><div><input class="input-sm ma-rate-score" data-dim="chargeback" data-tier="0" value="20"></div><div><span class="ma-dim-weight" data-dim="chargeback">19</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天拒付率 ≤ <input class="input-sm ma-rate-tier" data-dim="chargeback" data-tier="1" value="0.9"> %（VAMP Early Warning）<div class="rule-desc">接近预警线</div></div><div><input class="input-sm ma-rate-score" data-dim="chargeback" data-tier="1" value="40"></div><div><span class="ma-dim-weight" data-dim="chargeback">19</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天拒付率 ≤ <input class="input-sm ma-rate-tier" data-dim="chargeback" data-tier="2" value="1.5"> %（VAMP Identification）<div class="rule-desc">识别线以内；加强观察</div></div><div><input class="input-sm ma-rate-score" data-dim="chargeback" data-tier="2" value="65"></div><div><span class="ma-dim-weight" data-dim="chargeback">19</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天拒付率 &gt; <input class="input-sm ma-rate-tier" data-dim="chargeback" data-tier="2" value="1.5"> %（Excessive）<div class="rule-desc">超识别线；建议限制结算 / 复评</div></div><div><input class="input-sm ma-rate-score" data-dim="chargeback" data-tier="3" value="90"></div><div><span class="ma-dim-weight" data-dim="chargeback">19</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-user-ninja" style="margin-right:6px;color:#2563eb;"></i>欺诈率（Fraud Rate · VFMP / EFM）<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">— 仅已入网商户复评</span></div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>维度原始分 = 滚动30天欺诈率(%) × <input class="input-sm ma-mul" data-key="fraudMul" value="120">（上限100）<div class="rule-desc">例：欺诈率 0.5% → 原始分 60</div></div><div>公式</div><div><span class="ma-dim-weight" data-dim="fraud">20</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>欺诈率 &gt; <input class="input-sm ma-threshold" data-key="fraudWarn" value="0.5"> %（VFMP / EFM 监控线）<div class="rule-desc">确认欺诈占比超标，建议人工审核</div></div><div>参考</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天欺诈率 ≤ <input class="input-sm ma-rate-tier" data-dim="fraud" data-tier="0" value="0.2"> %<div class="rule-desc">低欺诈；正常区间</div></div><div><input class="input-sm ma-rate-score" data-dim="fraud" data-tier="0" value="20"></div><div><span class="ma-dim-weight" data-dim="fraud">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天欺诈率 ≤ <input class="input-sm ma-rate-tier" data-dim="fraud" data-tier="1" value="0.5"> %（VFMP / EFM 监控线）<div class="rule-desc">接近监控线</div></div><div><input class="input-sm ma-rate-score" data-dim="fraud" data-tier="1" value="50"></div><div><span class="ma-dim-weight" data-dim="fraud">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天欺诈率 &gt; <input class="input-sm ma-rate-tier" data-dim="fraud" data-tier="1" value="0.5"> %<div class="rule-desc">超监控线；建议人工审核</div></div><div><input class="input-sm ma-rate-score" data-dim="fraud" data-tier="2" value="85"></div><div><span class="ma-dim-weight" data-dim="fraud">17</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-id-card" style="margin-right:6px;color:#2563eb;"></i>KYC 质量（Identity Verification）</div>
+            <div class="rule-card-head"><i class="fas fa-clock" style="margin-right:6px;color:#2563eb;"></i>注册时长（Registration Tenure）</div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>维度原始分 = 100 − KYC 综合评分<div class="rule-desc">KYC 分越高，维度风险分越低；数据来自外部入网系统同步</div></div><div>公式</div><div><span class="ma-dim-weight" data-dim="kyc">15</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>KYC 综合评分 &lt; <input class="input-sm ma-threshold" data-key="kycLow" value="60"> 分<div class="rule-desc">KYC 不达标或核验异常，建议拒绝入驻</div></div><div>参考</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册时长 ≥ <input class="input-sm ma-tenure-days" data-tier="0" value="365"> 天<div class="rule-desc">按商户注册时间计算；成熟主体，历史可验证</div></div><div><input class="input-sm ma-tenure-score" data-tier="0" value="15"></div><div><span class="ma-dim-weight" data-dim="tenure">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册时长 ≥ <input class="input-sm ma-tenure-days" data-tier="1" value="180"> 天<div class="rule-desc">按商户注册时间计算；已过爬坡期</div></div><div><input class="input-sm ma-tenure-score" data-tier="1" value="30"></div><div><span class="ma-dim-weight" data-dim="tenure">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册时长 ≥ <input class="input-sm ma-tenure-days" data-tier="2" value="90"> 天<div class="rule-desc">按商户注册时间计算；Ramp-up 阶段</div></div><div><input class="input-sm ma-tenure-score" data-tier="2" value="50"></div><div><span class="ma-dim-weight" data-dim="tenure">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册时长 &lt; <input class="input-sm ma-tenure-days" data-tier="2" value="90"> 天（新注册）<div class="rule-desc">注册未满 90 天；入网评估无注册时间时默认取此档</div></div><div><input class="input-sm ma-tenure-new" value="75"></div><div><span class="ma-dim-weight" data-dim="tenure">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-clock" style="margin-right:6px;color:#2563eb;"></i>经营时长（Merchant Tenure）</div>
+            <div class="rule-card-head"><i class="fas fa-globe-americas" style="margin-right:6px;color:#2563eb;"></i>注册地风险</div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>入网时长 ≥ <input class="input-sm ma-tenure-days" data-tier="0" value="365"> 天<div class="rule-desc">成熟商户，历史行为可验证</div></div><div><input class="input-sm ma-tenure-score" data-tier="0" value="15"></div><div><span class="ma-dim-weight" data-dim="tenure">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>入网时长 ≥ <input class="input-sm ma-tenure-days" data-tier="1" value="180"> 天<div class="rule-desc">已过爬坡期</div></div><div><input class="input-sm ma-tenure-score" data-tier="1" value="30"></div><div><span class="ma-dim-weight" data-dim="tenure">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>入网时长 ≥ <input class="input-sm ma-tenure-days" data-tier="2" value="90"> 天<div class="rule-desc">Ramp-up 阶段</div></div><div><input class="input-sm ma-tenure-score" data-tier="2" value="50"></div><div><span class="ma-dim-weight" data-dim="tenure">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>入网时长 &lt; <input class="input-sm ma-tenure-days" data-tier="2" value="90"> 天（新商户）<div class="rule-desc">无历史拒付/欺诈数据，入网评估默认取此档</div></div><div><input class="input-sm ma-tenure-new" value="75"></div><div><span class="ma-dim-weight" data-dim="tenure">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册国家 ∈ <input class="input-md ma-geo-countries" data-tier="0" value="US, GB, DE, SG" style="width:160px;"><div class="rule-desc">低风险地区；监管完善、欺诈率较低（多国同一档）</div></div><div><input class="input-sm ma-geo-score" data-tier="0" value="25"></div><div><span class="ma-dim-weight" data-dim="geo">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册国家 ∈ <input class="input-md ma-geo-countries" data-tier="1" value="HK" style="width:160px;"><div class="rule-desc">中等风险；离岸架构常见</div></div><div><input class="input-sm ma-geo-score" data-tier="1" value="45"></div><div><span class="ma-dim-weight" data-dim="geo">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>注册国家 ∈ <input class="input-md ma-geo-countries" data-tier="2" value="NG, RU, IR" style="width:160px;"><div class="rule-desc">高风险 / 制裁关注；欺诈高发或合规风险</div></div><div><input class="input-sm ma-geo-score" data-tier="2" value="90"></div><div><span class="ma-dim-weight" data-dim="geo">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>其他未列明国家（默认）<div class="rule-desc">未命中任一档时的兜底分值</div></div><div><input class="input-sm ma-geo-default" value="40"></div><div><span class="ma-dim-weight" data-dim="geo">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-globe-americas" style="margin-right:6px;color:#2563eb;"></i>注册地风险（Geo Risk）</div>
+            <div class="rule-card-head"><i class="fas fa-globe" style="margin-right:6px;color:#2563eb;"></i>网站合规</div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>注册国家 = US / GB / DE / SG（低风险地区）<div class="rule-desc">监管完善、欺诈率较低</div></div><div>20–30</div><div><span class="ma-dim-weight" data-dim="geo">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>注册国家 = HK<div class="rule-desc">离岸架构常见，中等风险</div></div><div><input class="input-sm ma-geo" data-country="HK" value="45"></div><div><span class="ma-dim-weight" data-dim="geo">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>注册国家 = NG / RU / IR（高风险 / 制裁关注）<div class="rule-desc">欺诈高发或制裁合规风险</div></div><div>85–95</div><div><span class="ma-dim-weight" data-dim="geo">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>注册国家 = US<div class="rule-desc">美国</div></div><div><input class="input-sm ma-geo" data-country="US" value="20"></div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>注册国家 = NG<div class="rule-desc">尼日利亚</div></div><div><input class="input-sm ma-geo" data-country="NG" value="90"></div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>其他未列明国家（默认）<div class="rule-desc">取国家映射表未命中时的兜底分值</div></div><div><input class="input-sm ma-geo-default" value="40"></div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-globe" style="margin-right:6px;color:#2563eb;"></i>网站合规（Website / Domain）</div>
-            <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>交易域名与报备一致，HTTPS 有效，页面可访问<div class="rule-desc">入网同步校验；防钓鱼站 / 未授权接入</div></div><div><input class="input-sm ma-website" data-status="compliant" value="15"></div><div><span class="ma-dim-weight" data-dim="website">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>域名未核验 / 备案信息待确认<div class="rule-desc">外部同步标记为待复核</div></div><div><input class="input-sm ma-website" data-status="unverified" value="45"></div><div><span class="ma-dim-weight" data-dim="website">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>域名与报备不一致或存在跳转 / 镜像站<div class="rule-desc">命中 URL 白名单违规（R025 同类风险）</div></div><div><input class="input-sm ma-website" data-status="mismatch" value="80"></div><div><span class="ma-dim-weight" data-dim="website">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-          </div>
-          <div class="rule-card">
-            <div class="rule-card-head"><i class="fas fa-shield-halved" style="margin-right:6px;color:#2563eb;"></i>PCI-DSS 合规（Payment Security）</div>
-            <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>PCI DSS Level 1 认证有效<div class="rule-desc">大型商户；年度 onsite 审计</div></div><div><input class="input-sm ma-pci" data-level="L1" value="10"></div><div><span class="ma-dim-weight" data-dim="pci">5</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>PCI DSS Level 2 或 SAQ-A<div class="rule-desc">中小型商户 / 跳转支付</div></div><div><input class="input-sm ma-pci" data-level="L2" value="20"> / <input class="input-sm ma-pci" data-level="SAQ-A" value="35" style="width:48px;"></div><div><span class="ma-dim-weight" data-dim="pci">5</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>未提供 PCI 证明或已过期<div class="rule-desc">卡数据环境未验证，高风险</div></div><div><input class="input-sm ma-pci" data-level="NONE" value="75"></div><div><span class="ma-dim-weight" data-dim="pci">5</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>网站能访问<div class="rule-desc">DNS 解析成功且 HTTP 探测返回成功状态</div></div><div><input class="input-sm ma-website" data-status="compliant" value="15"></div><div><span class="ma-dim-weight" data-dim="website">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>网站不能访问<div class="rule-desc">系统探测不可达；建议挂起或复评</div></div><div><input class="input-sm ma-website" data-status="mismatch" value="80"></div><div><span class="ma-dim-weight" data-dim="website">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-scale-balanced" style="margin-right:6px;color:#2563eb;"></i>合规筛查（AML / Sanctions / PEP）</div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>制裁名单 / PEP / 负面舆情筛查 <input class="input-sm ma-compliance" data-hits="0" value="10"> 命中<div class="rule-desc">0 命中为通过</div></div><div>0命中</div><div><span class="ma-dim-weight" data-dim="compliance">5</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>筛查命中 ≥ <input class="input-sm ma-compliance" data-hits="1" value="55" style="width:48px;"> 1 条记录<div class="rule-desc">需人工复核受益人 / UBO</div></div><div>1命中</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>筛查命中 ≥ 2 条或制裁直接命中<div class="rule-desc">建议拒绝入驻或暂停收单</div></div><div><input class="input-sm ma-compliance" data-hits="2" value="90"></div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>制裁名单 / PEP / 负面舆情筛查命中 0 条<div class="rule-desc">0 命中为通过</div></div><div><input class="input-sm ma-compliance" data-hits="0" value="10"></div><div><span class="ma-dim-weight" data-dim="compliance">7</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>筛查命中 ≥ 1 条记录<div class="rule-desc">需人工复核受益人 / UBO</div></div><div><input class="input-sm ma-compliance" data-hits="1" value="55"></div><div><span class="ma-dim-weight" data-dim="compliance">7</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>筛查命中 ≥ 2 条或制裁直接命中<div class="rule-desc">建议拒绝入驻或暂停收单</div></div><div><input class="input-sm ma-compliance" data-hits="2" value="90"></div><div><span class="ma-dim-weight" data-dim="compliance">7</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-rotate-left" style="margin-right:6px;color:#2563eb;"></i>退款率（Refund Rate）<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">— 仅已入网商户复评</span></div>
             <div class="rule-head-row ma-head"><div>规则内容</div><div>维度分</div><div>权重</div><div>启用</div></div>
-            <div class="rule-item ma-item"><div>维度原始分 = 滚动30天退款率(%) × <input class="input-sm ma-mul" data-key="refundMul" value="50">（上限100）<div class="rule-desc">异常退款；洗钱或虚假交易信号</div></div><div>公式</div><div><span class="ma-dim-weight" data-dim="refund">8</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
-            <div class="rule-item ma-item"><div>退款率 &gt; <input class="input-sm ma-threshold" data-key="refundWarn" value="15"> % 且交易笔数 ≥ 100<div class="rule-desc">高退款占比预警线</div></div><div>参考</div><div>—</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天退款率 ≤ <input class="input-sm ma-rate-tier" data-dim="refund" data-tier="0" value="5"> %<div class="rule-desc">正常退款区间</div></div><div><input class="input-sm ma-rate-score" data-dim="refund" data-tier="0" value="20"></div><div><span class="ma-dim-weight" data-dim="refund">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天退款率 ≤ <input class="input-sm ma-rate-tier" data-dim="refund" data-tier="1" value="15"> %<div class="rule-desc">偏高；加强监控</div></div><div><input class="input-sm ma-rate-score" data-dim="refund" data-tier="1" value="50"></div><div><span class="ma-dim-weight" data-dim="refund">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
+            <div class="rule-item ma-item"><div>滚动30天退款率 &gt; <input class="input-sm ma-rate-tier" data-dim="refund" data-tier="1" value="15"> % 且交易笔数 ≥ 100<div class="rule-desc">高退款占比；洗钱或虚假交易信号</div></div><div><input class="input-sm ma-rate-score" data-dim="refund" data-tier="2" value="85"></div><div><span class="ma-dim-weight" data-dim="refund">10</span>%</div><div><div class="toggle active ma-toggle"></div></div></div>
           </div>
           <div class="rule-card">
             <div class="rule-card-head"><i class="fas fa-chart-line" style="margin-right:6px;color:#2563eb;"></i>交易放量异常（Volume Anomaly）<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">— 仅已入网商户复评</span></div>
@@ -620,8 +615,8 @@
           维度权重合计：<span class="sum-val" id="maWeightSum">100</span>% / 100%
         </div>
         <div class="toolbar" style="margin-top:12px;margin-bottom:0;">
-          <button class="primary" onclick="saveMerchantAssessConfig(); assessAllMerchants(); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('评估规则已保存并重新计算')">保存评估规则</button>
-          <button onclick="assessAllMerchants(); toast('已重新评估全部商户')">重新评估全部商户</button>
+          <button class="primary" onclick="saveMerchantAssessConfig(); assessAllMerchants({ archive: true }); initOnboardingAssessments(); renderOnboarding(); renderMerchants(); toast('评估规则已保存并重新计算')">保存评估规则</button>
+          <button onclick="assessAllMerchants({ archive: true }); toast('已重新评估全部商户')">重新评估全部商户</button>
         </div>
       </div>
     </div>
@@ -633,7 +628,6 @@
         <div class="rules-banner">
           配置各风控规则的触发条件及处置策略；风险等级由所选策略在「处置策略库」中自动带出，无需重复配置。规则命中后自动执行绑定策略；多条命中时取最高风险等级、最严处置策略。
           <div class="rules-tags">
-            <span class="rules-tag">PCI-DSS</span>
             <span class="rules-tag">PSD2 SCA</span>
             <span class="rules-tag">Visa VAMP</span>
             <span class="rules-tag">3DS 2.x</span>
@@ -677,7 +671,7 @@
             <div class="rule-item" data-rule-id="R013"><div>单笔金额 ≥ <input class="input-md" value="10000"> USD 或 ≥ <input class="input-md" value="50000"> HKD<div class="rule-desc">平台统一大额交易阈值（Large Ticket）；按交易币种分别判断</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R028"><div>同卡号/同商户 <input class="input-sm" value="24"> 小时内累计 ≥ <input class="input-sm" value="5"> 笔 或 金额 ≥ <input class="input-md" value="100000"> HKD<div class="rule-desc">日累计笔数/金额双维度；识别短时大额资金聚集</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R029"><div>同商户 <input class="input-sm" value="30"> 天内累计交易额 ≥ <input class="input-md" value="500000"> USD 或 ≥ <input class="input-md" value="2000000"> HKD<div class="rule-desc">月累计金额超平台阈值；识别异常交易规模</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
-            <div class="rule-item" data-rule-id="R014"><div>新商户（入网 &lt; <input class="input-sm" value="90"> 天）单日累计 &gt; <input class="input-md" value="50000"> USD 或 单笔 &gt; <input class="input-md" value="2000"> USD<div class="rule-desc">新商户爬坡期平台默认阈值（Ramp-up），与入网时长联动</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
+            <div class="rule-item" data-rule-id="R014"><div>新商户（入网 &lt; <input class="input-sm" value="90"> 天）单日累计 &gt; <input class="input-md" value="50000"> USD 或 单笔 &gt; <input class="input-md" value="2000"> USD<div class="rule-desc">新商户爬坡期平台默认阈值（Ramp-up），与注册时长联动</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R023"><div>单笔金额 &gt; 商户近 <input class="input-sm" value="30"> 天均额 × <input class="input-sm" value="300"> %<div class="rule-desc">单笔瞬时值偏离商户历史均额（异常大单）</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
             <div class="rule-item" data-rule-id="R032"><div>当前订单金额 &gt; 近 <input class="input-sm" value="30"> 天平均金额的 <input class="input-sm" value="600"> %<div class="rule-desc">本笔金额远超近期常态（如近30天均额500，本笔3,000即达600%）</div></div><div><select class="select-sm rule-measure-sel" style="width:100px;"></select></div><div class="rule-risk-cell"><span class="rule-risk-display"></span></div><div><div class="toggle active"></div></div></div>
           </div>
@@ -1141,16 +1135,15 @@
       <div class="mf" id="onboardActions">
         <button onclick="closeMask('onboardMask')">关闭</button>
         <button class="primary" id="obEddBtn" style="display:none;" onclick="createEddFromMerchant(currentMerchantId)"><i class="fas fa-user-shield"></i> 发起 EDD</button>
-        <button class="danger" id="obRejectBtn" onclick="reviewOnboard('reject')">拒绝入驻</button>
-        <button class="warn" id="obConditionalBtn" onclick="reviewOnboard('conditional')">条件通过</button>
-        <button class="success" id="obApproveBtn" onclick="reviewOnboard('approve')">批准入驻</button>
+        <button class="danger" id="obRejectBtn" onclick="reviewOnboard('reject')">不通过</button>
+        <button class="success" id="obApproveBtn" onclick="reviewOnboard('approve')">通过</button>
       </div>
     </div>
   </div>
 
   <!-- 附件预览弹窗 -->
   <div class="mask" id="attachPreviewMask">
-    <div class="modal sm">
+    <div class="modal md">
       <div class="mh">
         <div><div class="mh-title" id="attachPreviewTitle">附件预览</div><div class="mh-sub" id="attachPreviewSub"></div></div>
         <span class="close-btn" onclick="closeMask('attachPreviewMask')">×</span>
@@ -1158,7 +1151,7 @@
       <div class="mb" id="attachPreviewBody"></div>
       <div class="mf">
         <button onclick="closeMask('attachPreviewMask')">关闭</button>
-        <button class="primary" onclick="toast('附件下载已开始（演示）')"><i class="fas fa-download"></i> 下载</button>
+        <button class="primary" onclick="downloadCurrentAttachment()"><i class="fas fa-download"></i> 下载查看</button>
       </div>
     </div>
   </div>
@@ -1334,13 +1327,15 @@
       <div class="mb" id="eddDetailBody"></div>
       <div class="mf" id="eddDetailActions">
         <button onclick="closeMask('eddDetailMask')">关闭</button>
-        <button class="warn" id="eddCollectBtn" onclick="startEddCollection()">启动资料收集</button>
-        <button class="primary" id="eddReviewBtn" onclick="submitEddReview()">提交审核</button>
+        <button class="warn" id="eddCollectBtn" onclick="startEddCollection()">确认启动</button>
+        <button class="primary" id="eddUploadBtn" onclick="focusEddUpload()">上传资料</button>
         <button class="success" id="eddApproveBtn" onclick="approveEddCase()">审核通过</button>
         <button class="danger" id="eddRejectBtn" onclick="rejectEddCase()">审核拒绝</button>
       </div>
     </div>
   </div>
+
+  <input type="file" id="eddFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip,.xlsx" style="display:none;" onchange="handleEddFileUpload(event)" />
 
   <div class="toast" id="toast"></div>
 
@@ -1548,28 +1543,45 @@
   <script>
     // ===== 数据 =====
     const MERCHANTS = [
-      { id: "M100001", name: "GlobalShop Inc.", industry: "跨境电商", country: "US", onboardDate: "2024-03-15", riskScore: 28, riskLevel: "低风险", reviewStatus: "批准入驻", status: "正常", chargebackRate: 0.12, fraudRate: 0.05, refundRate: 2.1, volumeAnomalyRatio: 120, websiteStatus: "compliant", pciLevel: "L1", complianceHits: 0, kycScore: 92, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
-      { id: "M100002", name: "CloudSaaS Ltd.", industry: "软件SaaS", country: "GB", onboardDate: "2025-01-08", riskScore: 35, riskLevel: "低风险", reviewStatus: "批准入驻", status: "正常", chargebackRate: 0.08, fraudRate: 0.03, refundRate: 1.5, volumeAnomalyRatio: 95, websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycScore: 88, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
-      { id: "M100003", name: "GameCard Pro", industry: "虚拟商品", country: "HK", onboardDate: "2025-11-20", riskScore: 62, riskLevel: "中风险", reviewStatus: "条件通过", status: "观察", chargebackRate: 0.45, fraudRate: 0.28, refundRate: 8.5, volumeAnomalyRatio: 280, websiteStatus: "unverified", pciLevel: "NONE", complianceHits: 0, kycScore: 72, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
-      { id: "M100004", name: "TravelEase", industry: "旅游", country: "SG", onboardDate: "2023-08-02", riskScore: 22, riskLevel: "低风险", reviewStatus: "批准入驻", status: "正常", chargebackRate: 0.05, fraudRate: 0.02, refundRate: 0.8, volumeAnomalyRatio: 110, websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycScore: 95, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
-      { id: "M100005", name: "QuickBuy Store", industry: "实体零售", country: "DE", onboardDate: "2026-02-14", riskScore: 78, riskLevel: "高风险", reviewStatus: "批准入驻", status: "受限", chargebackRate: 1.2, fraudRate: 0.55, refundRate: 22, volumeAnomalyRatio: 620, websiteStatus: "mismatch", pciLevel: "NONE", complianceHits: 1, kycScore: 65, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
-      { id: "M100019", name: "ShadowPay LLC", industry: "虚拟商品", country: "HK", onboardDate: "2026-06-18", riskScore: 81, riskLevel: "高风险", reviewStatus: "拒绝入驻", status: "未开通", rejectReason: "合规筛查命中制裁关联主体", reviewTime: "2026-06-18 16:20", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", pciLevel: "NONE", complianceHits: 2, kycScore: 58, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-18 16:18", assessDetails: null },
-      { id: "M100020", name: "FastCoin Exchange", industry: "虚拟商品", country: "US", onboardDate: "2026-06-22", riskScore: 76, riskLevel: "高风险", reviewStatus: "拒绝入驻", status: "未开通", rejectReason: "网站合规未通过，业务描述与申报不符", reviewTime: "2026-06-22 11:05", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", pciLevel: "NONE", complianceHits: 1, kycScore: 64, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 11:03", assessDetails: null }
+      { id: "M100001", name: "GlobalShop Inc.", industry: "跨境电商", country: "US", registerDate: "2020-06-12", onboardDate: "2024-03-15", riskScore: 28, riskLevel: "低风险", reviewStatus: "通过", status: "正常", reviewRemark: "行业与资质材料齐全，网站可访问，综合评分低风险，同意入网", reviewTime: "2024-03-15 10:20", chargebackRate: 0.12, fraudRate: 0.05, refundRate: 2.1, volumeAnomalyRatio: 120, websiteStatus: "compliant", complianceHits: 0, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
+      { id: "M100002", name: "CloudSaaS Ltd.", industry: "软件SaaS", country: "GB", registerDate: "2022-09-01", onboardDate: "2025-01-08", riskScore: 35, riskLevel: "低风险", reviewStatus: "通过", status: "正常", reviewRemark: "SaaS 订阅模式清晰，合规筛查无命中，建议标准结算周期准入", reviewTime: "2025-01-08 14:05", chargebackRate: 0.08, fraudRate: 0.03, refundRate: 1.5, volumeAnomalyRatio: 95, websiteStatus: "compliant", complianceHits: 0, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
+      { id: "M100003", name: "GameCard Pro", industry: "虚拟商品", country: "HK", registerDate: "2025-08-10", onboardDate: "2025-11-20", riskScore: 62, riskLevel: "中风险", reviewStatus: "通过", status: "观察", reviewRemark: "虚拟商品行业风险偏高，资料可核验，同意入网并纳入观察名单加强监控", reviewTime: "2025-11-20 16:40", chargebackRate: 0.45, fraudRate: 0.28, refundRate: 8.5, volumeAnomalyRatio: 280, websiteStatus: "compliant", complianceHits: 0, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
+      { id: "M100004", name: "TravelEase", industry: "旅游", country: "SG", registerDate: "2019-03-18", onboardDate: "2023-08-02", riskScore: 22, riskLevel: "低风险", reviewStatus: "通过", status: "正常", reviewRemark: "注册年限较长，历史无重大合规问题，评分低风险，予以通过", reviewTime: "2023-08-02 11:15", chargebackRate: 0.05, fraudRate: 0.02, refundRate: 0.8, volumeAnomalyRatio: 110, websiteStatus: "compliant", complianceHits: 0, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
+      { id: "M100005", name: "QuickBuy Store", industry: "实体零售", country: "DE", registerDate: "2025-11-20", onboardDate: "2026-02-14", riskScore: 78, riskLevel: "高风险", reviewStatus: "通过", status: "受限", reviewRemark: "评分偏高但业务可解释，有条件通过并限制日累计限额，后续启动 EDD", reviewTime: "2026-02-14 09:50", chargebackRate: 1.2, fraudRate: 0.55, refundRate: 22, volumeAnomalyRatio: 620, websiteStatus: "mismatch", complianceHits: 1, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 08:00", assessDetails: null },
+      { id: "M100019", name: "ShadowPay LLC", industry: "虚拟商品", country: "HK", registerDate: "2026-05-01", onboardDate: "2026-06-18", riskScore: 81, riskLevel: "高风险", reviewStatus: "不通过", status: "未开通", reviewRemark: "合规筛查命中制裁关联主体", rejectReason: "合规筛查命中制裁关联主体", reviewTime: "2026-06-18 16:20", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", complianceHits: 2, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-18 16:18", assessDetails: null },
+      { id: "M100020", name: "FastCoin Exchange", industry: "虚拟商品", country: "US", registerDate: "2026-06-01", onboardDate: "2026-06-22", riskScore: 76, riskLevel: "高风险", reviewStatus: "不通过", status: "未开通", reviewRemark: "网站合规未通过，业务描述与申报不符", rejectReason: "网站合规未通过，业务描述与申报不符", reviewTime: "2026-06-22 11:05", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", complianceHits: 1, todayCount: 0, todayAmount: 0, lastAssessTime: "2026-06-22 11:03", assessDetails: null }
     ];
 
     const ONBOARDING_EXCLUDED_DIMS = ["chargeback", "fraud", "refund", "volumeAnomaly"];
 
     const MERCHANT_ASSESS_CONFIG = {
-      thresholds: { lowMax: 40, midMax: 70, chargebackWarn: 0.9, chargebackId: 1.5, fraudWarn: 0.5, kycLow: 60, refundWarn: 15 },
-      chargebackMul: 40,
-      fraudMul: 120,
-      refundMul: 50,
+      thresholds: { lowMax: 40, midMax: 70, chargebackWarn: 0.9, chargebackId: 1.5, fraudWarn: 0.5, refundWarn: 15 },
       industryDefault: 50,
       geoDefault: 40,
+      geoTiers: [
+        { countries: ["US", "GB", "DE", "SG"], score: 25 },
+        { countries: ["HK"], score: 45 },
+        { countries: ["NG", "RU", "IR"], score: 90 }
+      ],
       tenureNewScore: 75,
-      websiteScores: { compliant: 15, unverified: 45, mismatch: 80 },
-      pciScores: { "L1": 10, "L2": 20, "SAQ-A": 35, "SAQ-D": 40, "NONE": 75 },
+      websiteScores: { compliant: 15, mismatch: 80 },
       complianceScores: { 0: 10, 1: 55, 2: 90 },
+      chargebackTiers: [
+        { maxRate: 0.5, score: 20 },
+        { maxRate: 0.9, score: 40 },
+        { maxRate: 1.5, score: 65 },
+        { maxRate: 99999, score: 90 }
+      ],
+      fraudTiers: [
+        { maxRate: 0.2, score: 20 },
+        { maxRate: 0.5, score: 50 },
+        { maxRate: 99999, score: 85 }
+      ],
+      refundTiers: [
+        { maxRate: 5, score: 20 },
+        { maxRate: 15, score: 50 },
+        { maxRate: 99999, score: 85 }
+      ],
       volumeAnomalyTiers: [
         { maxRatio: 200, score: 15 },
         { maxRatio: 500, score: 50 },
@@ -1581,20 +1593,17 @@
         { minDays: 90, score: 50 }
       ],
       dimensions: [
-        { key: "industry", name: "行业风险", weight: 14 },
-        { key: "chargeback", name: "拒付率", weight: 16 },
-        { key: "fraud", name: "欺诈率", weight: 14 },
-        { key: "refund", name: "退款率", weight: 8 },
-        { key: "kyc", name: "KYC质量", weight: 12 },
-        { key: "website", name: "网站合规", weight: 8 },
-        { key: "pci", name: "PCI合规", weight: 5 },
-        { key: "compliance", name: "合规筛查", weight: 5 },
-        { key: "tenure", name: "经营时长", weight: 7 },
-        { key: "geo", name: "注册地风险", weight: 7 },
+        { key: "industry", name: "行业风险", weight: 17 },
+        { key: "chargeback", name: "拒付率", weight: 19 },
+        { key: "fraud", name: "欺诈率", weight: 17 },
+        { key: "refund", name: "退款率", weight: 10 },
+        { key: "website", name: "网站合规", weight: 10 },
+        { key: "compliance", name: "合规筛查", weight: 7 },
+        { key: "tenure", name: "注册时长", weight: 8 },
+        { key: "geo", name: "注册地风险", weight: 8 },
         { key: "volumeAnomaly", name: "交易放量", weight: 4 }
       ],
       industryScores: { "虚拟商品": 85, "跨境电商": 55, "软件SaaS": 35, "旅游": 40, "实体零售": 30 },
-      geoScores: { US: 20, GB: 25, DE: 25, SG: 30, HK: 45, NG: 90, RU: 85, IR: 95 },
       levelPolicies: {
         low: { settleCycle: "T+3", marginRate: "3%", singleLimit: "50,000 USD", dailyLimit: "200,000 USD", reviewCycle: "季度" },
         mid: { settleCycle: "T+7", marginRate: "5%", singleLimit: "10,000 USD", dailyLimit: "50,000 USD", reviewCycle: "月度" },
@@ -1603,88 +1612,76 @@
     };
 
     const ONBOARDING = [
-      { appId: "OB202606001", merchantId: "M100006", syncTime: "2026-06-20 14:30", name: "NovaPay Solutions", industry: "软件SaaS", country: "US", website: "novapay.io", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 92, riskScore: 32, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-20 14:31", reviewTime: null, assessDetails: null,
+      { appId: "OB202606001", merchantId: "M100006", syncTime: "2026-06-20 14:30", name: "NovaPay Solutions", industry: "软件SaaS", country: "US", registerDate: "2023-04-18", website: "novapay.io", websiteStatus: "compliant", complianceHits: 0, riskScore: 32, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-20 14:31", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F001", category: "企业资质", name: "营业执照-NovaPay.pdf", size: "856 KB", uploadTime: "2026-06-20 14:28", status: "已核验", type: "pdf" },
-          { id: "F002", category: "身份证明", name: "法人身份证-正面.jpg", size: "420 KB", uploadTime: "2026-06-20 14:28", status: "已核验", type: "img" },
-          { id: "F003", category: "身份证明", name: "法人身份证-反面.jpg", size: "398 KB", uploadTime: "2026-06-20 14:28", status: "已核验", type: "img" },
-          { id: "F004", category: "PCI合规", name: "SAQ-A-Attestation.pdf", size: "1.1 MB", uploadTime: "2026-06-20 14:29", status: "已核验", type: "pdf" },
-          { id: "F005", category: "银行信息", name: "对公账户开户证明.pdf", size: "672 KB", uploadTime: "2026-06-20 14:29", status: "待复核", type: "pdf" }
+          { id: "F001", category: "企业资质", name: "营业执照-NovaPay.pdf", size: "856 KB", uploadTime: "2026-06-20 14:28", type: "pdf" },
+          { id: "F002", category: "身份证明", name: "法人身份证-正面.jpg", size: "420 KB", uploadTime: "2026-06-20 14:28", type: "img" },
+          { id: "F003", category: "身份证明", name: "法人身份证-反面.jpg", size: "398 KB", uploadTime: "2026-06-20 14:28", type: "img" },
+          { id: "F005", category: "银行信息", name: "对公账户开户证明.pdf", size: "672 KB", uploadTime: "2026-06-20 14:29", type: "pdf" }
         ] },
-      { appId: "OB202606002", merchantId: "M100007", syncTime: "2026-06-21 09:15", name: "Digital Keys Hub", industry: "虚拟商品", country: "HK", website: "digitalkeys.hk", websiteStatus: "unverified", pciLevel: "NONE", complianceHits: 0, kycStatus: "REVIEW", kycScore: 72, riskScore: 58, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-21 09:16", reviewTime: null, assessDetails: null,
+      { appId: "OB202606002", merchantId: "M100007", syncTime: "2026-06-21 09:15", name: "Digital Keys Hub", industry: "虚拟商品", country: "HK", registerDate: "2025-12-01", website: "digitalkeys.hk", websiteStatus: "compliant", complianceHits: 0, riskScore: 58, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-21 09:16", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F011", category: "企业资质", name: "商业登记证-DigitalKeys.pdf", size: "742 KB", uploadTime: "2026-06-21 09:12", status: "已核验", type: "pdf" },
-          { id: "F012", category: "身份证明", name: "董事护照扫描件.pdf", size: "1.3 MB", uploadTime: "2026-06-21 09:13", status: "待复核", type: "pdf" },
-          { id: "F013", category: "网站合规", name: "网站首页截图.png", size: "580 KB", uploadTime: "2026-06-21 09:14", status: "已核验", type: "img" },
-          { id: "F014", category: "业务说明", name: "虚拟商品销售说明.docx", size: "245 KB", uploadTime: "2026-06-21 09:14", status: "已核验", type: "doc" }
+          { id: "F011", category: "企业资质", name: "商业登记证-DigitalKeys.pdf", size: "742 KB", uploadTime: "2026-06-21 09:12", type: "pdf" },
+          { id: "F012", category: "身份证明", name: "董事护照扫描件.pdf", size: "1.3 MB", uploadTime: "2026-06-21 09:13", type: "pdf" },
+          { id: "F013", category: "网站合规", name: "网站首页截图.png", size: "580 KB", uploadTime: "2026-06-21 09:14", type: "img" },
+          { id: "F014", category: "业务说明", name: "虚拟商品销售说明.docx", size: "245 KB", uploadTime: "2026-06-21 09:14", type: "doc" }
         ] },
-      { appId: "OB202606009", merchantId: "M100008", syncTime: "2026-06-22 11:20", name: "EuroFashion Shop", industry: "跨境电商", country: "DE", website: "eurofashion.de", websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycStatus: "PASS", kycScore: 88, riskScore: 41, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-22 11:22", reviewTime: null, assessDetails: null,
+      { appId: "OB202606009", merchantId: "M100008", syncTime: "2026-06-22 11:20", name: "EuroFashion Shop", industry: "跨境电商", country: "DE", registerDate: "2021-09-05", website: "eurofashion.de", websiteStatus: "compliant", complianceHits: 0, riskScore: 41, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-22 11:22", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F021", category: "企业资质", name: "Handelsregister-EuroFashion.pdf", size: "920 KB", uploadTime: "2026-06-22 11:18", status: "已核验", type: "pdf" },
-          { id: "F022", category: "身份证明", name: "Geschäftsführer-Ausweis.pdf", size: "680 KB", uploadTime: "2026-06-22 11:18", status: "已核验", type: "pdf" },
-          { id: "F023", category: "PCI合规", name: "PCI-L2-AOC.pdf", size: "1.5 MB", uploadTime: "2026-06-22 11:19", status: "已核验", type: "pdf" }
+          { id: "F021", category: "企业资质", name: "Handelsregister-EuroFashion.pdf", size: "920 KB", uploadTime: "2026-06-22 11:18", type: "pdf" },
+          { id: "F022", category: "身份证明", name: "Geschäftsführer-Ausweis.pdf", size: "680 KB", uploadTime: "2026-06-22 11:18", type: "pdf" } ] },
+      { appId: "OB202606010", merchantId: "M100009", syncTime: "2026-06-22 14:05", name: "TravelGo Ltd.", industry: "旅游", country: "SG", registerDate: "2018-11-30", website: "travelgo.sg", websiteStatus: "compliant", complianceHits: 0, riskScore: 26, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-22 14:06", reviewTime: null, assessDetails: null,
+        attachments: [
+          { id: "F031", category: "企业资质", name: "ACRA-Business-Profile.pdf", size: "690 KB", uploadTime: "2026-06-22 14:02", type: "pdf" },
+          { id: "F032", category: "身份证明", name: "Director-NRIC-Front.jpg", size: "350 KB", uploadTime: "2026-06-22 14:02", type: "img" },
+          { id: "F034", category: "业务说明", name: "旅游服务范围说明.pdf", size: "512 KB", uploadTime: "2026-06-22 14:04", type: "pdf" }
         ] },
-      { appId: "OB202606010", merchantId: "M100009", syncTime: "2026-06-22 14:05", name: "TravelGo Ltd.", industry: "旅游", country: "SG", website: "travelgo.sg", websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycStatus: "PASS", kycScore: 94, riskScore: 26, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-22 14:06", reviewTime: null, assessDetails: null,
+      { appId: "OB202606011", merchantId: "M100010", syncTime: "2026-06-22 16:30", name: "SmartRetail GmbH", industry: "实体零售", country: "DE", registerDate: "2024-01-12", website: "smartretail.de", websiteStatus: "compliant", complianceHits: 0, riskScore: 38, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-22 16:32", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F031", category: "企业资质", name: "ACRA-Business-Profile.pdf", size: "690 KB", uploadTime: "2026-06-22 14:02", status: "已核验", type: "pdf" },
-          { id: "F032", category: "身份证明", name: "Director-NRIC-Front.jpg", size: "350 KB", uploadTime: "2026-06-22 14:02", status: "已核验", type: "img" },
-          { id: "F033", category: "PCI合规", name: "PCI-L2-Certificate.pdf", size: "1.2 MB", uploadTime: "2026-06-22 14:03", status: "已核验", type: "pdf" },
-          { id: "F034", category: "业务说明", name: "旅游服务范围说明.pdf", size: "512 KB", uploadTime: "2026-06-22 14:04", status: "已核验", type: "pdf" }
+          { id: "F041", category: "企业资质", name: "营业执照-SmartRetail.pdf", size: "810 KB", uploadTime: "2026-06-22 16:28", type: "pdf" },
+          { id: "F042", category: "银行信息", name: "银行开户证明.pdf", size: "560 KB", uploadTime: "2026-06-22 16:29", type: "pdf" } ] },
+      { appId: "OB202606012", merchantId: "M100011", syncTime: "2026-06-23 09:10", name: "PayFlow Global", industry: "跨境电商", country: "US", registerDate: "2022-05-16", website: "payflow.global", websiteStatus: "compliant", complianceHits: 0, riskScore: 35, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-23 09:12", reviewTime: null, assessDetails: null,
+        attachments: [
+          { id: "F051", category: "企业资质", name: "Certificate-of-Incorporation.pdf", size: "720 KB", uploadTime: "2026-06-23 09:08", type: "pdf" },
+          { id: "F052", category: "身份证明", name: "CEO-Driver-License.jpg", size: "410 KB", uploadTime: "2026-06-23 09:08", type: "img" },
+          { id: "F054", category: "银行信息", name: "Bank-Reference-Letter.pdf", size: "620 KB", uploadTime: "2026-06-23 09:09", type: "pdf" }
         ] },
-      { appId: "OB202606011", merchantId: "M100010", syncTime: "2026-06-22 16:30", name: "SmartRetail GmbH", industry: "实体零售", country: "DE", website: "smartretail.de", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 85, riskScore: 38, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-22 16:32", reviewTime: null, assessDetails: null,
+      { appId: "OB202606013", merchantId: "M100012", syncTime: "2026-06-23 10:45", name: "Nordic SaaS AB", industry: "软件SaaS", country: "DE", registerDate: "2020-07-22", website: "nordicsaas.se", websiteStatus: "compliant", complianceHits: 0, riskScore: 29, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-23 10:47", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F041", category: "企业资质", name: "营业执照-SmartRetail.pdf", size: "810 KB", uploadTime: "2026-06-22 16:28", status: "已核验", type: "pdf" },
-          { id: "F042", category: "银行信息", name: "银行开户证明.pdf", size: "560 KB", uploadTime: "2026-06-22 16:29", status: "待复核", type: "pdf" },
-          { id: "F043", category: "PCI合规", name: "SAQ-A-Attestation.pdf", size: "980 KB", uploadTime: "2026-06-22 16:29", status: "已核验", type: "pdf" }
+          { id: "F061", category: "企业资质", name: "Bolagsverket-Registration.pdf", size: "650 KB", uploadTime: "2026-06-23 10:43", type: "pdf" } ] },
+      { appId: "OB202606014", merchantId: "M100013", syncTime: "2026-06-23 13:20", name: "FashionDirect HK", industry: "跨境电商", country: "HK", registerDate: "2024-08-09", website: "fashiondirect.hk", websiteStatus: "compliant", complianceHits: 0, riskScore: 48, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-23 13:22", reviewTime: null, assessDetails: null,
+        attachments: [
+          { id: "F071", category: "企业资质", name: "BR-FashionDirect.pdf", size: "780 KB", uploadTime: "2026-06-23 13:18", type: "pdf" },
+          { id: "F072", category: "身份证明", name: "UBO-身份证.pdf", size: "890 KB", uploadTime: "2026-06-23 13:18", type: "pdf" },
+          { id: "F073", category: "网站合规", name: "域名备案截图.png", size: "420 KB", uploadTime: "2026-06-23 13:19", type: "img" }
         ] },
-      { appId: "OB202606012", merchantId: "M100011", syncTime: "2026-06-23 09:10", name: "PayFlow Global", industry: "跨境电商", country: "US", website: "payflow.global", websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycStatus: "PASS", kycScore: 90, riskScore: 35, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-23 09:12", reviewTime: null, assessDetails: null,
+      { appId: "OB202606015", merchantId: "M100014", syncTime: "2026-06-23 15:00", name: "CryptoGift Store", industry: "虚拟商品", country: "HK", registerDate: "2025-10-03", website: "cryptogift.hk", websiteStatus: "compliant", complianceHits: 0, riskScore: 62, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-23 15:02", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F051", category: "企业资质", name: "Certificate-of-Incorporation.pdf", size: "720 KB", uploadTime: "2026-06-23 09:08", status: "已核验", type: "pdf" },
-          { id: "F052", category: "身份证明", name: "CEO-Driver-License.jpg", size: "410 KB", uploadTime: "2026-06-23 09:08", status: "已核验", type: "img" },
-          { id: "F053", category: "PCI合规", name: "PCI-L2-SAQ.pdf", size: "1.4 MB", uploadTime: "2026-06-23 09:09", status: "已核验", type: "pdf" },
-          { id: "F054", category: "银行信息", name: "Bank-Reference-Letter.pdf", size: "620 KB", uploadTime: "2026-06-23 09:09", status: "已核验", type: "pdf" }
+          { id: "F081", category: "企业资质", name: "BR-CryptoGift.pdf", size: "710 KB", uploadTime: "2026-06-23 14:58", type: "pdf" },
+          { id: "F082", category: "身份证明", name: "Director-Passport.pdf", size: "1.1 MB", uploadTime: "2026-06-23 14:58", type: "pdf" },
+          { id: "F083", category: "业务说明", name: "礼品卡业务合规说明.docx", size: "320 KB", uploadTime: "2026-06-23 14:59", type: "doc" }
         ] },
-      { appId: "OB202606013", merchantId: "M100012", syncTime: "2026-06-23 10:45", name: "Nordic SaaS AB", industry: "软件SaaS", country: "DE", website: "nordicsaas.se", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 94, riskScore: 29, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-23 10:47", reviewTime: null, assessDetails: null,
+      { appId: "OB202606016", merchantId: "M100015", syncTime: "2026-06-23 16:40", name: "GameVault Pro", industry: "虚拟商品", country: "US", registerDate: "2026-03-15", website: "gamevault.pro", websiteStatus: "mismatch", complianceHits: 1, riskScore: 74, riskLevel: "高风险", status: "待审核", assessTime: "2026-06-23 16:42", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F061", category: "企业资质", name: "Bolagsverket-Registration.pdf", size: "650 KB", uploadTime: "2026-06-23 10:43", status: "已核验", type: "pdf" },
-          { id: "F062", category: "PCI合规", name: "SAQ-A-Attestation.pdf", size: "890 KB", uploadTime: "2026-06-23 10:44", status: "已核验", type: "pdf" }
+          { id: "F091", category: "企业资质", name: "Delaware-Corp-Certificate.pdf", size: "580 KB", uploadTime: "2026-06-23 16:38", type: "pdf" },
+          { id: "F092", category: "网站合规", name: "Website-Screenshot.png", size: "640 KB", uploadTime: "2026-06-23 16:38", type: "img" },
+          { id: "F093", category: "合规材料", name: "AML-Questionnaire.pdf", size: "430 KB", uploadTime: "2026-06-23 16:39", type: "pdf" }
         ] },
-      { appId: "OB202606014", merchantId: "M100013", syncTime: "2026-06-23 13:20", name: "FashionDirect HK", industry: "跨境电商", country: "HK", website: "fashiondirect.hk", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 82, riskScore: 48, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-23 13:22", reviewTime: null, assessDetails: null,
+      { appId: "OB202606017", merchantId: "M100016", syncTime: "2026-06-24 08:15", name: "FreshMart Online", industry: "实体零售", country: "GB", registerDate: "2021-02-28", website: "freshmart.co.uk", websiteStatus: "compliant", complianceHits: 0, riskScore: 33, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-24 08:17", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F071", category: "企业资质", name: "BR-FashionDirect.pdf", size: "780 KB", uploadTime: "2026-06-23 13:18", status: "已核验", type: "pdf" },
-          { id: "F072", category: "身份证明", name: "UBO-身份证.pdf", size: "890 KB", uploadTime: "2026-06-23 13:18", status: "已核验", type: "pdf" },
-          { id: "F073", category: "网站合规", name: "域名备案截图.png", size: "420 KB", uploadTime: "2026-06-23 13:19", status: "已核验", type: "img" }
+          { id: "F101", category: "企业资质", name: "Companies-House-Certificate.pdf", size: "760 KB", uploadTime: "2026-06-24 08:12", type: "pdf" },
+          { id: "F102", category: "身份证明", name: "Director-Passport.pdf", size: "920 KB", uploadTime: "2026-06-24 08:13", type: "pdf" },
+          { id: "F104", category: "银行信息", name: "Bank-Statement.pdf", size: "540 KB", uploadTime: "2026-06-24 08:14", type: "pdf" }
         ] },
-      { appId: "OB202606015", merchantId: "M100014", syncTime: "2026-06-23 15:00", name: "CryptoGift Store", industry: "虚拟商品", country: "HK", website: "cryptogift.hk", websiteStatus: "unverified", pciLevel: "NONE", complianceHits: 0, kycStatus: "REVIEW", kycScore: 68, riskScore: 62, riskLevel: "中风险", status: "待审核", assessTime: "2026-06-23 15:02", reviewTime: null, assessDetails: null,
+      { appId: "OB202606018", merchantId: "M100017", syncTime: "2026-06-24 10:30", name: "CloudHost Billing", industry: "软件SaaS", country: "GB", registerDate: "2019-06-11", website: "cloudhost.io", websiteStatus: "compliant", complianceHits: 0, riskScore: 31, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-24 10:32", reviewTime: null, assessDetails: null,
         attachments: [
-          { id: "F081", category: "企业资质", name: "BR-CryptoGift.pdf", size: "710 KB", uploadTime: "2026-06-23 14:58", status: "已核验", type: "pdf" },
-          { id: "F082", category: "身份证明", name: "Director-Passport.pdf", size: "1.1 MB", uploadTime: "2026-06-23 14:58", status: "待复核", type: "pdf" },
-          { id: "F083", category: "业务说明", name: "礼品卡业务合规说明.docx", size: "320 KB", uploadTime: "2026-06-23 14:59", status: "已核验", type: "doc" }
-        ] },
-      { appId: "OB202606016", merchantId: "M100015", syncTime: "2026-06-23 16:40", name: "GameVault Pro", industry: "虚拟商品", country: "US", website: "gamevault.pro", websiteStatus: "mismatch", pciLevel: "NONE", complianceHits: 1, kycStatus: "REVIEW", kycScore: 66, riskScore: 74, riskLevel: "高风险", status: "待审核", assessTime: "2026-06-23 16:42", reviewTime: null, assessDetails: null,
-        attachments: [
-          { id: "F091", category: "企业资质", name: "Delaware-Corp-Certificate.pdf", size: "580 KB", uploadTime: "2026-06-23 16:38", status: "已核验", type: "pdf" },
-          { id: "F092", category: "网站合规", name: "Website-Screenshot.png", size: "640 KB", uploadTime: "2026-06-23 16:38", status: "核验失败", type: "img" },
-          { id: "F093", category: "合规材料", name: "AML-Questionnaire.pdf", size: "430 KB", uploadTime: "2026-06-23 16:39", status: "待复核", type: "pdf" }
-        ] },
-      { appId: "OB202606017", merchantId: "M100016", syncTime: "2026-06-24 08:15", name: "FreshMart Online", industry: "实体零售", country: "GB", website: "freshmart.co.uk", websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycStatus: "PASS", kycScore: 87, riskScore: 33, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-24 08:17", reviewTime: null, assessDetails: null,
-        attachments: [
-          { id: "F101", category: "企业资质", name: "Companies-House-Certificate.pdf", size: "760 KB", uploadTime: "2026-06-24 08:12", status: "已核验", type: "pdf" },
-          { id: "F102", category: "身份证明", name: "Director-Passport.pdf", size: "920 KB", uploadTime: "2026-06-24 08:13", status: "已核验", type: "pdf" },
-          { id: "F103", category: "PCI合规", name: "PCI-L2-AOC.pdf", size: "1.3 MB", uploadTime: "2026-06-24 08:14", status: "已核验", type: "pdf" },
-          { id: "F104", category: "银行信息", name: "Bank-Statement.pdf", size: "540 KB", uploadTime: "2026-06-24 08:14", status: "待复核", type: "pdf" }
-        ] },
-      { appId: "OB202606018", merchantId: "M100017", syncTime: "2026-06-24 10:30", name: "CloudHost Billing", industry: "软件SaaS", country: "GB", website: "cloudhost.io", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 91, riskScore: 31, riskLevel: "低风险", status: "待审核", assessTime: "2026-06-24 10:32", reviewTime: null, assessDetails: null,
-        attachments: [
-          { id: "F111", category: "企业资质", name: "UK-Registration-Certificate.pdf", size: "680 KB", uploadTime: "2026-06-24 10:28", status: "已核验", type: "pdf" },
-          { id: "F112", category: "PCI合规", name: "SAQ-A-Attestation.pdf", size: "950 KB", uploadTime: "2026-06-24 10:29", status: "已核验", type: "pdf" }
-        ] }
+          { id: "F111", category: "企业资质", name: "UK-Registration-Certificate.pdf", size: "680 KB", uploadTime: "2026-06-24 10:28", type: "pdf" } ] }
     ];
 
     const SYNC_ONBOARD_POOL = [
-      { name: "PayFlow Global", industry: "跨境电商", country: "US", website: "payflow.global", websiteStatus: "compliant", pciLevel: "L2", complianceHits: 0, kycStatus: "PASS", kycScore: 90 },
-      { name: "CryptoGift Store", industry: "虚拟商品", country: "HK", website: "cryptogift.hk", websiteStatus: "unverified", pciLevel: "NONE", complianceHits: 0, kycStatus: "REVIEW", kycScore: 68 },
-      { name: "Nordic SaaS AB", industry: "软件SaaS", country: "DE", website: "nordicsaas.se", websiteStatus: "compliant", pciLevel: "SAQ-A", complianceHits: 0, kycStatus: "PASS", kycScore: 94 }
+      { name: "PayFlow Global", industry: "跨境电商", country: "US", website: "payflow.global", websiteStatus: "compliant", complianceHits: 0, registerDate: "2022-05-16" },
+      { name: "CryptoGift Store", industry: "虚拟商品", country: "HK", website: "cryptogift.hk", websiteStatus: "compliant", complianceHits: 0, registerDate: "2025-10-03" },
+      { name: "Nordic SaaS AB", industry: "软件SaaS", country: "DE", website: "nordicsaas.se", websiteStatus: "compliant", complianceHits: 0, registerDate: "2020-07-22" }
     ];
 
     function nextMerchantId() {
@@ -1698,7 +1695,7 @@
     }
 
     function isRejectedMerchant(m) {
-      return m.reviewStatus === "拒绝入驻";
+      return m.reviewStatus === "不通过" || m.reviewStatus === "拒绝入驻";
     }
 
     // ===== 处置策略 =====
@@ -1901,24 +1898,112 @@
     let eddSeq = 50;
     let eddMode = "add";
     let currentEddId = null;
+    let currentEddAction = "view";
 
     const EDD_CHECKLIST = [
-      { key: "ubo", label: "受益所有人 (UBO) 身份核实", desc: "提供持股 ≥25% 自然人身份证件及股权结构图" },
-      { key: "source", label: "资金来源说明", desc: "说明主要收入来源及预计交易规模" },
-      { key: "business", label: "业务模式说明", desc: "详细描述商品/服务、目标客户、定价模式" },
-      { key: "site", label: "网站/APP 实地核验", desc: "截图、Whois、第三方流量数据等" },
-      { key: "bank", label: "银行账户验证", desc: "近 3 个月银行对账单或开户证明" },
-      { key: "pep", label: "PEP/制裁筛查报告", desc: "董事及 UBO 无 PEP/制裁命中证明" },
-      { key: "visit", label: "现场尽调报告（如适用）", desc: "高风险行业或大额商户需实地或视频尽调" }
+      { key: "ubo", label: "受益所有人 (UBO) 身份核实", desc: "提供持股 ≥25% 自然人身份证件及股权结构图", required: true },
+      { key: "source", label: "资金来源说明", desc: "说明主要收入来源及预计交易规模", required: true },
+      { key: "business", label: "业务模式说明", desc: "详细描述商品/服务、目标客户、定价模式", required: true },
+      { key: "site", label: "网站/APP 实地核验", desc: "截图、Whois、第三方流量数据等", required: true },
+      { key: "bank", label: "银行账户验证", desc: "近 3 个月银行对账单或开户证明", required: true },
+      { key: "pep", label: "PEP/制裁筛查报告", desc: "董事及 UBO 无 PEP/制裁命中证明", required: true },
+      { key: "visit", label: "现场尽调报告（如适用）", desc: "高风险行业或大额商户需实地或视频尽调", required: false }
     ];
 
+    function makeEddDemoDoc(name, size) {
+      const type = normalizeAttachType(name.split(".").pop());
+      return {
+        id: "EDDDOC" + Math.random().toString(36).slice(2, 9),
+        name: name,
+        size: size || "320 KB",
+        uploadTime: "2026-06-20 10:00",
+        type: type,
+        content: "【演示材料内容】\n文件：" + name + "\n\n本附件用于 EDD 强化尽调核验。审核人员可在线查看摘要，或点击「下载查看」获取文件副本。正式环境将展示真实文件内容（PDF/图片等）。"
+      };
+    }
+
+    function normalizeAttachType(ext) {
+      const e = String(ext || "").toLowerCase().replace(/^\./, "");
+      if (["png", "jpg", "jpeg", "gif", "webp", "bmp"].includes(e)) return "img";
+      if (["doc", "docx", "xls", "xlsx", "txt", "csv"].includes(e)) return "doc";
+      if (["zip", "rar", "7z"].includes(e)) return "zip";
+      return "pdf";
+    }
+
+    let currentAttachPreview = null;
+
     const EDD_CASES = [
-      { id: "EDD202606001", merchantId: "M100003", merchantName: "GameCard Pro", trigger: "行业高风险", riskLevel: "中风险", status: "资料收集中", createTime: "2026-06-15 10:00", deadline: "2026-07-15", assignee: "合规-王", progress: 43, checklist: { ubo: true, source: true, business: true, site: false, bank: false, pep: true, visit: false }, notes: "虚拟商品行业，需加强 UBO 核实", linkedStrId: null },
-      { id: "EDD202606002", merchantId: "M100005", merchantName: "QuickBuy Store", trigger: "可疑交易关联", riskLevel: "高风险", status: "审核中", createTime: "2026-06-18 14:30", deadline: "2026-07-18", assignee: "合规-张", progress: 86, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: false }, notes: "关联 STR202606002 可疑交易报送", linkedStrId: "STR202606002" },
-      { id: "EDD202606003", merchantId: "M100003", merchantName: "GameCard Pro", trigger: "STR关联", riskLevel: "中风险", status: "待启动", createTime: "2026-06-22 09:20", deadline: "2026-07-22", assignee: "—", progress: 0, checklist: {}, notes: "STR202606003 触发自动创建", linkedStrId: "STR202606003" },
-      { id: "EDD202606004", merchantId: "M100001", merchantName: "GlobalShop Inc.", trigger: "交易量异常", riskLevel: "低风险", status: "已通过", createTime: "2026-05-10 09:00", deadline: "2026-06-10", assignee: "合规-李", progress: 100, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: true }, notes: "月累计交易额突增，经核实为促销季正常放量", linkedStrId: null, reviewTime: "2026-06-08 16:00" },
-      { id: "EDD202606005", merchantId: "M100005", merchantName: "QuickBuy Store", trigger: "PEP/制裁筛查", riskLevel: "高风险", status: "未通过", createTime: "2026-04-01 11:00", deadline: "2026-05-01", assignee: "合规-张", progress: 57, checklist: { ubo: true, source: false, business: true, site: true, bank: false, pep: false, visit: false }, notes: "UBO 筛查命中 PEP 关联，资金来源无法核实", linkedStrId: null, reviewTime: "2026-04-28 10:00", rejectReason: "PEP 关联且无法提供合法资金来源证明" }
+      { id: "EDD202606001", merchantId: "M100003", merchantName: "GameCard Pro", trigger: "行业高风险", riskLevel: "中风险", status: "资料收集中", createTime: "2026-06-15 10:00", deadline: "2026-07-15", assignee: "合规-王", progress: 67, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: false },
+        docs: {
+          ubo: [makeEddDemoDoc("UBO-股权结构图.pdf", "480 KB")],
+          source: [makeEddDemoDoc("资金来源说明.docx", "210 KB")],
+          business: [makeEddDemoDoc("业务模式说明.pdf", "360 KB")],
+          pep: [makeEddDemoDoc("PEP筛查报告.pdf", "190 KB")]
+        }, notes: "虚拟商品行业，需加强 UBO 核实", linkedStrId: null },
+      { id: "EDD202606002", merchantId: "M100005", merchantName: "QuickBuy Store", trigger: "可疑交易关联", riskLevel: "高风险", status: "审核中", createTime: "2026-06-18 14:30", deadline: "2026-07-18", assignee: "合规-张", progress: 100, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: false },
+        docs: {
+          ubo: [makeEddDemoDoc("UBO-身份证.pdf")],
+          source: [makeEddDemoDoc("资金来源说明.pdf")],
+          business: [makeEddDemoDoc("业务模式-QuickBuy.pdf")],
+          site: [makeEddDemoDoc("网站核验截图.png", "640 KB")],
+          bank: [makeEddDemoDoc("银行对账单-近3月.pdf", "1.2 MB")],
+          pep: [makeEddDemoDoc("制裁筛查报告.pdf")]
+        }, notes: "关联 STR202606002 可疑交易报送", linkedStrId: "STR202606002" },
+      { id: "EDD202606003", merchantId: "M100003", merchantName: "GameCard Pro", trigger: "STR关联", riskLevel: "中风险", status: "待启动", createTime: "2026-06-22 09:20", deadline: "2026-07-22", assignee: "—", progress: 0, checklist: {}, docs: {}, notes: "STR202606003 触发自动创建", linkedStrId: "STR202606003" },
+      { id: "EDD202606004", merchantId: "M100001", merchantName: "GlobalShop Inc.", trigger: "交易量异常", riskLevel: "低风险", status: "已通过", createTime: "2026-05-10 09:00", deadline: "2026-06-10", assignee: "合规-李", progress: 100, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: true },
+        docs: {
+          ubo: [makeEddDemoDoc("UBO-核实材料.pdf")],
+          source: [makeEddDemoDoc("资金来源说明.pdf")],
+          business: [makeEddDemoDoc("业务模式说明.pdf")],
+          site: [makeEddDemoDoc("网站核验.zip", "2.1 MB")],
+          bank: [makeEddDemoDoc("银行开户证明.pdf")],
+          pep: [makeEddDemoDoc("PEP报告.pdf")],
+          visit: [makeEddDemoDoc("视频尽调纪要.pdf", "540 KB")]
+        }, notes: "月累计交易额突增，经核实为促销季正常放量", linkedStrId: null, reviewTime: "2026-06-08 16:00", reviewRemark: "材料齐全且可核验，交易放量为促销季正常波动，同意通过 EDD" },
+      { id: "EDD202606005", merchantId: "M100005", merchantName: "QuickBuy Store", trigger: "PEP/制裁筛查", riskLevel: "高风险", status: "未通过", createTime: "2026-04-01 11:00", deadline: "2026-05-01", assignee: "合规-张", progress: 50, checklist: { ubo: true, source: true, business: true, site: true, bank: true, pep: true, visit: false },
+        docs: {
+          ubo: [makeEddDemoDoc("UBO-材料.pdf")],
+          business: [makeEddDemoDoc("业务说明.pdf")],
+          site: [makeEddDemoDoc("网站截图.png", "420 KB")]
+        }, notes: "UBO 筛查命中 PEP 关联，资金来源无法核实", linkedStrId: null, reviewTime: "2026-04-28 10:00", reviewRemark: "UBO 命中 PEP 关联，资金来源说明缺失且无法补充核实", rejectReason: "UBO 命中 PEP 关联，资金来源说明缺失且无法补充核实" }
     ];
+
+    let currentEddUpload = null;
+
+    function ensureEddDocs(e) {
+      if (!e.docs) e.docs = {};
+      EDD_CHECKLIST.forEach(c => {
+        if (!Array.isArray(e.docs[c.key])) e.docs[c.key] = [];
+      });
+      if (!e.checklist) e.checklist = {};
+      return e;
+    }
+
+    function defaultEddChecklist() {
+      const map = {};
+      EDD_CHECKLIST.forEach(c => { map[c.key] = c.required !== false; });
+      return map;
+    }
+
+    function isEddDocUploaded(e, key) {
+      ensureEddDocs(e);
+      return (e.docs[key] || []).length > 0;
+    }
+
+    function getEddSelectedItems(e) {
+      ensureEddDocs(e);
+      return EDD_CHECKLIST.filter(c => !!e.checklist[c.key]);
+    }
+
+    function getEddMissingRequired(e) {
+      return getEddSelectedItems(e).filter(c => !isEddDocUploaded(e, c.key));
+    }
+
+    function refreshEddProgress(e) {
+      ensureEddDocs(e);
+      e.progress = calcEddProgress(e);
+      return e.progress;
+    }
 
     function strTypeTag(type) {
       if (type === "LTR") return '<span class="tag str-type-ltr">大额 LTR</span>';
@@ -1935,11 +2020,18 @@
       return '<span class="tag ' + (map[s] || "pending") + '">' + s + '</span>';
     }
 
-    function calcEddProgress(checklist) {
-      if (!checklist) return 0;
-      const total = EDD_CHECKLIST.length;
-      const done = EDD_CHECKLIST.filter(c => checklist[c.key]).length;
-      return Math.round((done / total) * 100);
+    function calcEddProgress(caseOrChecklist) {
+      if (!caseOrChecklist) return 0;
+      if (caseOrChecklist.docs || caseOrChecklist.id) {
+        ensureEddDocs(caseOrChecklist);
+        const required = getEddSelectedItems(caseOrChecklist);
+        if (!required.length) return 0;
+        const done = required.filter(c => isEddDocUploaded(caseOrChecklist, c.key)).length;
+        return Math.round((done / required.length) * 100);
+      }
+      const keys = Object.keys(caseOrChecklist).filter(k => caseOrChecklist[k]);
+      if (!keys.length) return 0;
+      return 0;
     }
 
     function renderStrReports(filtered, resetPage) {
@@ -2128,7 +2220,7 @@
         trigger: "STR关联", riskLevel: "中风险", status: "待启动",
         createTime: new Date().toLocaleString("zh-CN", { hour12: false }),
         deadline: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
-        assignee: "—", progress: 0, checklist: {},
+        assignee: "—", progress: 0, checklist: {}, docs: {},
         notes: "由 " + strItem.id + " 自动触发创建", linkedStrId: strItem.id
       });
     }
@@ -2304,15 +2396,20 @@
       if (!body) return;
       const page = paginateList("eddCases", list);
       body.innerHTML = page.items.length ? page.items.map(e => {
-        const prog = e.progress != null ? e.progress : calcEddProgress(e.checklist);
+        const prog = refreshEddProgress(e);
+        const docsReady = getEddSelectedItems(e).length > 0 && getEddMissingRequired(e).length === 0;
+        const showUpload = e.status === "资料收集中";
+        const showReview = e.status === "审核中" || (e.status === "资料收集中" && docsReady);
         return '<tr><td><span class="action-code">' + e.id + '</span></td>' +
           '<td>' + e.merchantId + '</td><td>' + e.merchantName + '</td>' +
           '<td>' + e.trigger + '</td><td>' + riskTag(e.riskLevel) + '</td>' +
           '<td><div style="min-width:100px;">' + prog + '%<div class="edd-progress"><div class="edd-progress-fill" style="width:' + prog + '%;"></div></div></div></td>' +
           '<td>' + e.deadline + '</td><td>' + eddStatusTag(e.status) + '</td>' +
           '<td class="ob-actions-cell"><span class="ob-actions">' +
-          '<button onclick="openEddDetail(\'' + e.id + '\')">详情</button>' +
-          (e.status === "待启动" ? '<button class="primary" onclick="openEddDetail(\'' + e.id + '\')">启动</button>' : '') +
+          '<button onclick="openEddDetail(\'' + e.id + '\',\'view\')">详情</button>' +
+          (e.status === "待启动" ? '<button class="primary" onclick="openEddDetail(\'' + e.id + '\',\'start\')">启动</button>' : '') +
+          (showUpload && !docsReady ? '<button class="primary" onclick="openEddDetail(\'' + e.id + '\',\'upload\')">上传资料</button>' : '') +
+          (showReview ? '<button class="warn" onclick="openEddReview(\'' + e.id + '\')">审核</button>' : '') +
           '</span></td></tr>';
       }).join("") : '<tr><td colspan="9" class="empty">暂无 EDD 工单</td></tr>';
       renderPagerBar("eddCases", "eddPager", page.total, () => renderEddCases());
@@ -2374,7 +2471,7 @@
         id: "EDD202606" + String(eddSeq).padStart(3, "0"),
         merchantId, merchantName, trigger, riskLevel,
         status: "待启动", createTime: new Date().toLocaleString("zh-CN", { hour12: false }),
-        deadline, assignee, progress: 0, checklist: {}, notes, linkedStrId: null
+        deadline, assignee, progress: 0, checklist: {}, docs: {}, notes, linkedStrId: null
       });
       closeMask("eddMask");
       renderEddCases();
@@ -2382,21 +2479,136 @@
       toast("EDD 工单已创建");
     }
 
-    function openEddDetail(id) {
+    function openEddDetail(id, action) {
       currentEddId = id;
+      currentEddAction = action || "view";
       const e = EDD_CASES.find(x => x.id === id);
       if (!e) return;
-      if (!e.checklist) e.checklist = {};
-      const prog = calcEddProgress(e.checklist);
-      e.progress = prog;
-      document.getElementById("eddDetailTitle").textContent = e.id + " · EDD 强化尽调";
+      ensureEddDocs(e);
+
+      // 按入口约束可操作状态，避免同一弹窗串流程
+      if (currentEddAction === "start" && e.status !== "待启动") currentEddAction = "view";
+      if (currentEddAction === "upload" && e.status !== "资料收集中") currentEddAction = "view";
+      if (currentEddAction === "review" && e.status !== "审核中") currentEddAction = "view";
+
+      const selecting = currentEddAction === "start" && e.status === "待启动";
+      const canUpload = currentEddAction === "upload" && e.status === "资料收集中";
+      const reviewing = currentEddAction === "review" && e.status === "审核中";
+
+      if (selecting && !Object.keys(e.checklist).length) {
+        e.checklist = defaultEddChecklist();
+      }
+      const prog = refreshEddProgress(e);
+      const selected = getEddSelectedItems(e);
+      const missing = getEddMissingRequired(e);
+      const titleMap = { start: "启动资料收集", upload: "上传尽调资料", review: "EDD 审核", view: "EDD 详情" };
+      document.getElementById("eddDetailTitle").textContent = e.id + " · " + (titleMap[currentEddAction] || "EDD 详情");
       document.getElementById("eddDetailSub").textContent = e.merchantId + " · " + e.merchantName;
-      const checklistHtml = EDD_CHECKLIST.map(c =>
-        '<div class="checklist-item"><input type="checkbox" id="edd-chk-' + c.key + '" ' + (e.checklist[c.key] ? "checked" : "") +
-        ' onchange="toggleEddChecklist(\'' + e.id + '\',\'' + c.key + '\',this.checked)" ' +
-        (e.status === "已通过" || e.status === "未通过" ? "disabled" : "") + ' />' +
-        '<div><b>' + c.label + '</b><div style="font-size:12px;color:#64748b;margin-top:2px;">' + c.desc + '</div></div></div>'
-      ).join("");
+
+      const items = selecting ? EDD_CHECKLIST : (selected.length ? selected : EDD_CHECKLIST);
+      const canPreviewDocs = reviewing || currentEddAction === "view" || canUpload || ["审核中", "已通过", "未通过", "已过期", "资料收集中"].includes(e.status);
+
+      let checklistHtml = "";
+      if (reviewing) {
+        const rows = [];
+        items.forEach(c => {
+          if (!e.checklist[c.key]) return;
+          const files = e.docs[c.key] || [];
+          if (!files.length) {
+            rows.push('<tr><td>' + c.label + '</td><td colspan="3" style="color:#94a3b8;">未上传</td><td>—</td></tr>');
+            return;
+          }
+          files.forEach((f, idx) => {
+            rows.push('<tr><td>' + c.label + '</td>' +
+              '<td><div class="attach-name"><span class="attach-icon ' + attachIconClass(f.type) + '"><i class="fas ' + attachIconName(f.type) + '"></i></span><span title="' + f.name + '">' + f.name + '</span></div></td>' +
+              '<td>' + (f.size || "—") + '</td><td>' + (f.uploadTime || "—") + '</td>' +
+              '<td style="white-space:nowrap;">' +
+              '<button type="button" onclick="openEddDocPreview(\'' + e.id + '\',\'' + c.key + '\',' + idx + ')"><i class="fas fa-eye"></i> 查看</button> ' +
+              '<button type="button" class="primary" onclick="downloadEddDoc(\'' + e.id + '\',\'' + c.key + '\',' + idx + ')"><i class="fas fa-download"></i> 下载查看</button>' +
+              '</td></tr>');
+          });
+        });
+        checklistHtml = '<div class="table-wrap"><table><thead><tr><th>材料项</th><th>文件名</th><th>大小</th><th>上传时间</th><th>操作</th></tr></thead><tbody>' +
+          (rows.length ? rows.join("") : '<tr><td colspan="5" class="empty">暂无已上传资料</td></tr>') +
+          '</tbody></table></div>';
+      } else {
+        checklistHtml = items.map(c => {
+          const files = e.docs[c.key] || [];
+          const done = files.length > 0;
+          const isNeeded = !!e.checklist[c.key];
+          let statusTag = "";
+          if (selecting) {
+            statusTag = c.required === false
+              ? '<span class="tag low">可选</span>'
+              : '<span class="tag pending">建议收集</span>';
+          } else if (isNeeded) {
+            statusTag = done
+              ? '<span class="tag pass">已上传</span>'
+              : '<span class="tag pending">待上传</span>';
+          } else {
+            statusTag = '<span class="tag low">未要求</span>';
+          }
+          const fileRows = !selecting && isNeeded
+            ? (files.length
+              ? '<div class="edd-file-list">' + files.map((f, idx) =>
+                '<div class="edd-file-row"><span class="attach-name"><span class="attach-icon ' + attachIconClass(f.type) + '"><i class="fas ' + attachIconName(f.type) + '"></i></span><span title="' + f.name + '">' + f.name + '</span></span>' +
+                '<span>' + (f.size || "") + '</span><span>' + (f.uploadTime || "") + '</span>' +
+                '<span style="margin-left:auto;display:flex;gap:6px;flex-shrink:0;">' +
+                (canUpload ? '<button type="button" onclick="removeEddDoc(\'' + e.id + '\',\'' + c.key + '\',' + idx + ')">删除</button>' : "") +
+                (canPreviewDocs
+                  ? '<button type="button" onclick="openEddDocPreview(\'' + e.id + '\',\'' + c.key + '\',' + idx + ')"><i class="fas fa-eye"></i> 查看</button>' +
+                    '<button type="button" class="primary" onclick="downloadEddDoc(\'' + e.id + '\',\'' + c.key + '\',' + idx + ')"><i class="fas fa-download"></i> 下载查看</button>'
+                  : "") +
+                '</span></div>').join("") + '</div>'
+              : '<div style="margin-top:8px;font-size:12px;color:#94a3b8;">尚未上传资料</div>')
+            : "";
+          const checkbox = selecting
+            ? '<input type="checkbox" id="eddReq_' + c.key + '" ' + (isNeeded ? "checked" : "") + ' />'
+            : (isNeeded ? '<input type="checkbox" checked disabled />' : '<input type="checkbox" disabled />');
+          return '<div class="checklist-item">' + checkbox +
+            '<div class="edd-check-main"><div class="edd-check-head"><div><b>' + c.label + '</b> ' + statusTag +
+            '<div style="font-size:12px;color:#64748b;margin-top:2px;">' + c.desc + '</div></div>' +
+            (canUpload && isNeeded
+              ? '<button type="button" class="primary" onclick="triggerEddDocUpload(\'' + e.id + '\',\'' + c.key + '\')"><i class="fas fa-upload"></i> 上传</button>'
+              : "") +
+            '</div>' + fileRows + '</div></div>';
+        }).join("");
+      }
+
+      let progressHint = "";
+      if (selecting) {
+        progressHint = '<span style="margin-left:10px;font-size:12px;color:#64748b;">勾选所需资料后确认启动，随后在列表点击「上传资料」</span>';
+      } else if (canUpload && missing.length) {
+        progressHint = '<span style="margin-left:10px;font-size:12px;color:#b45309;">待上传 ' + missing.length + ' 项</span>';
+      } else if (canUpload && !missing.length && selected.length) {
+        progressHint = '<span style="margin-left:10px;font-size:12px;color:#059669;">资料已齐备，关闭后请在列表点击「审核」</span>';
+      } else if (reviewing) {
+        progressHint = '<span style="margin-left:10px;font-size:12px;color:#64748b;">请预览/下载核验材料，并填写审核备注</span>';
+      } else if (selected.length) {
+        progressHint = '<span style="margin-left:10px;font-size:12px;color:#64748b;">完成度 ' + prog + '%</span>';
+      }
+
+      const sectionHint = selecting
+        ? '<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">仅勾选本次需要的资料</span>'
+        : (canUpload
+          ? '<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">上传齐全后关闭，回列表点「审核」</span>'
+          : (reviewing ? '<span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px;">可预览内容并下载查看</span>' : ""));
+
+      const reviewFormHtml = reviewing
+        ? '<div class="form-section"><h4>审核备注</h4><div class="field">' +
+          '<label>审核备注（必填）</label>' +
+          '<textarea id="eddReviewRemark" style="width:100%;min-height:110px;" placeholder="请填写材料核验情况、风险判断及通过/不通过依据（必填）"></textarea>' +
+          '<div style="margin-top:6px;font-size:12px;color:#b45309;">审核通过或不通过前必须填写审核备注</div>' +
+          '</div></div>'
+        : (e.reviewRemark
+          ? '<div class="form-section"><h4>审核备注</h4><div class="detail-grid">' +
+            detailItem("审核结论", e.status) +
+            detailItem("审核时间", e.reviewTime || "—") +
+            detailItem("审核备注", e.reviewRemark) +
+            '</div></div>'
+          : "");
+
+      // 审核页：资料清单在上，便于查看/下载；备注在下
       document.getElementById("eddDetailBody").innerHTML =
         '<div class="form-section"><h4>工单信息</h4><div class="detail-grid">' +
         detailItem("EDD 编号", e.id) + detailItem("状态", eddStatusTag(e.status)) +
@@ -2405,58 +2617,274 @@
         detailItem("负责人", e.assignee) + detailItem("截止日期", e.deadline) +
         detailItem("创建时间", e.createTime) +
         (e.reviewTime ? detailItem("审核时间", e.reviewTime) : "") +
-        (e.rejectReason ? detailItem("拒绝原因", e.rejectReason) : "") +
-        '</div><div style="margin-top:12px;">资料完成度：<b style="color:#2563eb;">' + prog + '%</b><div class="edd-progress"><div class="edd-progress-fill" style="width:' + prog + '%;"></div></div></div></div>' +
+        '</div><div style="margin-top:12px;">资料完成度：<b style="color:#2563eb;">' + prog + '%</b>' +
+        progressHint +
+        '<div class="edd-progress"><div class="edd-progress-fill" style="width:' + prog + '%;"></div></div></div></div>' +
         (e.notes ? '<div class="form-section"><h4>备注</h4><p style="font-size:13px;color:#374151;">' + e.notes + '</p></div>' : '') +
         (e.linkedStrId ? '<div class="form-section"><h4>关联 STR</h4><button class="ghost" onclick="closeMask(\'eddDetailMask\');switchPage(\'str-report\');openStrDetail(\'' + e.linkedStrId + '\')">查看 ' + e.linkedStrId + ' →</button></div>' : '') +
-        '<div class="form-section"><h4>尽调资料清单</h4>' + checklistHtml + '</div>';
-      document.getElementById("eddCollectBtn").style.display = e.status === "待启动" ? "inline-block" : "none";
-      document.getElementById("eddReviewBtn").style.display = (e.status === "资料收集中" && prog >= 50) ? "inline-block" : "none";
-      document.getElementById("eddApproveBtn").style.display = e.status === "审核中" ? "inline-block" : "none";
-      document.getElementById("eddRejectBtn").style.display = e.status === "审核中" ? "inline-block" : "none";
+        '<div class="form-section"><h4>' + (selecting ? "勾选所需尽调资料" : (reviewing ? "已上传尽调资料（可查看 / 下载）" : "尽调资料清单")) + sectionHint +
+        '</h4>' + checklistHtml + '</div>' +
+        reviewFormHtml;
+
+      const eddModal = document.querySelector("#eddDetailMask .modal");
+      if (eddModal) eddModal.className = reviewing ? "modal lg" : "modal";
+
+      document.getElementById("eddCollectBtn").style.display = selecting ? "inline-block" : "none";
+      document.getElementById("eddUploadBtn").style.display = (canUpload && missing.length > 0) ? "inline-block" : "none";
+      document.getElementById("eddApproveBtn").style.display = reviewing ? "inline-block" : "none";
+      document.getElementById("eddRejectBtn").style.display = reviewing ? "inline-block" : "none";
       openMask("eddDetailMask");
     }
 
-    function toggleEddChecklist(eddId, key, checked) {
-      const e = EDD_CASES.find(x => x.id === eddId);
+    function openEddReview(id) {
+      const e = EDD_CASES.find(x => x.id === id);
       if (!e) return;
-      if (!e.checklist) e.checklist = {};
-      e.checklist[key] = checked;
-      e.progress = calcEddProgress(e.checklist);
-      if (e.status === "资料收集中") openEddDetail(eddId);
+      ensureEddDocs(e);
+      if (e.status === "资料收集中") {
+        const missing = getEddMissingRequired(e);
+        if (!getEddSelectedItems(e).length || missing.length) {
+          toast("请先在列表点击「上传资料」并完成勾选材料上传");
+          openEddDetail(id, "upload");
+          return;
+        }
+        e.status = "审核中";
+        refreshEddProgress(e);
+        addAuditLog({ module: "EDD尽调", action: "提交", level: "INFO", target: e.id, summary: "资料齐全，进入审核", detail: { merchantId: e.merchantId } });
+        renderEddCases();
+      }
+      if (e.status !== "审核中") {
+        toast("当前状态不可审核");
+        return;
+      }
+      openEddDetail(id, "review");
+    }
+
+    function triggerEddDocUpload(eddId, key) {
+      currentEddUpload = { eddId: eddId, key: key };
+      const input = document.getElementById("eddFileInput");
+      if (input) input.click();
+    }
+
+    function focusEddUpload() {
+      const e = EDD_CASES.find(x => x.id === currentEddId);
+      if (!e || e.status !== "资料收集中") return;
+      const missing = getEddMissingRequired(e);
+      if (!missing.length) {
+        toast("资料已齐备，请关闭后在列表点击「审核」");
+        closeMask("eddDetailMask");
+        renderEddCases();
+        return;
+      }
+      toast("请上传：" + missing[0].label);
+      triggerEddDocUpload(e.id, missing[0].key);
+    }
+
+    function handleEddFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (!file || !currentEddUpload) return;
+      const e = EDD_CASES.find(x => x.id === currentEddUpload.eddId);
+      if (!e || e.status !== "资料收集中") { toast("当前状态不可上传资料"); return; }
+      ensureEddDocs(e);
+      const key = currentEddUpload.key;
+      if (!e.checklist[key]) { toast("该项未在启动时勾选，无需上传"); return; }
+      e.docs[key].push({
+        id: "EDDDOC" + Date.now(),
+        name: file.name,
+        size: (file.size / 1024).toFixed(0) + " KB",
+        uploadTime: new Date().toLocaleString("zh-CN", { hour12: false }),
+        type: normalizeAttachType(file.name.split(".").pop()),
+        objectUrl: URL.createObjectURL(file),
+        content: "【已上传材料】\n文件：" + file.name + "\n大小：" + (file.size / 1024).toFixed(0) + " KB\n\n本文件由操作员本地上传，可通过「查看」或「下载查看」核验原件。"
+      });
+      refreshEddProgress(e);
+      addAuditLog({ module: "EDD尽调", action: "上传", level: "INFO", target: e.id, summary: "上传 EDD 尽调资料", detail: { item: key, file: file.name } });
+      toast("已上传：" + file.name);
+      currentEddUpload = null;
+      const missing = getEddMissingRequired(e);
+      if (!missing.length) {
+        toast("资料已齐备，请关闭后在列表点击「审核」");
+      }
+      openEddDetail(e.id, "upload");
+      renderEddCases();
+    }
+
+    function removeEddDoc(eddId, key, idx) {
+      const e = EDD_CASES.find(x => x.id === eddId);
+      if (!e || e.status !== "资料收集中") return;
+      ensureEddDocs(e);
+      if (!e.docs[key] || !e.docs[key][idx]) return;
+      const removed = e.docs[key].splice(idx, 1)[0];
+      refreshEddProgress(e);
+      toast("已删除：" + (removed ? removed.name : "附件"));
+      openEddDetail(eddId, "upload");
+      renderEddCases();
     }
 
     function startEddCollection() {
       const e = EDD_CASES.find(x => x.id === currentEddId);
-      if (!e) return;
+      if (!e || e.status !== "待启动") return;
+      ensureEddDocs(e);
+      const selected = {};
+      let count = 0;
+      EDD_CHECKLIST.forEach(c => {
+        const el = document.getElementById("eddReq_" + c.key);
+        const checked = el ? !!el.checked : !!e.checklist[c.key];
+        selected[c.key] = checked;
+        if (checked) count++;
+      });
+      if (!count) {
+        toast("请至少勾选一项所需资料");
+        return;
+      }
+      e.checklist = selected;
       e.status = "资料收集中";
       e.assignee = e.assignee === "—" ? "合规-王" : e.assignee;
-      toast("EDD 资料收集已启动：" + e.id);
-      openEddDetail(currentEddId);
+      refreshEddProgress(e);
+      addAuditLog({ module: "EDD尽调", action: "启动", level: "INFO", target: e.id, summary: "启动 EDD 资料收集", detail: { required: Object.keys(selected).filter(k => selected[k]) } });
+      toast("已启动，请在列表点击「上传资料」");
+      closeMask("eddDetailMask");
       renderEddCases();
     }
 
-    function submitEddReview() {
-      const e = EDD_CASES.find(x => x.id === currentEddId);
-      if (!e) return;
-      const prog = calcEddProgress(e.checklist);
-      if (prog < 50) { toast("资料完成度不足 50%，无法提交审核"); return; }
-      e.status = "审核中";
-      e.progress = prog;
-      toast("EDD 已提交审核");
-      openEddDetail(currentEddId);
-      renderEddCases();
+    function getEddDocRef(eddId, key, idx) {
+      const e = EDD_CASES.find(x => x.id === eddId);
+      if (!e) return null;
+      ensureEddDocs(e);
+      const f = (e.docs[key] || [])[idx];
+      if (!f) return null;
+      const item = EDD_CHECKLIST.find(c => c.key === key);
+      return { e: e, f: f, category: item ? item.label : key };
+    }
+
+    function openEddDocPreview(eddId, key, idx) {
+      const hit = getEddDocRef(eddId, key, idx);
+      if (!hit) { toast("附件不存在"); return; }
+      const e = hit.e, f = hit.f, category = hit.category;
+      currentAttachPreview = { source: "edd", eddId: eddId, key: key, idx: idx, name: f.name, type: f.type, size: f.size, objectUrl: f.objectUrl || null };
+      document.getElementById("attachPreviewTitle").textContent = f.name;
+      document.getElementById("attachPreviewSub").textContent = category + " · " + (f.size || "—") + " · " + e.id;
+      const icon = attachIconName(f.type);
+      const textContent = f.content || (
+        "【材料内容摘要】\n" +
+        "材料项：" + category + "\n" +
+        "工单：" + e.id + " · " + e.merchantName + "\n" +
+        "上传时间：" + (f.uploadTime || "—") + "\n\n" +
+        "本文件为 EDD 尽调「" + category + "」上传件，用于核验商户相关信息的完整性与真实性。正式环境将展示 PDF/图片等原件内容。"
+      );
+      let previewInner = "";
+      if (f.objectUrl && f.type === "img") {
+        previewInner = '<img src="' + f.objectUrl + '" alt="' + f.name.replace(/"/g, "") + '" style="max-width:100%;max-height:420px;border-radius:8px;border:1px solid #e5e7eb;object-fit:contain;" />';
+      } else if (f.objectUrl && f.type === "pdf") {
+        previewInner = '<iframe src="' + f.objectUrl + '" title="' + f.name.replace(/"/g, "") + '" style="width:100%;height:420px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;"></iframe>';
+      } else {
+        previewInner = '<i class="fas ' + icon + '"></i>' +
+          '<div><b>' + f.name + '</b></div>' +
+          '<div style="font-size:12px;margin-top:4px;color:#64748b;">可在下方阅读材料内容，或点击「下载查看」获取副本</div>' +
+          '<pre style="margin-top:12px;padding:14px;background:#fff;border:1px solid #eef1f5;border-radius:8px;text-align:left;font-size:12px;color:#334155;width:100%;max-width:520px;white-space:pre-wrap;line-height:1.7;max-height:260px;overflow:auto;font-family:inherit;">' +
+          String(textContent).replace(/</g, "&lt;") +
+          '</pre>';
+      }
+      document.getElementById("attachPreviewBody").innerHTML =
+        '<div class="detail-grid" style="margin-bottom:14px;">' +
+        detailItem("文件名称", f.name) + detailItem("材料类型", category) +
+        detailItem("文件大小", f.size || "—") + detailItem("上传时间", f.uploadTime || "—") +
+        detailItem("商户号", e.merchantId) + detailItem("商户名称", e.merchantName) +
+        '</div>' +
+        '<div class="attach-preview-box" style="align-items:stretch;">' + previewInner + '</div>';
+      openMask("attachPreviewMask");
+    }
+
+    function downloadEddDoc(eddId, key, idx) {
+      const hit = getEddDocRef(eddId, key, idx);
+      if (!hit) { toast("附件不存在"); return; }
+      const f = hit.f, category = hit.category;
+      if (f.objectUrl) {
+        const a = document.createElement("a");
+        a.href = f.objectUrl;
+        a.download = f.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast("已开始下载查看：" + f.name);
+        return;
+      }
+      const content = f.content || [
+        "EDD 尽调材料（演示下载）",
+        "材料项：" + category,
+        "文件名：" + f.name,
+        "大小：" + (f.size || "—"),
+        "上传时间：" + (f.uploadTime || "—"),
+        "",
+        "【材料内容】",
+        "本文件为 EDD 强化尽调上传材料，正式环境将下载真实附件原件。",
+        "审核人员可据此核验：" + category + "。"
+      ].join("\n");
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = f.name.replace(/\.[^.]+$/, "") + "-内容.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1200);
+      toast("已下载查看：" + f.name);
+    }
+
+    function downloadCurrentAttachment() {
+      if (!currentAttachPreview) { toast("无可下载附件"); return; }
+      if (currentAttachPreview.source === "edd") {
+        downloadEddDoc(currentAttachPreview.eddId, currentAttachPreview.key, currentAttachPreview.idx);
+        return;
+      }
+      if (currentAttachPreview.objectUrl) {
+        const a = document.createElement("a");
+        a.href = currentAttachPreview.objectUrl;
+        a.download = currentAttachPreview.name || "attachment";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast("已开始下载：" + currentAttachPreview.name);
+        return;
+      }
+      const content = [
+        "附件（演示下载）",
+        "文件名：" + (currentAttachPreview.name || "—"),
+        "类型：" + (currentAttachPreview.category || "—"),
+        "大小：" + (currentAttachPreview.size || "—"),
+        "",
+        "正式环境将下载真实附件原件。"
+      ].join("\n");
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = ((currentAttachPreview.name || "attachment").replace(/\.[^.]+$/, "")) + "-内容摘要.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1200);
+      toast("已下载：" + (currentAttachPreview.name || "附件"));
+    }
+
+    function readEddReviewRemark() {
+      const el = document.getElementById("eddReviewRemark");
+      return el ? el.value.trim() : "";
     }
 
     function approveEddCase() {
       const e = EDD_CASES.find(x => x.id === currentEddId);
-      if (!e) return;
+      if (!e || e.status !== "审核中") return;
+      const remark = readEddReviewRemark();
+      if (!remark) { toast("请填写审核备注"); return; }
+      ensureEddDocs(e);
       e.status = "已通过";
       e.progress = 100;
+      e.reviewRemark = remark;
       e.reviewTime = new Date().toLocaleString("zh-CN", { hour12: false });
-      EDD_CHECKLIST.forEach(c => { e.checklist[c.key] = true; });
       const m = MERCHANTS.find(x => x.id === e.merchantId);
-      addAuditLog({ module: "EDD尽调", action: "审核", level: "INFO", target: e.id, summary: "EDD 审核通过", detail: { merchantId: e.merchantId, decision: "已通过" } });
+      addAuditLog({ module: "EDD尽调", action: "审核", level: "INFO", target: e.id, summary: "EDD 审核通过", detail: { merchantId: e.merchantId, decision: "已通过", remark: remark } });
       if (m && m.status === "观察") { m.status = "正常"; toast("EDD 审核通过，商户已恢复正常状态"); }
       else toast("EDD 审核通过：" + e.id);
       closeMask("eddDetailMask");
@@ -2466,12 +2894,15 @@
 
     function rejectEddCase() {
       const e = EDD_CASES.find(x => x.id === currentEddId);
-      if (!e) return;
+      if (!e || e.status !== "审核中") return;
+      const remark = readEddReviewRemark();
+      if (!remark) { toast("请填写审核备注"); return; }
       e.status = "未通过";
+      e.reviewRemark = remark;
+      e.rejectReason = remark;
       e.reviewTime = new Date().toLocaleString("zh-CN", { hour12: false });
-      e.rejectReason = e.rejectReason || "资料不完整或风险无法排除";
       const m = MERCHANTS.find(x => x.id === e.merchantId);
-      addAuditLog({ module: "EDD尽调", action: "审核", level: "WARN", target: e.id, summary: "EDD 审核未通过", detail: { merchantId: e.merchantId, decision: "未通过", reason: e.rejectReason } });
+      addAuditLog({ module: "EDD尽调", action: "审核", level: "WARN", target: e.id, summary: "EDD 审核未通过", detail: { merchantId: e.merchantId, decision: "未通过", reason: remark } });
       if (m) { m.status = "受限"; toast("EDD 审核未通过，商户已限制收单", true); }
       else toast("EDD 审核未通过");
       closeMask("eddDetailMask");
@@ -4395,15 +4826,35 @@
         "（入网阶段无交易数据，不含拒付率/欺诈率/退款率/交易放量）";
     }
 
-    const WEBSITE_STATUS_LABEL = { compliant: "合规", unverified: "待核验", mismatch: "域名不一致" };
-    const PCI_LEVEL_LABEL = { "L1": "PCI L1", "L2": "PCI L2", "SAQ-A": "SAQ-A", "SAQ-D": "SAQ-D", "NONE": "未认证" };
+    const WEBSITE_STATUS_LABEL = { compliant: "能访问", mismatch: "不能访问", unverified: "能访问" };
 
-    function getWebsiteScore(status) {
-      return MERCHANT_ASSESS_CONFIG.websiteScores[status] ?? 45;
+    function parseGeoCountries(text) {
+      return String(text || "").split(/[,/|，、\s]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
     }
 
-    function getPciScore(level) {
-      return MERCHANT_ASSESS_CONFIG.pciScores[level] ?? 75;
+    function rebuildGeoScoresFromTiers() {
+      const cfg = MERCHANT_ASSESS_CONFIG;
+      const map = {};
+      (cfg.geoTiers || []).forEach(t => {
+        (t.countries || []).forEach(c => { map[c] = t.score; });
+      });
+      cfg.geoScores = map;
+    }
+
+    function getGeoScore(country) {
+      const cfg = MERCHANT_ASSESS_CONFIG;
+      const code = String(country || "").toUpperCase();
+      for (const t of (cfg.geoTiers || [])) {
+        if ((t.countries || []).map(c => String(c).toUpperCase()).includes(code)) return t.score;
+      }
+      if (cfg.geoScores && cfg.geoScores[country] != null) return cfg.geoScores[country];
+      if (cfg.geoScores && cfg.geoScores[code] != null) return cfg.geoScores[code];
+      return cfg.geoDefault ?? 40;
+    }
+
+    function getWebsiteScore(status) {
+      if (status === "unverified") status = "compliant";
+      return MERCHANT_ASSESS_CONFIG.websiteScores[status] ?? MERCHANT_ASSESS_CONFIG.websiteScores.compliant ?? 15;
     }
 
     function getComplianceScore(hits) {
@@ -4421,18 +4872,49 @@
       return tiers[tiers.length - 1]?.score ?? 85;
     }
 
+    function getRateTierScore(rate, tiers) {
+      const sorted = (tiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      for (const t of sorted) {
+        if (rate <= t.maxRate) return t.score;
+      }
+      return sorted[sorted.length - 1]?.score ?? 90;
+    }
+
+    function describeRateTier(rate, tiers, unit) {
+      const sorted = (tiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      const hit = sorted.find(t => rate <= t.maxRate) || sorted[sorted.length - 1];
+      if (!hit) return rate + unit + ' → 维度分 —';
+      const prev = sorted.filter(t => t.maxRate < hit.maxRate).pop();
+      if (hit.maxRate >= 99999) {
+        return rate + unit + ' > ' + (prev?.maxRate ?? 0) + unit + ' → 维度分 ' + hit.score;
+      }
+      return rate + unit + ' ≤ ' + hit.maxRate + unit + ' → 维度分 ' + hit.score;
+    }
+
+    function getRegisterDate(entity) {
+      if (!entity) return "";
+      return entity.registerDate || entity.registrationDate || "";
+    }
+
+    function calcRegisterDays(registerDate, asOf) {
+      if (!registerDate) return null;
+      const start = Date.parse(String(registerDate).replace(/-/g, "/"));
+      if (isNaN(start)) return null;
+      const end = asOf || Date.now();
+      return Math.max(0, Math.floor((end - start) / 86400000));
+    }
+
     function merchantAssessFields(entity, isApp) {
       return {
         industry: entity.industry,
         country: entity.country,
         onboardDate: isApp ? new Date().toISOString().slice(0, 10) : entity.onboardDate,
+        registerDate: getRegisterDate(entity) || "",
         chargebackRate: isApp ? 0 : (entity.chargebackRate || 0),
         fraudRate: isApp ? 0 : (entity.fraudRate || 0),
         refundRate: isApp ? 0 : (entity.refundRate || 0),
         volumeAnomalyRatio: isApp ? 100 : (entity.volumeAnomalyRatio ?? 100),
-        kycScore: entity.kycScore,
-        websiteStatus: entity.websiteStatus || "unverified",
-        pciLevel: entity.pciLevel || "NONE",
+        websiteStatus: entity.websiteStatus === "mismatch" ? "mismatch" : "compliant",
         complianceHits: entity.complianceHits ?? 0
       };
     }
@@ -4440,7 +4922,6 @@
     function getMerchantRuleContent(key, merchant, raw, opts) {
       const isOnboarding = opts && opts.onboarding;
       const cfg = MERCHANT_ASSESS_CONFIG;
-      const t = cfg.thresholds;
       if (key === "industry") {
         const s = cfg.industryScores[merchant.industry];
         return s != null
@@ -4449,30 +4930,19 @@
       }
       if (key === "chargeback") {
         if (isOnboarding) return "入网阶段无交易历史，不适用";
-        let ref = merchant.chargebackRate + '% × ' + cfg.chargebackMul + ' = ' + raw;
-        if (merchant.chargebackRate > t.chargebackId) ref += '；超 VAMP 识别线 ' + t.chargebackId + '%';
-        else if (merchant.chargebackRate > t.chargebackWarn) ref += '；超 VAMP 预警线 ' + t.chargebackWarn + '%';
-        return ref;
+        return describeRateTier(merchant.chargebackRate || 0, cfg.chargebackTiers, "%");
       }
       if (key === "fraud") {
         if (isOnboarding) return "入网阶段无交易历史，不适用";
-        let ref = (merchant.fraudRate || 0) + '% × ' + cfg.fraudMul + ' = ' + raw;
-        if ((merchant.fraudRate || 0) > t.fraudWarn) ref += '；超 VFMP 监控线 ' + t.fraudWarn + '%';
-        return ref;
+        return describeRateTier(merchant.fraudRate || 0, cfg.fraudTiers, "%");
       }
       if (key === "refund") {
         if (isOnboarding) return "入网阶段无交易历史，不适用";
-        let ref = (merchant.refundRate || 0) + '% × ' + cfg.refundMul + ' = ' + raw;
-        if ((merchant.refundRate || 0) > t.refundWarn) ref += '；超退款预警线 ' + t.refundWarn + '%';
-        return ref;
+        return describeRateTier(merchant.refundRate || 0, cfg.refundTiers, "%");
       }
       if (key === "website") {
-        const st = merchant.websiteStatus || "unverified";
-        return '网站状态 = ' + (WEBSITE_STATUS_LABEL[st] || st) + ' → 维度分 ' + raw;
-      }
-      if (key === "pci") {
-        const lv = merchant.pciLevel || "NONE";
-        return 'PCI = ' + (PCI_LEVEL_LABEL[lv] || lv) + ' → 维度分 ' + raw;
+        const st = merchant.websiteStatus === "mismatch" ? "mismatch" : "compliant";
+        return (st === "compliant" ? "网站能访问" : "网站不能访问") + " → 维度分 " + raw;
       }
       if (key === "compliance") {
         const hits = merchant.complianceHits ?? 0;
@@ -4483,44 +4953,43 @@
         const ratio = merchant.volumeAnomalyRatio ?? 100;
         return '当日量 / 近30日均值 = ' + ratio + '% → 维度分 ' + raw;
       }
-      if (key === "kyc") {
-        const kyc = merchant.kycScore ?? 80;
-        let ref = '100 − KYC(' + kyc + ') = ' + raw;
-        if (kyc < t.kycLow) ref += '；KYC 低于 ' + t.kycLow + ' 分';
-        return ref;
-      }
       if (key === "tenure") {
-        if (isOnboarding) return '新商户入网（无交易历史）→ 维度分 ' + cfg.tenureNewScore;
-        const days = Math.floor((Date.now() - new Date(merchant.onboardDate)) / 86400000);
+        const base = (opts && opts.asOf) ? opts.asOf : Date.now();
+        const regDate = getRegisterDate(merchant);
+        const days = calcRegisterDays(regDate, base);
+        if (days == null) {
+          return (isOnboarding ? "入网评估无注册时间，按新注册档" : "无注册时间，按新注册档") + " → 维度分 " + cfg.tenureNewScore;
+        }
         const tiers = cfg.tenureTiers.slice().sort((a, b) => b.minDays - a.minDays);
         const hit = tiers.find(x => days >= x.minDays);
         return hit
-          ? '入网 ' + days + ' 天 ≥ ' + hit.minDays + ' 天 → 维度分 ' + hit.score
-          : '新商户入网 ' + days + ' 天 → 维度分 ' + cfg.tenureNewScore;
+          ? "注册时长 " + days + " 天（注册日 " + regDate + "）≥ " + hit.minDays + " 天 → 维度分 " + hit.score
+          : "注册时长 " + days + " 天（注册日 " + regDate + "）< 最低档 → 维度分 " + cfg.tenureNewScore;
       }
       if (key === "geo") {
-        const s = cfg.geoScores[merchant.country];
-        return s != null
-          ? '注册国 = ' + merchant.country + ' → 维度分 ' + s
-          : '注册国 = ' + merchant.country + '（默认）→ 维度分 ' + (cfg.geoDefault || 40);
+        const s = getGeoScore(merchant.country);
+        const hit = (cfg.geoTiers || []).find(t =>
+          (t.countries || []).map(c => String(c).toUpperCase()).includes(String(merchant.country || "").toUpperCase())
+        );
+        return hit
+          ? '注册国 = ' + merchant.country + ' ∈ ' + hit.countries.join('/') + ' → 维度分 ' + s
+          : '注册国 = ' + merchant.country + '（默认）→ 维度分 ' + s;
       }
       return '—';
     }
 
     function calcDimensionScores(merchant) {
       const cfg = MERCHANT_ASSESS_CONFIG;
-      const days = Math.floor((Date.now() - new Date(merchant.onboardDate)) / 86400000);
+      const days = calcRegisterDays(getRegisterDate(merchant));
       return {
         industry: cfg.industryScores[merchant.industry] ?? cfg.industryDefault ?? 50,
-        chargeback: Math.min(100, (merchant.chargebackRate || 0) * cfg.chargebackMul),
-        fraud: Math.min(100, (merchant.fraudRate || 0) * cfg.fraudMul),
-        refund: Math.min(100, (merchant.refundRate || 0) * cfg.refundMul),
-        kyc: Math.max(0, 100 - (merchant.kycScore || 80)),
-        website: getWebsiteScore(merchant.websiteStatus || "unverified"),
-        pci: getPciScore(merchant.pciLevel || "NONE"),
+        chargeback: getRateTierScore(merchant.chargebackRate || 0, cfg.chargebackTiers),
+        fraud: getRateTierScore(merchant.fraudRate || 0, cfg.fraudTiers),
+        refund: getRateTierScore(merchant.refundRate || 0, cfg.refundTiers),
+        website: getWebsiteScore(merchant.websiteStatus || "compliant"),
         compliance: getComplianceScore(merchant.complianceHits ?? 0),
-        tenure: getTenureScore(days),
-        geo: cfg.geoScores[merchant.country] ?? cfg.geoDefault ?? 40,
+        tenure: days == null ? cfg.tenureNewScore : getTenureScore(days),
+        geo: getGeoScore(merchant.country),
         volumeAnomaly: getVolumeAnomalyScore(merchant.volumeAnomalyRatio ?? 100)
       };
     }
@@ -4546,26 +5015,98 @@
         score <= t.midMax ? "中风险" : "高风险";
     }
 
-    function assessMerchant(merchant) {
-      const pseudo = merchantAssessFields(merchant, false);
+    let assessHistorySeq = 1;
+    function nextAssessHistoryId() {
+      return "AH" + String(Date.now()).slice(-8) + String(assessHistorySeq++).padStart(3, "0");
+    }
+
+    function snapshotMerchantAssess(merchant, type) {
+      return {
+        id: nextAssessHistoryId(),
+        time: merchant.lastAssessTime || new Date().toLocaleString("zh-CN", { hour12: false }),
+        type: type || "定期复评",
+        riskScore: merchant.riskScore,
+        riskLevel: merchant.riskLevel,
+        chargebackRate: merchant.chargebackRate,
+        fraudRate: merchant.fraudRate,
+        refundRate: merchant.refundRate,
+        volumeAnomalyRatio: merchant.volumeAnomalyRatio,
+        websiteStatus: merchant.websiteStatus,
+        complianceHits: merchant.complianceHits,
+        details: merchant.assessDetails ? merchant.assessDetails.map(d => Object.assign({}, d)) : null
+      };
+    }
+
+    function pushAssessHistory(merchant, type) {
+      if (!merchant || merchant.riskScore == null) return;
+      if (!merchant.assessHistory) merchant.assessHistory = [];
+      merchant.assessHistory.unshift(snapshotMerchantAssess(merchant, type));
+      if (merchant.assessHistory.length > 20) merchant.assessHistory.length = 20;
+    }
+
+    function ensureHistoryAssessDetails(merchant, snap) {
+      if (!snap) return snap;
+      if (snap.details && snap.details.length) return snap;
+      const isOnboarding = /^入网/.test(String(snap.type || ""));
+      const asOf = Date.parse(String(snap.time || "").replace(/-/g, "/")) || Date.now();
+      const registerDate = getRegisterDate(merchant) || String(merchant.syncTime || snap.time || "").slice(0, 10);
+      const onboardDate = merchant.onboardDate || String(merchant.syncTime || snap.time || "").slice(0, 10) || new Date().toISOString().slice(0, 10);
+      const pseudo = {
+        industry: merchant.industry,
+        country: merchant.country,
+        onboardDate,
+        registerDate,
+        chargebackRate: snap.chargebackRate ?? 0,
+        fraudRate: snap.fraudRate ?? 0,
+        refundRate: snap.refundRate ?? 0,
+        volumeAnomalyRatio: snap.volumeAnomalyRatio ?? 100,
+        websiteStatus: snap.websiteStatus === "mismatch" ? "mismatch" : "compliant",
+        complianceHits: snap.complianceHits ?? 0
+      };
+      const days = calcRegisterDays(registerDate, asOf);
       const dimScores = calcDimensionScores(pseudo);
-      const details = buildAssessDetails(pseudo, dimScores);
+      dimScores.tenure = days == null ? MERCHANT_ASSESS_CONFIG.tenureNewScore : getTenureScore(days);
+      const dims = isOnboarding ? getOnboardingDimensions() : MERCHANT_ASSESS_CONFIG.dimensions;
+      snap.details = buildAssessDetails(pseudo, dimScores, dims, { onboarding: isOnboarding, asOf });
+      return snap;
+    }
+
+    function assessMerchant(merchant, opts) {
+      opts = opts || {};
+      const useOnboarding = opts.onboarding === true || (opts.onboarding !== false && isRejectedMerchant(merchant));
+      if (opts.archive && merchant.assessDetails && merchant.lastAssessTime) {
+        pushAssessHistory(merchant, opts.trigger || "重新评估");
+      }
+      const pseudo = merchantAssessFields(merchant, useOnboarding);
+      const dimScores = calcDimensionScores(pseudo);
+      if (useOnboarding) {
+        const regDays = calcRegisterDays(getRegisterDate(merchant));
+        dimScores.tenure = regDays == null ? MERCHANT_ASSESS_CONFIG.tenureNewScore : getTenureScore(regDays);
+      }
+      const dims = useOnboarding ? getOnboardingDimensions() : MERCHANT_ASSESS_CONFIG.dimensions;
+      const details = buildAssessDetails(pseudo, dimScores, dims, useOnboarding ? { onboarding: true } : {});
       merchant.riskScore = Math.min(100, details.reduce((s, d) => s + d.weighted, 0));
       merchant.riskLevel = riskLevelFromScore(merchant.riskScore);
       merchant.assessDetails = details;
-      merchant.lastAssessTime = new Date().toLocaleString("zh-CN", { hour12: false });
+      if (!opts.keepAssessTime) {
+        merchant.lastAssessTime = new Date().toLocaleString("zh-CN", { hour12: false });
+      }
+      return merchant;
+    }
+
+    function syncMerchantRiskLevel(merchant) {
+      if (!merchant || merchant.riskScore == null) return merchant;
+      merchant.riskLevel = riskLevelFromScore(merchant.riskScore);
       return merchant;
     }
 
     function assessOnboardingApplicant(app) {
-      const kycDefault = { PASS: 92, REVIEW: 72, REJECT: 35, PENDING: 60 };
-      app.kycScore = app.kycScore ?? kycDefault[app.kycStatus] ?? 75;
-      app.websiteStatus = app.websiteStatus || "unverified";
-      app.pciLevel = app.pciLevel || "NONE";
+      app.websiteStatus = app.websiteStatus === "mismatch" ? "mismatch" : "compliant";
       app.complianceHits = app.complianceHits ?? 0;
       const pseudo = merchantAssessFields(app, true);
       const dimScores = calcDimensionScores(pseudo);
-      dimScores.tenure = MERCHANT_ASSESS_CONFIG.tenureNewScore;
+      const regDays = calcRegisterDays(getRegisterDate(app));
+      dimScores.tenure = regDays == null ? MERCHANT_ASSESS_CONFIG.tenureNewScore : getTenureScore(regDays);
       const details = buildAssessDetails(pseudo, dimScores, getOnboardingDimensions(), { onboarding: true });
       app.riskScore = Math.min(100, details.reduce((s, d) => s + d.weighted, 0));
       app.riskLevel = riskLevelFromScore(app.riskScore);
@@ -4594,16 +5135,15 @@
         industry: tpl.industry,
         country: tpl.country,
         website: tpl.website,
-        websiteStatus: tpl.websiteStatus || "unverified",
-        pciLevel: tpl.pciLevel || "NONE",
+        registerDate: tpl.registerDate || "",
+        websiteStatus: tpl.websiteStatus === "mismatch" ? "mismatch" : "compliant",
         complianceHits: tpl.complianceHits ?? 0,
-        kycStatus: tpl.kycStatus,
-        kycScore: tpl.kycScore,
         riskScore: null,
         riskLevel: "—",
         status: "待评估",
         assessTime: null,
         assessDetails: null,
+        assessHistory: [],
         attachments: buildDefaultOnboardAttachments(tpl.name, syncTime)
       };
       ONBOARDING.unshift(app);
@@ -4613,9 +5153,110 @@
       toast("已同步商户并完成风险评级：" + app.name + "（" + app.merchantId + "）");
     }
 
-    function assessAllMerchants() {
-      MERCHANTS.filter(m => !isRejectedMerchant(m)).forEach(assessMerchant);
+    function assessAllMerchants(opts) {
+      opts = opts || {};
+      MERCHANTS.forEach(m => assessMerchant(m, Object.assign({}, opts, {
+        onboarding: isRejectedMerchant(m)
+      })));
       renderMerchants();
+    }
+
+    function seedMerchantAssessHistory() {
+      const samples = {
+        M100001: [
+          { time: "2026-03-15 08:00", type: "季度复评", riskScore: 30, riskLevel: "低风险", chargebackRate: 0.10, fraudRate: 0.04, refundRate: 1.9, volumeAnomalyRatio: 115, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2025-12-15 08:00", type: "季度复评", riskScore: 26, riskLevel: "低风险", chargebackRate: 0.09, fraudRate: 0.03, refundRate: 1.8, volumeAnomalyRatio: 108, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2024-03-15 10:25", type: "入网评估", riskScore: 24, riskLevel: "低风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        M100002: [
+          { time: "2026-04-08 08:00", type: "季度复评", riskScore: 33, riskLevel: "低风险", chargebackRate: 0.07, fraudRate: 0.02, refundRate: 1.4, volumeAnomalyRatio: 98, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2025-01-08 14:10", type: "入网评估", riskScore: 31, riskLevel: "低风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        M100003: [
+          { time: "2026-05-20 08:00", type: "月度复评", riskScore: 58, riskLevel: "中风险", chargebackRate: 0.40, fraudRate: 0.22, refundRate: 7.2, volumeAnomalyRatio: 240, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2026-02-20 08:00", type: "月度复评", riskScore: 55, riskLevel: "中风险", chargebackRate: 0.38, fraudRate: 0.20, refundRate: 6.8, volumeAnomalyRatio: 210, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2025-11-20 16:45", type: "入网评估", riskScore: 52, riskLevel: "中风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        M100004: [
+          { time: "2026-02-02 08:00", type: "季度复评", riskScore: 20, riskLevel: "低风险", chargebackRate: 0.04, fraudRate: 0.02, refundRate: 0.7, volumeAnomalyRatio: 105, websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2023-08-02 11:20", type: "入网评估", riskScore: 18, riskLevel: "低风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        M100005: [
+          { time: "2026-05-14 08:00", type: "双周复评", riskScore: 72, riskLevel: "高风险", chargebackRate: 1.05, fraudRate: 0.48, refundRate: 18, volumeAnomalyRatio: 510, websiteStatus: "mismatch", complianceHits: 1 },
+          { time: "2026-04-01 08:00", type: "月度复评", riskScore: 68, riskLevel: "中风险", chargebackRate: 0.92, fraudRate: 0.42, refundRate: 16, volumeAnomalyRatio: 450, websiteStatus: "mismatch", complianceHits: 1 },
+          { time: "2026-02-14 09:55", type: "入网评估", riskScore: 65, riskLevel: "中风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", complianceHits: 1 }
+        ],
+        M100019: [
+          { time: "2026-06-18 16:18", type: "入网评估", riskScore: 81, riskLevel: "高风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", complianceHits: 2 }
+        ],
+        M100020: [
+          { time: "2026-06-22 11:03", type: "入网评估", riskScore: 76, riskLevel: "高风险", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100, websiteStatus: "mismatch", complianceHits: 1 }
+        ]
+      };
+      MERCHANTS.forEach(m => {
+        if (m.assessHistory && m.assessHistory.length) return;
+        const list = samples[m.id] || [];
+        m.assessHistory = list.map(item => {
+          const snap = {
+            id: nextAssessHistoryId(),
+            time: item.time,
+            type: item.type,
+            riskScore: item.riskScore,
+            riskLevel: item.riskLevel,
+            chargebackRate: item.chargebackRate,
+            fraudRate: item.fraudRate,
+            refundRate: item.refundRate,
+            volumeAnomalyRatio: item.volumeAnomalyRatio,
+            websiteStatus: item.websiteStatus,
+            complianceHits: item.complianceHits,
+            details: null
+          };
+          return ensureHistoryAssessDetails(m, snap);
+        });
+      });
+    }
+
+    function seedOnboardingAssessHistory() {
+      const samples = {
+        OB202606002: [
+          { time: "2026-06-20 11:05", type: "入网评估", riskScore: 64, riskLevel: "中风险", websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        OB202606015: [
+          { time: "2026-06-22 10:20", type: "入网评估", riskScore: 55, riskLevel: "中风险", websiteStatus: "compliant", complianceHits: 0 },
+          { time: "2026-06-23 09:40", type: "入网复评", riskScore: 60, riskLevel: "中风险", websiteStatus: "compliant", complianceHits: 0 }
+        ],
+        OB202606016: [
+          { time: "2026-06-23 12:15", type: "入网评估", riskScore: 70, riskLevel: "中风险", websiteStatus: "mismatch", complianceHits: 1 }
+        ]
+      };
+      ONBOARDING.forEach(o => {
+        if (o.assessHistory && o.assessHistory.length) return;
+        const list = samples[o.appId] || [];
+        if (!list.length) {
+          o.assessHistory = [];
+          return;
+        }
+        const ctx = {
+          industry: o.industry,
+          country: o.country,
+          onboardDate: String(o.syncTime || o.assessTime || "").slice(0, 10),
+          syncTime: o.syncTime
+        };
+        o.assessHistory = list.map(item => ensureHistoryAssessDetails(ctx, {
+          id: nextAssessHistoryId(),
+          time: item.time,
+          type: item.type,
+          riskScore: item.riskScore,
+          riskLevel: item.riskLevel,
+          chargebackRate: 0,
+          fraudRate: 0,
+          refundRate: 0,
+          volumeAnomalyRatio: 100,
+          websiteStatus: item.websiteStatus,
+          complianceHits: item.complianceHits ?? 0,
+          details: null
+        }));
+      });
     }
 
     function renderMerchantRiskDims() {
@@ -4635,7 +5276,7 @@
       const cfg = MERCHANT_ASSESS_CONFIG;
       document.querySelectorAll(".mrl-threshold[data-key='lowMax']").forEach(el => { el.value = cfg.thresholds.lowMax; });
       document.querySelectorAll(".mrl-threshold[data-key='midMax']").forEach(el => { el.value = cfg.thresholds.midMax; });
-      ["chargebackWarn", "chargebackId", "fraudWarn", "kycLow"].forEach(k => {
+      ["chargebackWarn", "chargebackId", "fraudWarn"].forEach(k => {
         document.querySelectorAll("#rules .mrl-threshold[data-key='" + k + "']").forEach(el => { el.value = cfg.thresholds[k]; });
       });
       Object.keys(cfg.levelPolicies || {}).forEach(level => {
@@ -4655,13 +5296,11 @@
       const midEl = document.querySelector(".mrl-threshold[data-key='midMax']");
       if (lowEl) cfg.thresholds.lowMax = parseFloat(lowEl.value) || 40;
       if (midEl) cfg.thresholds.midMax = parseFloat(midEl.value) || 70;
-      ["chargebackWarn", "chargebackId", "fraudWarn", "kycLow"].forEach(k => {
+      ["chargebackWarn", "chargebackId", "fraudWarn"].forEach(k => {
         const els = document.querySelectorAll(".mrl-threshold[data-key='" + k + "']");
         const val = els.length ? parseFloat(els[0].value) : cfg.thresholds[k];
         if (!isNaN(val)) cfg.thresholds[k] = val;
         els.forEach(el => { el.value = cfg.thresholds[k]; });
-        const maEl = document.querySelector(".ma-threshold[data-key='" + k + "']");
-        if (maEl) maEl.value = cfg.thresholds[k];
       });
       if (!cfg.levelPolicies) cfg.levelPolicies = {};
       ["low", "mid", "high"].forEach(level => {
@@ -4681,23 +5320,60 @@
       updateMrlLevelRanges();
     }
 
+    function applyRateTiersToUI(dim, tiers) {
+      const sorted = (tiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      sorted.forEach((t, i) => {
+        const sEl = document.querySelector(".ma-rate-score[data-dim='" + dim + "'][data-tier='" + i + "']");
+        if (sEl) sEl.value = t.score;
+        if (t.maxRate < 99999) {
+          document.querySelectorAll(".ma-rate-tier[data-dim='" + dim + "'][data-tier='" + i + "']").forEach(el => {
+            el.value = t.maxRate;
+          });
+        }
+      });
+    }
+
+    function readRateTiersFromUI(dim, boundCount, defaultBounds, defaultScores) {
+      const tiers = [];
+      for (let i = 0; i < boundCount; i++) {
+        const dEl = document.querySelector(".ma-rate-tier[data-dim='" + dim + "'][data-tier='" + i + "']");
+        const sEl = document.querySelector(".ma-rate-score[data-dim='" + dim + "'][data-tier='" + i + "']");
+        tiers.push({
+          maxRate: parseFloat(dEl?.value) || defaultBounds[i],
+          score: parseFloat(sEl?.value) || defaultScores[i]
+        });
+      }
+      const sLast = document.querySelector(".ma-rate-score[data-dim='" + dim + "'][data-tier='" + boundCount + "']");
+      tiers.push({
+        maxRate: 99999,
+        score: parseFloat(sLast?.value) || defaultScores[boundCount]
+      });
+      return tiers.sort((a, b) => a.maxRate - b.maxRate);
+    }
+
+    function syncThresholdsFromAssessTiers() {
+      const cfg = MERCHANT_ASSESS_CONFIG;
+      const cb = (cfg.chargebackTiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      const fr = (cfg.fraudTiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      const rf = (cfg.refundTiers || []).slice().sort((a, b) => a.maxRate - b.maxRate);
+      if (cb[1]) cfg.thresholds.chargebackWarn = cb[1].maxRate;
+      if (cb[2]) cfg.thresholds.chargebackId = cb[2].maxRate;
+      if (fr[1]) cfg.thresholds.fraudWarn = fr[1].maxRate;
+      if (rf[1]) cfg.thresholds.refundWarn = rf[1].maxRate;
+      ["chargebackWarn", "chargebackId", "fraudWarn", "refundWarn"].forEach(k => {
+        document.querySelectorAll(".mrl-threshold[data-key='" + k + "']").forEach(el => {
+          el.value = cfg.thresholds[k];
+        });
+      });
+    }
+
     function applyMerchantAssessConfigToUI() {
       const cfg = MERCHANT_ASSESS_CONFIG;
-      const thMap = { chargebackWarn: "chargebackWarn", chargebackId: "chargebackId", fraudWarn: "fraudWarn", kycLow: "kycLow", refundWarn: "refundWarn" };
-      Object.keys(thMap).forEach(k => {
-        const el = document.querySelector(".ma-threshold[data-key='" + k + "']");
-        if (el) el.value = cfg.thresholds[k];
-      });
-      document.querySelectorAll(".ma-mul").forEach(el => {
-        if (el.dataset.key === "chargebackMul") el.value = cfg.chargebackMul;
-        if (el.dataset.key === "fraudMul") el.value = cfg.fraudMul;
-        if (el.dataset.key === "refundMul") el.value = cfg.refundMul;
-      });
+      applyRateTiersToUI("chargeback", cfg.chargebackTiers);
+      applyRateTiersToUI("fraud", cfg.fraudTiers);
+      applyRateTiersToUI("refund", cfg.refundTiers);
       document.querySelectorAll(".ma-website").forEach(el => {
         if (cfg.websiteScores[el.dataset.status] != null) el.value = cfg.websiteScores[el.dataset.status];
-      });
-      document.querySelectorAll(".ma-pci").forEach(el => {
-        if (cfg.pciScores[el.dataset.level] != null) el.value = cfg.pciScores[el.dataset.level];
       });
       document.querySelectorAll(".ma-compliance").forEach(el => {
         const h = parseInt(el.dataset.hits, 10);
@@ -4714,8 +5390,11 @@
       });
       const indDef = document.querySelector(".ma-industry-default");
       if (indDef) indDef.value = cfg.industryDefault;
-      document.querySelectorAll(".ma-geo").forEach(el => {
-        if (cfg.geoScores[el.dataset.country] != null) el.value = cfg.geoScores[el.dataset.country];
+      (cfg.geoTiers || []).forEach((t, i) => {
+        const cEl = document.querySelector(".ma-geo-countries[data-tier='" + i + "']");
+        const sEl = document.querySelector(".ma-geo-score[data-tier='" + i + "']");
+        if (cEl) cEl.value = (t.countries || []).join(", ");
+        if (sEl) sEl.value = t.score;
       });
       const geoDef = document.querySelector(".ma-geo-default");
       if (geoDef) geoDef.value = cfg.geoDefault;
@@ -4734,23 +5413,15 @@
 
     function readMerchantAssessConfigFromUI() {
       const cfg = MERCHANT_ASSESS_CONFIG;
-      ["chargebackWarn", "chargebackId", "fraudWarn", "kycLow", "refundWarn"].forEach(k => {
-        const el = document.querySelector(".ma-threshold[data-key='" + k + "']");
-        if (el) cfg.thresholds[k] = parseFloat(el.value) || cfg.thresholds[k];
-        const mrlEl = document.querySelector(".mrl-threshold[data-key='" + k + "']");
-        if (mrlEl) mrlEl.value = cfg.thresholds[k];
-      });
-      document.querySelectorAll(".ma-mul").forEach(el => {
-        if (el.dataset.key === "chargebackMul") cfg.chargebackMul = parseFloat(el.value) || 40;
-        if (el.dataset.key === "fraudMul") cfg.fraudMul = parseFloat(el.value) || 120;
-        if (el.dataset.key === "refundMul") cfg.refundMul = parseFloat(el.value) || 50;
-      });
+      cfg.chargebackTiers = readRateTiersFromUI("chargeback", 3, [0.5, 0.9, 1.5], [20, 40, 65, 90]);
+      cfg.fraudTiers = readRateTiersFromUI("fraud", 2, [0.2, 0.5], [20, 50, 85]);
+      cfg.refundTiers = readRateTiersFromUI("refund", 2, [5, 15], [20, 50, 85]);
+      syncThresholdsFromAssessTiers();
       document.querySelectorAll(".ma-website").forEach(el => {
-        cfg.websiteScores[el.dataset.status] = parseFloat(el.value) || 45;
+        cfg.websiteScores[el.dataset.status] = parseFloat(el.value) || (el.dataset.status === "mismatch" ? 80 : 15);
       });
-      document.querySelectorAll(".ma-pci").forEach(el => {
-        cfg.pciScores[el.dataset.level] = parseFloat(el.value) || 75;
-      });
+      delete cfg.websiteScores.unverified;
+      delete cfg.websiteCertWarnDays;
       document.querySelectorAll(".ma-compliance").forEach(el => {
         cfg.complianceScores[parseInt(el.dataset.hits, 10)] = parseFloat(el.value) || 55;
       });
@@ -4765,9 +5436,22 @@
       });
       const indDef = document.querySelector(".ma-industry-default");
       if (indDef) cfg.industryDefault = parseFloat(indDef.value) || 50;
-      document.querySelectorAll(".ma-geo").forEach(el => {
-        cfg.geoScores[el.dataset.country] = parseFloat(el.value) || 40;
+      const geoTierCount = document.querySelectorAll(".ma-geo-countries").length || 3;
+      const geoDefaults = [
+        { countries: ["US", "GB", "DE", "SG"], score: 25 },
+        { countries: ["HK"], score: 45 },
+        { countries: ["NG", "RU", "IR"], score: 90 }
+      ];
+      cfg.geoTiers = Array.from({ length: geoTierCount }, (_, i) => {
+        const cEl = document.querySelector(".ma-geo-countries[data-tier='" + i + "']");
+        const sEl = document.querySelector(".ma-geo-score[data-tier='" + i + "']");
+        const countries = parseGeoCountries(cEl?.value);
+        return {
+          countries: countries.length ? countries : (geoDefaults[i]?.countries || []),
+          score: parseFloat(sEl?.value) || geoDefaults[i]?.score || 40
+        };
       });
+      rebuildGeoScoresFromTiers();
       const geoDef = document.querySelector(".ma-geo-default");
       if (geoDef) cfg.geoDefault = parseFloat(geoDef.value) || 40;
       const tenureNew = document.querySelector(".ma-tenure-new");
@@ -4820,20 +5504,45 @@
         if (!raw) return;
         const saved = JSON.parse(raw);
         Object.assign(MERCHANT_ASSESS_CONFIG.thresholds, saved.thresholds || {});
-        if (saved.chargebackMul != null) MERCHANT_ASSESS_CONFIG.chargebackMul = saved.chargebackMul;
-        if (saved.fraudMul != null) MERCHANT_ASSESS_CONFIG.fraudMul = saved.fraudMul;
-        if (saved.refundMul != null) MERCHANT_ASSESS_CONFIG.refundMul = saved.refundMul;
-        if (saved.websiteScores) Object.assign(MERCHANT_ASSESS_CONFIG.websiteScores, saved.websiteScores);
-        if (saved.pciScores) Object.assign(MERCHANT_ASSESS_CONFIG.pciScores, saved.pciScores);
+        if (saved.chargebackTiers) MERCHANT_ASSESS_CONFIG.chargebackTiers = saved.chargebackTiers;
+        if (saved.fraudTiers) MERCHANT_ASSESS_CONFIG.fraudTiers = saved.fraudTiers;
+        if (saved.refundTiers) MERCHANT_ASSESS_CONFIG.refundTiers = saved.refundTiers;
+        if (saved.websiteScores) {
+          Object.assign(MERCHANT_ASSESS_CONFIG.websiteScores, saved.websiteScores);
+          delete MERCHANT_ASSESS_CONFIG.websiteScores.unverified;
+        }
         if (saved.complianceScores) Object.assign(MERCHANT_ASSESS_CONFIG.complianceScores, saved.complianceScores);
         if (saved.volumeAnomalyTiers) MERCHANT_ASSESS_CONFIG.volumeAnomalyTiers = saved.volumeAnomalyTiers;
         if (saved.industryDefault != null) MERCHANT_ASSESS_CONFIG.industryDefault = saved.industryDefault;
         if (saved.geoDefault != null) MERCHANT_ASSESS_CONFIG.geoDefault = saved.geoDefault;
+        if (saved.geoTiers) {
+          MERCHANT_ASSESS_CONFIG.geoTiers = saved.geoTiers;
+        } else if (saved.geoScores) {
+          const byScore = {};
+          Object.keys(saved.geoScores).forEach(c => {
+            const s = saved.geoScores[c];
+            if (!byScore[s]) byScore[s] = [];
+            byScore[s].push(c);
+          });
+          MERCHANT_ASSESS_CONFIG.geoTiers = Object.keys(byScore).map(s => ({
+            countries: byScore[s],
+            score: parseFloat(s)
+          })).sort((a, b) => a.score - b.score);
+        }
+        rebuildGeoScoresFromTiers();
         if (saved.tenureNewScore != null) MERCHANT_ASSESS_CONFIG.tenureNewScore = saved.tenureNewScore;
         if (saved.tenureTiers) MERCHANT_ASSESS_CONFIG.tenureTiers = saved.tenureTiers;
         if (saved.industryScores) Object.assign(MERCHANT_ASSESS_CONFIG.industryScores, saved.industryScores);
-        if (saved.geoScores) Object.assign(MERCHANT_ASSESS_CONFIG.geoScores, saved.geoScores);
-        if (saved.dimensions) MERCHANT_ASSESS_CONFIG.dimensions = saved.dimensions;
+        if (saved.dimensions) {
+          const dims = saved.dimensions.filter(d => d.key !== "kyc" && d.key !== "pci").map(d => {
+            if (d.key === "tenure" && (d.name === "经营时长" || !d.name)) return Object.assign({}, d, { name: "注册时长" });
+            return d;
+          });
+          const sum = dims.reduce((s, d) => s + d.weight, 0);
+          MERCHANT_ASSESS_CONFIG.dimensions = sum === 100 ? dims : MERCHANT_ASSESS_CONFIG.dimensions;
+        }
+        const tenureDim = MERCHANT_ASSESS_CONFIG.dimensions.find(d => d.key === "tenure");
+        if (tenureDim) tenureDim.name = "注册时长";
         if (saved.levelPolicies) Object.assign(MERCHANT_ASSESS_CONFIG.levelPolicies, saved.levelPolicies);
       } catch (e) { /* ignore */ }
     }
@@ -4850,16 +5559,6 @@
       document.querySelectorAll(".ma-toggle").forEach(t => {
         t.onclick = () => t.classList.toggle("active");
       });
-      document.querySelectorAll(".ma-threshold").forEach(el => {
-        el.addEventListener("input", () => {
-          const key = el.dataset.key;
-          if (key && MERCHANT_ASSESS_CONFIG.thresholds[key] != null) {
-            MERCHANT_ASSESS_CONFIG.thresholds[key] = parseFloat(el.value) || MERCHANT_ASSESS_CONFIG.thresholds[key];
-            const mrlEl = document.querySelector(".mrl-threshold[data-key='" + key + "']");
-            if (mrlEl) mrlEl.value = el.value;
-          }
-        });
-      });
       applyMerchantAssessConfigToUI();
       updateMaWeightSum();
       updateOnboardingDimSummary();
@@ -4874,47 +5573,74 @@
         ).join("") + '</tbody></table></div>';
     }
 
+    function renderHistoryDetailBody(merchant, h) {
+      ensureHistoryAssessDetails(merchant, h);
+      const isOnboarding = /^入网/.test(String(h.type || ""));
+      const dimTable = h.details && h.details.length
+        ? renderAssessDetailTable(h.details)
+        : '<div class="empty" style="padding:8px;">暂无维度明细</div>';
+      const weightedSum = (h.details || []).reduce((s, d) => s + (d.weighted || 0), 0);
+      return '<div style="text-align:left;">' +
+        '<div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#111827;">评估概要</div>' +
+        '<div class="detail-grid" style="margin-bottom:12px;">' +
+        detailItem("评估时间", h.time || "—") +
+        detailItem("评估类型", h.type || "—") +
+        detailItem("综合评分", h.riskScore != null ? h.riskScore + " / 100" : "—") +
+        detailItem("风险等级", h.riskLevel && h.riskLevel !== "—" ? riskTag(h.riskLevel) : "—") +
+        detailItem("维度加权合计", weightedSum ? weightedSum + " 分" : "—") +
+        detailItem("评估说明", isOnboarding
+          ? "入网评估：不含拒付率 / 欺诈率 / 退款率 / 交易放量"
+          : "存续复评：含交易行为与放量等全量维度") +
+        (isOnboarding
+          ? ""
+          : detailItem("拒付率", h.chargebackRate != null ? h.chargebackRate + "%" : "—") +
+            detailItem("欺诈率", h.fraudRate != null ? h.fraudRate + "%" : "—") +
+            detailItem("退款率", h.refundRate != null ? h.refundRate + "%" : "—") +
+            detailItem("交易放量", h.volumeAnomalyRatio != null ? h.volumeAnomalyRatio + "%" : "—")) +
+        detailItem("网站合规", WEBSITE_STATUS_LABEL[h.websiteStatus] || h.websiteStatus || "—") +
+        detailItem("合规命中", (h.complianceHits ?? 0) + " 条") +
+        detailItem("行业", merchant.industry || "—") +
+        detailItem("注册国家", merchant.country || "—") +
+        '</div>' +
+        '<div style="font-size:13px;font-weight:600;margin:4px 0 8px;color:#111827;">维度评分明细</div>' +
+        dimTable +
+        '</div>';
+    }
 
-    function openMerchantAssessDetail(id) {
-      const m = MERCHANTS.find(x => x.id === id);
-      if (!m) return;
-      const rejected = isRejectedMerchant(m);
-      if (!rejected && !m.assessDetails) assessMerchant(m);
-      document.getElementById("obModalTitle").textContent = rejected ? "入网评估详情" : "商户风险评级详情";
-      document.getElementById("obModalSub").textContent = m.id + " · " + m.name;
-      const dimRows = m.assessDetails ? renderAssessDetailTable(m.assessDetails) : '<div class="empty" style="padding:20px;">暂无评估明细</div>';
-      const rejectSection = rejected
-        ? '<div class="form-section"><h4>审核决策</h4><div class="detail-grid">' +
-          detailItem("审核状态", m.reviewStatus) + detailItem("收单状态", m.status) +
-          detailItem("拒绝原因", m.rejectReason || "—") + detailItem("审核时间", m.reviewTime || "—") +
-          '</div></div>'
-        : "";
-      const tradeFields = rejected
-        ? detailItem("拒付率", "—") + detailItem("欺诈率", "—") + detailItem("退款率", "—") + detailItem("交易放量", "—")
-        : detailItem("拒付率", m.chargebackRate + "%") +
-          detailItem("欺诈率", (m.fraudRate || 0) + "%") +
-          detailItem("退款率", (m.refundRate || 0) + "%") +
-          detailItem("交易放量", (m.volumeAnomalyRatio ?? 100) + "%");
-      document.getElementById("onboardDetail").innerHTML =
-        rejectSection +
-        '<div class="form-section"><h4>' + (rejected ? "入网评估" : "综合评估") + '</h4><div class="detail-grid">' +
-        detailItem("综合评分", m.riskScore != null ? m.riskScore + " / 100" : "—") +
-        detailItem("风险等级", m.riskLevel) +
-        detailItem("等级规则", "≤" + MERCHANT_ASSESS_CONFIG.thresholds.lowMax + " 低风险；" +
-          (MERCHANT_ASSESS_CONFIG.thresholds.lowMax + 1) + "–" + MERCHANT_ASSESS_CONFIG.thresholds.midMax + " 中风险；>" +
-          MERCHANT_ASSESS_CONFIG.thresholds.midMax + " 高风险") +
-        tradeFields +
-        detailItem("网站合规", WEBSITE_STATUS_LABEL[m.websiteStatus] || m.websiteStatus || "—") +
-        detailItem("PCI合规", PCI_LEVEL_LABEL[m.pciLevel] || m.pciLevel || "—") +
-        detailItem("合规命中", (m.complianceHits ?? 0) + " 条") +
-        detailItem("KYC评分", (m.kycScore || "—")) +
-        detailItem("最近评估", m.lastAssessTime || "—") +
-        '</div></div>' +
-        '<div class="form-section"><h4>维度评分明细</h4>' + dimRows + '</div>';
-      document.getElementById("obRejectBtn").style.display = "none";
-      document.getElementById("obConditionalBtn").style.display = "none";
-      document.getElementById("obApproveBtn").style.display = "none";
-      openMask("onboardMask");
+    function renderAssessHistorySection(m, opts) {
+      opts = opts || {};
+      const list = m.assessHistory || [];
+      if (!list.length) {
+        if (opts.hideIfEmpty) return "";
+        return '<div class="form-section"><h4>历史评估记录</h4><div class="empty" style="padding:16px;">' + (opts.emptyText || "暂无历史评估记录") + '</div></div>';
+      }
+      list.forEach(h => ensureHistoryAssessDetails(m, h));
+      const hideTrade = opts.hideTrade || isRejectedMerchant(m);
+      const colSpan = hideTrade ? 6 : 8;
+      return '<div class="form-section"><h4>历史评估记录 <span style="font-size:12px;font-weight:400;color:#64748b;">共 ' + list.length + ' 条（不含当前评估）</span></h4>' +
+        '<div class="table-wrap"><table><thead><tr><th>评估时间</th><th>评估类型</th><th>综合评分</th><th>风险等级</th>' +
+        (hideTrade ? "" : "<th>拒付率</th><th>欺诈率</th>") +
+        '<th>网站合规</th><th>操作</th></tr></thead><tbody>' +
+        list.map(h =>
+          '<tr><td>' + (h.time || "—") + '</td><td>' + (h.type || "—") + '</td>' +
+          '<td>' + (h.riskScore != null ? '<span class="score-val">' + h.riskScore + '</span>/100' : "—") + '</td>' +
+          '<td>' + (h.riskLevel && h.riskLevel !== "—" ? riskTag(h.riskLevel) : "—") + '</td>' +
+          (hideTrade
+            ? ""
+            : '<td>' + (h.chargebackRate != null ? h.chargebackRate + "%" : "—") + '</td>' +
+              '<td>' + (h.fraudRate != null ? h.fraudRate + "%" : "—") + '</td>') +
+          '<td>' + (WEBSITE_STATUS_LABEL[h.websiteStatus] || h.websiteStatus || "—") + '</td>' +
+          '<td><button type="button" onclick="toggleMerchantHistoryDetail(\'' + h.id + '\')">明细</button></td></tr>' +
+          '<tr id="ah-detail-' + h.id + '" style="display:none;"><td colspan="' + colSpan + '" style="background:#f8fafc;padding:12px;">' +
+          renderHistoryDetailBody(m, h) + '</td></tr>'
+        ).join("") +
+        '</tbody></table></div></div>';
+    }
+
+    function toggleMerchantHistoryDetail(historyId) {
+      const el = document.getElementById("ah-detail-" + historyId);
+      if (!el) return;
+      el.style.display = el.style.display === "none" ? "" : "none";
     }
 
     function applyMeasureToOrder(order, actionName, hitDetails) {
@@ -5073,7 +5799,6 @@
         blacklistHit: false,
         merchantDays: Math.floor((Date.now() - new Date(m.onboardDate)) / 86400000),
         merchantTodayAmount: spec.amount,
-        merchantKycScore: m.kycScore,
         merchantComplianceHits: m.complianceHits ?? 0,
         merchantChargebackRate: m.chargebackRate || 0,
         merchantFraudRate: m.fraudRate || 0,
@@ -5152,7 +5877,6 @@
         blacklistHit: false,
         merchantDays: Math.floor((Date.now() - new Date(m.onboardDate)) / 86400000),
         merchantTodayAmount: spec.amount,
-        merchantKycScore: m.kycScore,
         merchantComplianceHits: m.complianceHits ?? 0,
         merchantChargebackRate: m.chargebackRate || 0,
         merchantFraudRate: m.fraudRate || 0,
@@ -5233,7 +5957,6 @@
         blacklistHit: false,
         merchantDays: Math.floor((Date.now() - new Date(m.onboardDate)) / 86400000),
         merchantTodayAmount: m.todayAmount,
-        merchantKycScore: m.kycScore,
         merchantComplianceHits: 0,
         merchantChargebackRate: m.chargebackRate || 0,
         merchantFraudRate: m.fraudRate || 0,
@@ -5333,7 +6056,6 @@
         blacklistHit: Math.random() < 0.008,
         merchantDays,
         merchantTodayAmount: m.todayAmount,
-        merchantKycScore: m.kycScore,
         merchantComplianceHits: m.complianceHits ?? 0,
         merchantChargebackRate: m.chargebackRate || 0,
         merchantFraudRate: m.fraudRate || 0,
@@ -5438,7 +6160,7 @@
     }
 
     function reviewStatusTag(s) {
-      const map = { "批准入驻": "pass", "条件通过": "audit", "拒绝入驻": "block" };
+      const map = { "通过": "pass", "批准入驻": "pass", "不通过": "block", "拒绝入驻": "block" };
       return '<span class="tag ' + (map[s] || "pending") + '">' + (s || "—") + '</span>';
     }
 
@@ -5542,7 +6264,6 @@
     function renderOnboarding(filtered, resetPage) {
       if (filtered !== undefined) setPagerFiltered("onboarding", filtered, resetPage);
       const list = pendingOnboardingList(getPagerList("onboarding", ONBOARDING));
-      const kycMap = { PASS: "通过", REJECT: "拒绝", REVIEW: "待复核", PENDING: "核验中" };
       const page = paginateList("onboarding", list);
       document.getElementById("onboardBody").innerHTML = page.items.length ? page.items.map(o => {
         const viewBtn = '<button onclick="openOnboardView(\'' + o.appId + '\')">查看</button>';
@@ -5550,17 +6271,17 @@
         return '<tr><td><span class="action-code">' + (o.merchantId || "—") + '</span></td>' +
           '<td>' + o.name + '</td><td>' + o.industry + '</td><td>' + o.country + '</td>' +
           '<td>' + o.syncTime + '</td>' +
-          '<td>' + (kycMap[o.kycStatus] || o.kycStatus) + '</td>' +
           '<td>' + (o.riskScore !== null ? o.riskScore + '/100' : '—') + '</td>' +
           '<td>' + (o.riskLevel !== "—" ? riskTag(o.riskLevel) : "—") + '</td>' +
           '<td>' + statusTag(o.status) + '</td>' +
           '<td class="ob-actions-cell"><span class="ob-actions">' + viewBtn + actionBtn + '</span></td></tr>';
-      }).join("") : '<tr><td colspan="10" class="empty">暂无待审核商户</td></tr>';
+      }).join("") : '<tr><td colspan="9" class="empty">暂无待审核商户</td></tr>';
       renderPagerBar("onboarding", "onboardPager", page.total, () => renderOnboarding());
     }
 
     function renderMerchants(filtered, resetPage) {
       if (filtered !== undefined) setPagerFiltered("merchants", filtered, resetPage);
+      MERCHANTS.forEach(syncMerchantRiskLevel);
       const list = getPagerList("merchants", MERCHANTS);
       document.getElementById("mTotal").textContent = MERCHANTS.length;
       document.getElementById("mActive").textContent = MERCHANTS.filter(m => m.status === "正常").length;
@@ -5574,7 +6295,6 @@
       const page = paginateList("merchants", list);
       document.getElementById("merchantBody").innerHTML = page.items.length ? page.items.map(m => {
         const rejected = isRejectedMerchant(m);
-        const assessBtnLabel = rejected ? "入网评估" : "评估详情";
         return '<tr><td>' + m.id + '</td><td>' + m.name + '</td><td>' + m.industry + '</td><td>' + m.onboardDate + '</td>' +
         '<td>' + (m.riskScore != null ? '<span class="score-val">' + m.riskScore + '</span>/100' : "—") + '</td>' +
         '<td>' + (m.riskLevel && m.riskLevel !== "—" ? riskTag(m.riskLevel) : "—") + '</td>' +
@@ -5585,8 +6305,7 @@
         '<td>' + (rejected ? "—" : m.todayAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })) + '</td>' +
         '<td>' + reviewStatusTag(m.reviewStatus) + '</td>' +
         '<td>' + opsStatusTag(m.status) + '</td>' +
-        '<td><button onclick="openMerchantDetail(\'' + m.id + '\')">详情</button> ' +
-        '<button onclick="openMerchantAssessDetail(\'' + m.id + '\')">' + assessBtnLabel + '</button></td></tr>';
+        '<td><button onclick="openMerchantDetail(\'' + m.id + '\')">详情</button></td></tr>';
       }).join("") : '<tr><td colspan="14" class="empty">暂无商户</td></tr>';
       renderPagerBar("merchants", "merchantPager", page.total, () => renderMerchants());
     }
@@ -5951,11 +6670,6 @@
       openOnboardDetail(appId, "view");
     }
 
-    function attachStatusTag(status) {
-      const map = { "已核验": "pass", "待复核": "audit", "核验失败": "block", "未上传": "pending" };
-      return '<span class="tag ' + (map[status] || "pending") + '">' + status + '</span>';
-    }
-
     function attachIconClass(type) {
       if (type === "img") return "img";
       if (type === "doc") return "doc";
@@ -5973,33 +6687,28 @@
       const short = name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, "");
       const t = syncTime || new Date().toLocaleString("zh-CN", { hour12: false });
       return [
-        { id: "F" + Date.now(), category: "企业资质", name: "营业执照-" + short + ".pdf", size: "820 KB", uploadTime: t, status: "待复核", type: "pdf" },
-        { id: "F" + (Date.now() + 1), category: "身份证明", name: "法人身份证.pdf", size: "650 KB", uploadTime: t, status: "待复核", type: "pdf" },
-        { id: "F" + (Date.now() + 2), category: "银行信息", name: "对公账户证明.pdf", size: "540 KB", uploadTime: t, status: "待复核", type: "pdf" }
+        { id: "F" + Date.now(), category: "企业资质", name: "营业执照-" + short + ".pdf", size: "820 KB", uploadTime: t, type: "pdf" },
+        { id: "F" + (Date.now() + 1), category: "身份证明", name: "法人身份证.pdf", size: "650 KB", uploadTime: t, type: "pdf" },
+        { id: "F" + (Date.now() + 2), category: "银行信息", name: "对公账户证明.pdf", size: "540 KB", uploadTime: t, type: "pdf" }
       ];
     }
 
     function renderOnboardAttachmentsSection(o) {
       const files = o.attachments || [];
-      const uploaded = files.filter(f => f.status !== "未上传");
-      const verified = files.filter(f => f.status === "已核验").length;
       if (!files.length) {
         return '<div class="form-section"><h4>入网附件材料</h4><div class="empty" style="padding:20px;">暂无附件，请等待外部系统同步</div></div>';
       }
       return '<div class="form-section"><h4>入网附件材料（外部系统同步）</h4>' +
-        '<div class="attach-summary"><span>共 <b>' + files.length + '</b> 项</span>' +
-        '<span>已上传 <b>' + uploaded.length + '</b> 项</span>' +
-        '<span>已核验 <b>' + verified + '</b> 项</span></div>' +
+        '<div class="attach-summary"><span>共 <b>' + files.length + '</b> 项</span></div>' +
         '<div class="table-wrap"><table class="attach-table"><thead><tr>' +
-        '<th>文件名称</th><th>材料类型</th><th>大小</th><th>上传时间</th><th>核验状态</th><th>操作</th>' +
+        '<th>文件名称</th><th>材料类型</th><th>大小</th><th>上传时间</th><th>操作</th>' +
         '</tr></thead><tbody>' +
         files.map(f =>
           '<tr><td><div class="attach-name"><span class="attach-icon ' + attachIconClass(f.type) + '"><i class="fas ' + attachIconName(f.type) + '"></i></span><span title="' + f.name + '">' + f.name + '</span></div></td>' +
           '<td>' + f.category + '</td>' +
           '<td>' + (f.size || "—") + '</td>' +
           '<td>' + (f.uploadTime || "—") + '</td>' +
-          '<td>' + attachStatusTag(f.status) + '</td>' +
-          '<td>' + (f.status === "未上传" ? "—" : '<button onclick="openAttachmentPreview(\'' + o.appId + '\',\'' + f.id + '\')">预览</button>') + '</td></tr>'
+          '<td><button onclick="openAttachmentPreview(\'' + o.appId + '\',\'' + f.id + '\')">预览</button></td></tr>'
         ).join("") +
         '</tbody></table></div></div>';
     }
@@ -6009,13 +6718,13 @@
       const f = o && (o.attachments || []).find(x => x.id === fileId);
       if (!f) { toast("附件不存在"); return; }
       document.getElementById("attachPreviewTitle").textContent = f.name;
-      document.getElementById("attachPreviewSub").textContent = f.category + " · " + (f.size || "—") + " · " + f.status;
+      document.getElementById("attachPreviewSub").textContent = f.category + " · " + (f.size || "—");
       const icon = attachIconName(f.type);
       document.getElementById("attachPreviewBody").innerHTML =
         '<div class="detail-grid" style="margin-bottom:14px;">' +
         detailItem("文件名称", f.name) + detailItem("材料类型", f.category) +
         detailItem("文件大小", f.size || "—") + detailItem("上传时间", f.uploadTime || "—") +
-        detailItem("核验状态", f.status) + detailItem("商户号", o.merchantId || "—") +
+        detailItem("商户号", o.merchantId || "—") +
         '</div>' +
         '<div class="attach-preview-box"><i class="fas ' + icon + '"></i>' +
         '<div><b>' + f.name + '</b></div>' +
@@ -6023,8 +6732,53 @@
       openMask("attachPreviewMask");
     }
 
-    function buildOnboardDetailHtml(o) {
-      const kycMap = { PASS: "通过", REJECT: "拒绝", REVIEW: "待复核", PENDING: "核验中" };
+    function calcMerchantTenureDays(registerDate, asOf) {
+      return calcRegisterDays(registerDate, asOf);
+    }
+
+    function renderMerchantInfoSection(entity, opts) {
+      opts = opts || {};
+      const onboarding = !!opts.onboarding;
+      const rejected = !!opts.rejected;
+      const id = entity.id || entity.merchantId || "—";
+      const onboardDate = entity.onboardDate || (entity.syncTime ? String(entity.syncTime).slice(0, 10) : "");
+      const registerDate = getRegisterDate(entity);
+      const tenureDays = calcRegisterDays(registerDate);
+      let html = '<div class="form-section"><h4>商户信息</h4><div class="detail-grid">' +
+        detailItem("商户号", id) +
+        (entity.syncTime ? detailItem("同步时间", entity.syncTime) : "") +
+        detailItem("商户名称", entity.name || "—") +
+        detailItem("行业（行业风险）", entity.industry || "—") +
+        detailItem("注册国家（注册地风险）", entity.country || "—") +
+        detailItem("注册时间", registerDate || "—") +
+        detailItem("注册时长", tenureDays != null ? tenureDays + " 天" : (onboarding ? "无注册时间（默认新注册档）" : "—")) +
+        (onboardDate ? detailItem("入网日期", onboardDate) : "") +
+        (entity.website ? detailItem("业务网站", entity.website) : "") +
+        detailItem("网站合规", WEBSITE_STATUS_LABEL[entity.websiteStatus] || entity.websiteStatus || "—") +
+        detailItem("合规筛查命中", (entity.complianceHits ?? 0) + " 条");
+      if (onboarding) {
+        html += detailItem("拒付率 / 欺诈率 / 退款率 / 交易放量", "入网阶段不适用");
+      } else if (rejected) {
+        html += detailItem("拒付率", "—") + detailItem("欺诈率", "—") +
+          detailItem("退款率", "—") + detailItem("交易放量", "—") +
+          detailItem("今日交易笔数", "—") + detailItem("今日交易金额", "—") +
+          detailItem("收单状态", opsStatusTag(entity.status));
+      } else {
+        html += detailItem("拒付率", (entity.chargebackRate ?? 0) + "%") +
+          detailItem("欺诈率", (entity.fraudRate ?? 0) + "%") +
+          detailItem("退款率", (entity.refundRate ?? 0) + "%") +
+          detailItem("交易放量", (entity.volumeAnomalyRatio ?? 100) + "%") +
+          detailItem("今日交易笔数", entity.todayCount ?? 0) +
+          detailItem("今日交易金额", (entity.todayAmount != null ? entity.todayAmount.toLocaleString() : "—")) +
+          detailItem("收单状态", opsStatusTag(entity.status));
+      }
+      if (opts.eddText) html += detailItem("进行中 EDD", opts.eddText);
+      html += '</div></div>';
+      return html;
+    }
+
+    function buildOnboardDetailHtml(o, opts) {
+      opts = opts || {};
       if (!o.assessDetails && o.riskScore !== null) {
         const savedStatus = o.status;
         assessOnboardingApplicant(o);
@@ -6033,35 +6787,27 @@
       const dimSection = o.assessDetails && o.assessDetails.length
         ? '<div class="form-section"><h4>入网评估明细</h4>' + renderAssessDetailTable(o.assessDetails) + '</div>' : '';
       const t = MERCHANT_ASSESS_CONFIG.thresholds;
-      return '<div class="form-section"><h4>同步信息（外部系统）</h4><div class="detail-grid">' +
-        detailItem("商户号", o.merchantId || "—") +
-        detailItem("同步时间", o.syncTime) +
-        detailItem("商户名称", o.name) + detailItem("行业类型", o.industry) +
-        detailItem("注册国家", o.country) + detailItem("业务网站", o.website) +
-        '</div></div>' +
+      const reviewForm = opts.isReview && o.status === "待审核"
+        ? '<div class="form-section"><h4>审核说明</h4><div class="field">' +
+          '<label>审核说明（必填）</label>' +
+          '<textarea id="obReviewRemark" style="width:100%;" placeholder="填写通过或不通过的审核依据、风险判断及补充说明"></textarea>' +
+          '</div></div>'
+        : "";
+      return renderMerchantInfoSection(o, { onboarding: true }) +
         renderOnboardAttachmentsSection(o) +
-        '<div class="form-section"><h4>KYC 信息（同步）</h4><div class="detail-grid">' +
-        detailItem("KYC状态", kycMap[o.kycStatus] || o.kycStatus) +
-        detailItem("KYC评分", o.kycScore != null ? o.kycScore + " / 100" : "—") +
-        '</div></div>' +
-        '<div class="form-section"><h4>合规与资质（同步）</h4><div class="detail-grid">' +
-        detailItem("网站合规", WEBSITE_STATUS_LABEL[o.websiteStatus] || o.websiteStatus || "待核验") +
-        detailItem("PCI 合规", PCI_LEVEL_LABEL[o.pciLevel] || o.pciLevel || "未认证") +
-        detailItem("合规筛查", (o.complianceHits ?? 0) + " 条命中") +
-        '</div></div>' +
         '<div class="form-section"><h4>风控风险评级</h4><div class="detail-grid">' +
         detailItem("综合评分", o.riskScore !== null ? o.riskScore + " / 100" : "待评估") +
         detailItem("风险等级", o.riskLevel) +
-        detailItem("评估说明", "入网无交易历史；不含拒付率/欺诈率/退款率/交易放量") +
         detailItem("等级规则", "≤" + t.lowMax + " 低风险；" + (t.lowMax + 1) + "–" + t.midMax + " 中风险；>" + t.midMax + " 高风险") +
         detailItem("评估时间", o.assessTime || "—") +
-        detailItem("入驻建议", o.riskScore === null ? "请先执行风险评级" : o.riskScore <= t.lowMax ? "建议批准" : o.riskScore <= t.midMax ? "条件入驻" : "建议拒绝") +
         '</div></div>' + dimSection +
+        renderAssessHistorySection(o, { hideIfEmpty: true, hideTrade: true }) +
+        reviewForm +
         (o.status === "已通过" || o.status === "已拒绝"
           ? '<div class="form-section"><h4>审核决策</h4><div class="detail-grid">' +
             detailItem("审核状态", statusTag(o.status)) +
             detailItem("审核时间", o.reviewTime || "—") +
-            (o.rejectReason ? detailItem("拒绝原因", o.rejectReason) : "") +
+            detailItem("审核说明", o.reviewRemark || o.rejectReason || "—") +
             '</div></div>' : "");
     }
 
@@ -6072,10 +6818,9 @@
       const isReview = mode === "review";
       document.getElementById("obModalTitle").textContent = isReview ? "商户入网审核" : "商户入网详情";
       document.getElementById("obModalSub").textContent = (o.merchantId || "—") + " · " + o.name;
-      document.getElementById("onboardDetail").innerHTML = buildOnboardDetailHtml(o);
+      document.getElementById("onboardDetail").innerHTML = buildOnboardDetailHtml(o, { isReview });
       const showActions = isReview && o.status === "待审核";
       document.getElementById("obRejectBtn").style.display = showActions ? "inline-block" : "none";
-      document.getElementById("obConditionalBtn").style.display = showActions ? "inline-block" : "none";
       document.getElementById("obApproveBtn").style.display = showActions ? "inline-block" : "none";
       const eddBtnOb = document.getElementById("obEddBtn");
       if (eddBtnOb) eddBtnOb.style.display = "none";
@@ -6085,62 +6830,82 @@
     function reviewOnboard(decision) {
       const o = ONBOARDING.find(x => x.appId === currentObAppId);
       if (!o) return;
+      const remarkEl = document.getElementById("obReviewRemark");
+      const remark = remarkEl ? remarkEl.value.trim() : "";
+      if (!remark) { toast("请填写审核说明"); return; }
+      o.reviewRemark = remark;
       if (decision === "approve") {
         o.status = "已通过";
         o.reviewTime = new Date().toLocaleString("zh-CN", { hour12: false });
         MERCHANTS.push({
           id: o.merchantId || nextMerchantId(),
           name: o.name, industry: o.industry, country: o.country,
+          registerDate: getRegisterDate(o) || "",
           onboardDate: new Date().toISOString().slice(0, 10),
           riskScore: o.riskScore || 30, riskLevel: o.riskLevel === "—" ? "低风险" : o.riskLevel,
-          reviewStatus: "批准入驻", status: "正常", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
-          websiteStatus: o.websiteStatus || "unverified", pciLevel: o.pciLevel || "NONE", complianceHits: o.complianceHits ?? 0,
-          kycScore: o.kycScore || 85, todayCount: 0, todayAmount: 0,
+          reviewStatus: "通过", status: "正常", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
+          websiteStatus: o.websiteStatus === "mismatch" ? "mismatch" : "compliant", complianceHits: o.complianceHits ?? 0,
+          todayCount: 0, todayAmount: 0,
+          reviewRemark: remark, reviewTime: o.reviewTime,
           lastAssessTime: null, assessDetails: null
         });
         if (!o.merchantId) o.merchantId = MERCHANTS[MERCHANTS.length - 1].id;
-        assessMerchant(MERCHANTS[MERCHANTS.length - 1]);
-        addAuditLog({ module: "商户管理", action: "审核", level: "INFO", target: o.appId, summary: "批准商户入驻申请", detail: { merchant: o.name, merchantId: o.merchantId, decision: "批准入驻", riskLevel: o.riskLevel } });
-        toast("商户「" + o.name + "」已批准入驻", false);
-      } else if (decision === "conditional") {
-        o.status = "已通过";
-        o.reviewTime = new Date().toLocaleString("zh-CN", { hour12: false });
-        MERCHANTS.push({
-          id: o.merchantId || nextMerchantId(),
-          name: o.name, industry: o.industry, country: o.country,
-          onboardDate: new Date().toISOString().slice(0, 10),
-          riskScore: o.riskScore || 50, riskLevel: "中风险",
-          reviewStatus: "条件通过", status: "观察", chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
-          websiteStatus: o.websiteStatus || "unverified", pciLevel: o.pciLevel || "NONE", complianceHits: o.complianceHits ?? 0,
-          kycScore: o.kycScore || 75, todayCount: 0, todayAmount: 0,
-          lastAssessTime: null, assessDetails: null
-        });
-        if (!o.merchantId) o.merchantId = MERCHANTS[MERCHANTS.length - 1].id;
-        assessMerchant(MERCHANTS[MERCHANTS.length - 1]);
-        addAuditLog({ module: "商户管理", action: "审核", level: "WARN", target: o.appId, summary: "条件通过商户入驻申请", detail: { merchant: o.name, merchantId: o.merchantId, decision: "条件通过", riskLevel: "中风险" } });
-        toast("商户「" + o.name + "」条件通过，已加入观察名单", true);
+        const newM = MERCHANTS[MERCHANTS.length - 1];
+        assessMerchant(newM);
+        const priorHist = (o.assessHistory || []).map(h => Object.assign({}, h, {
+          details: h.details ? h.details.map(d => Object.assign({}, d)) : null
+        }));
+        newM.assessHistory = [{
+          id: nextAssessHistoryId(),
+          time: o.assessTime || newM.lastAssessTime,
+          type: "入网评估",
+          riskScore: o.riskScore,
+          riskLevel: o.riskLevel,
+          chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
+          websiteStatus: o.websiteStatus,
+          complianceHits: o.complianceHits ?? 0,
+          details: o.assessDetails ? o.assessDetails.map(d => Object.assign({}, d)) : null
+        }].concat(priorHist);
+        addAuditLog({ module: "商户管理", action: "审核", level: "INFO", target: o.appId, summary: "商户入网审核通过", detail: { merchant: o.name, merchantId: o.merchantId, decision: "通过", riskLevel: o.riskLevel, remark } });
+        toast("商户「" + o.name + "」审核通过", false);
       } else {
         o.status = "已拒绝";
         o.reviewTime = new Date().toLocaleString("zh-CN", { hour12: false });
-        o.rejectReason = o.rejectReason || "人工审核拒绝入驻";
+        o.rejectReason = remark;
+        const priorHistReject = (o.assessHistory || []).map(h => Object.assign({}, h, {
+          details: h.details ? h.details.map(d => Object.assign({}, d)) : null
+        }));
         MERCHANTS.push({
           id: o.merchantId || nextMerchantId(),
           name: o.name, industry: o.industry, country: o.country,
+          registerDate: getRegisterDate(o) || "",
           onboardDate: new Date().toISOString().slice(0, 10),
           riskScore: o.riskScore ?? null,
           riskLevel: o.riskLevel || "—",
-          reviewStatus: "拒绝入驻",
+          reviewStatus: "不通过",
           status: "未开通",
-          rejectReason: o.rejectReason,
+          rejectReason: remark,
+          reviewRemark: remark,
           reviewTime: o.reviewTime,
           chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
-          websiteStatus: o.websiteStatus || "unverified", pciLevel: o.pciLevel || "NONE", complianceHits: o.complianceHits ?? 0,
-          kycScore: o.kycScore || 0, todayCount: 0, todayAmount: 0,
-          lastAssessTime: o.assessTime || null, assessDetails: o.assessDetails || null
+          websiteStatus: o.websiteStatus === "mismatch" ? "mismatch" : "compliant", complianceHits: o.complianceHits ?? 0,
+          todayCount: 0, todayAmount: 0,
+          lastAssessTime: o.assessTime || null, assessDetails: o.assessDetails || null,
+          assessHistory: [{
+            id: nextAssessHistoryId(),
+            time: o.assessTime || o.reviewTime,
+            type: "入网评估",
+            riskScore: o.riskScore,
+            riskLevel: o.riskLevel,
+            chargebackRate: 0, fraudRate: 0, refundRate: 0, volumeAnomalyRatio: 100,
+            websiteStatus: o.websiteStatus,
+            complianceHits: o.complianceHits ?? 0,
+            details: o.assessDetails ? o.assessDetails.map(d => Object.assign({}, d)) : null
+          }].concat(priorHistReject)
         });
         if (!o.merchantId) o.merchantId = MERCHANTS[MERCHANTS.length - 1].id;
-        addAuditLog({ module: "商户管理", action: "审核", level: "WARN", target: o.appId, summary: "拒绝商户入驻申请", detail: { merchant: o.name, merchantId: o.merchantId, decision: "拒绝入驻", reason: o.rejectReason } });
-        toast("已拒绝「" + o.name + "」入驻申请，已记入商户列表");
+        addAuditLog({ module: "商户管理", action: "审核", level: "WARN", target: o.appId, summary: "商户入网审核不通过", detail: { merchant: o.name, merchantId: o.merchantId, decision: "不通过", reason: remark } });
+        toast("商户「" + o.name + "」审核不通过，已记入商户列表");
       }
       closeMask("onboardMask");
       const idx = ONBOARDING.findIndex(x => x.appId === currentObAppId);
@@ -6153,32 +6918,39 @@
       const m = MERCHANTS.find(x => x.id === id);
       if (!m) return;
       const rejected = isRejectedMerchant(m);
+      // 与列表使用同一套评估逻辑，避免列表分值/等级与详情不一致
+      if (!m.assessDetails || m.riskScore == null) {
+        assessMerchant(m, { onboarding: rejected, keepAssessTime: !!m.lastAssessTime });
+        renderMerchants();
+      } else {
+        syncMerchantRiskLevel(m);
+      }
       const merchantEdd = EDD_CASES.filter(e => e.merchantId === id && e.status !== "已通过");
+      const t = MERCHANT_ASSESS_CONFIG.thresholds;
+      const dimRows = m.assessDetails && m.assessDetails.length
+        ? renderAssessDetailTable(m.assessDetails)
+        : '<div class="empty" style="padding:20px;">暂无评估明细</div>';
       document.getElementById("obModalTitle").textContent = rejected ? "商户入网拒绝详情" : "商户详情";
       document.getElementById("obModalSub").textContent = m.id + " · " + m.name;
       document.getElementById("onboardDetail").innerHTML =
-        '<div class="detail-grid">' +
-        detailItem("商户号", m.id) + detailItem("商户名称", m.name) +
-        detailItem("行业", m.industry) + detailItem("注册国家", m.country) +
-        detailItem("申请日期", m.onboardDate) +
-        detailItem("风险评级", m.riskScore != null ? m.riskScore + "/100" : "—") +
-        detailItem("风险等级", m.riskLevel) +
-        (rejected
-          ? detailItem("拒付率", "—") + detailItem("欺诈率", "—") + detailItem("退款率", "—")
-          : detailItem("拒付率", m.chargebackRate + "%") +
-            detailItem("欺诈率", (m.fraudRate || 0) + "%") +
-            detailItem("退款率", (m.refundRate || 0) + "%")) +
-        detailItem("网站合规", WEBSITE_STATUS_LABEL[m.websiteStatus] || "—") +
-        detailItem("PCI合规", PCI_LEVEL_LABEL[m.pciLevel] || "—") +
-        (rejected
-          ? detailItem("今日交易笔数", "—") + detailItem("今日交易金额", "—")
-          : detailItem("今日交易笔数", m.todayCount) + detailItem("今日交易金额", m.todayAmount.toLocaleString())) +
-        detailItem("审核状态", m.reviewStatus || "—") + detailItem("收单状态", m.status) +
-        (rejected ? detailItem("拒绝原因", m.rejectReason || "—") + detailItem("审核时间", m.reviewTime || "—") : "") +
-        (merchantEdd.length ? detailItem("进行中 EDD", merchantEdd.map(e => e.id + " (" + e.status + ")").join("、")) : "") +
-        '</div>';
+        renderMerchantInfoSection(m, {
+          rejected,
+          eddText: merchantEdd.length ? merchantEdd.map(e => e.id + " (" + e.status + ")").join("、") : ""
+        }) +
+        '<div class="form-section"><h4>审核说明</h4><div class="detail-grid">' +
+        detailItem("审核状态", reviewStatusTag(m.reviewStatus || "—")) +
+        detailItem("审核时间", m.reviewTime || "—") +
+        detailItem("审核说明", m.reviewRemark || m.rejectReason || "—") +
+        '</div></div>' +
+        '<div class="form-section"><h4>评估信息</h4><div class="detail-grid">' +
+        detailItem("综合评分", m.riskScore != null ? m.riskScore + " / 100" : "—") +
+        detailItem("风险等级", m.riskLevel && m.riskLevel !== "—" ? riskTag(m.riskLevel) : "—") +
+        detailItem("等级规则", "≤" + t.lowMax + " 低风险；" + (t.lowMax + 1) + "–" + t.midMax + " 中风险；>" + t.midMax + " 高风险") +
+        detailItem("最近评估", m.lastAssessTime || "—") +
+        '</div></div>' +
+        '<div class="form-section"><h4>维度评分明细（当前）</h4>' + dimRows + '</div>' +
+        renderAssessHistorySection(m, { hideIfEmpty: true });
       document.getElementById("obRejectBtn").style.display = "none";
-      document.getElementById("obConditionalBtn").style.display = "none";
       document.getElementById("obApproveBtn").style.display = "none";
       const eddBtn = document.getElementById("obEddBtn");
       if (eddBtn) eddBtn.style.display = !rejected ? "inline-block" : "none";
@@ -6297,6 +7069,8 @@
     initMerchantAssessRulesUI();
     initMerchantRiskLevelRulesUI();
     initOnboardingAssessments();
+    seedMerchantAssessHistory();
+    seedOnboardingAssessHistory();
     assessAllMerchants();
     initSeedData();
     setInterval(() => {

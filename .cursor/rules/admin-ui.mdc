@@ -39,6 +39,7 @@ alwaysApply: false
 - 请求与 URL query 同步：`page`、`pageSize`、筛选字段
 - option **value=英文**；展示用 `*_label`
 - Modal 同页新增/编辑；无硬删时用状态失效
+- **配置页（非列表）首屏数据**：经 `renderList` / 视图变量服务端注入，**不要**再单独写 `GET .../config` 异步拉取；仅列表分页数据用 AJAX `GET .../list`；保存等写操作仍用 `POST .../save`
 
 ## 其它
 

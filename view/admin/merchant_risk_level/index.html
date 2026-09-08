@@ -1,0 +1,158 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <h3 class="card-title mb-1">商户风险等级规则</h3>
+        <div class="text-secondary">综合评分 → 风险等级映射及等级权益策略（入网 / 复评通用）</div>
+      </div>
+      <div class="btn-list">
+        <button type="button" class="btn" id="mrlReassessBtn">重新评估全部商户</button>
+        <button type="button" class="btn btn-primary" id="mrlSaveBtn">保存等级规则</button>
+      </div>
+    </div>
+    <div class="alert alert-info mt-3 mb-0 flex-column align-items-start gap-1" role="alert">
+      <div>商户经<strong>评估规则</strong>各维度加权得出综合评分（0–100），再按本页<strong>分值区间</strong>映射为低 / 中 / 高风险等级，并联动结算、限额、复评等策略。修改等级阈值后请保存并<strong>重新评估</strong>商户。</div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge bg-blue-lt">评分映射</span>
+        <span class="badge bg-blue-lt">等级策略</span>
+        <span class="badge bg-blue-lt">入网 / 复评</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h3 class="card-title">综合评分计算公式</h3>
+  </div>
+  <div class="card-body">
+    <p class="mb-0 text-secondary">
+      综合评分 = Σ（各维度原始分 × 权重%）；维度原始分由
+      <a href="/admin/merchant_risk">商户评估规则</a>
+      中各维度命中结果确定，满分 100 分。
+    </p>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h3 class="card-title">风险等级分值映射</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-vcenter mb-0">
+        <thead>
+          <tr>
+            <th style="width:8rem;">风险等级</th>
+            <th>映射规则</th>
+            <th style="width:10rem;">分值区间</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge bg-green-lt">低风险</span></td>
+            <td>
+              综合评分 ≤
+              <input type="number" class="form-control form-control-sm d-inline-block mx-1" id="mrlLowMax"
+                     min="0" max="100" step="1" style="width:4.5rem;" value="{$config.low_max|default=40}"> 分
+            </td>
+            <td class="text-secondary">0 – <span id="mrlLowRange">{$config.low_max|default=40}</span></td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-yellow-lt">中风险</span></td>
+            <td>
+              综合评分 &gt; <span id="mrlMidRuleLo">{$config.low_max|default=40}</span> 且 ≤
+              <input type="number" class="form-control form-control-sm d-inline-block mx-1" id="mrlMidMax"
+                     min="0" max="100" step="1" style="width:4.5rem;" value="{$config.mid_max|default=70}"> 分
+            </td>
+            <td class="text-secondary">
+              <span id="mrlMidRangeLo">{$config.low_max|default=40}</span> – <span id="mrlMidRangeHi">{$config.mid_max|default=70}</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="badge bg-red-lt">高风险</span></td>
+            <td>综合评分 &gt; <span id="mrlHighRuleLo">{$config.mid_max|default=70}</span> 分</td>
+            <td class="text-secondary">&gt; <span id="mrlHighRange">{$config.mid_max|default=70}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title"><i class="ti ti-shield-check me-2 text-primary"></i>等级权益与管控策略</h3>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-vcenter card-table mb-0" style="min-width:960px;">
+      <thead>
+        <tr>
+          <th>风险等级</th>
+          <th>结算周期（天）</th>
+          <th>滚动保证金（%）</th>
+          <th>单笔限额（USD）</th>
+          <th>日累计限额（USD）</th>
+          <th>复评频率</th>
+          <th>入网/存续建议</th>
+        </tr>
+      </thead>
+      <tbody>
+        {foreach $policies as $levelKey => $policy}
+        <tr data-level="{$levelKey}">
+          <td>
+            {if $levelKey == 'low'}
+            <span class="badge bg-green-lt">{$policy.level_label|default='低风险'}</span>
+            {elseif $levelKey == 'mid'}
+            <span class="badge bg-yellow-lt">{$policy.level_label|default='中风险'}</span>
+            {else /}
+            <span class="badge bg-red-lt">{$policy.level_label|default='高风险'}</span>
+            {/if}
+          </td>
+          <td>
+            <div class="input-group input-group-flat" style="width:6.5rem;">
+              <span class="input-group-text">T+</span>
+              <input type="number" class="form-control js-mrl-field" data-level="{$levelKey}" data-field="settle_days"
+                     min="0" step="1" value="{$policy.settle_days|default=0}">
+            </div>
+          </td>
+          <td>
+            <div class="input-group input-group-flat" style="width:5.5rem;">
+              <input type="number" class="form-control js-mrl-field" data-level="{$levelKey}" data-field="margin_rate"
+                     min="0" max="100" step="1" value="{$policy.margin_rate|default=0}">
+              <span class="input-group-text">%</span>
+            </div>
+          </td>
+          <td>
+            <input type="number" class="form-control js-mrl-field" data-level="{$levelKey}" data-field="single_limit"
+                   min="0" step="1" value="{$policy.single_limit|default=0}" style="width:8rem;">
+          </td>
+          <td>
+            <input type="number" class="form-control js-mrl-field" data-level="{$levelKey}" data-field="daily_limit"
+                   min="0" step="1" value="{$policy.daily_limit|default=0}" style="width:8rem;">
+          </td>
+          <td>
+            <select class="form-select js-mrl-field" data-level="{$levelKey}" data-field="review_cycle" style="width:7rem;">
+              {foreach $review_cycle_options as $cycleKey => $cycleLabel}
+              <option value="{$cycleKey}" {if $policy.review_cycle == $cycleKey}selected{/if}>{$cycleLabel}</option>
+              {/foreach}
+            </select>
+          </td>
+          <td class="text-secondary small js-mrl-advice" data-level="{$levelKey}">{$policy.advice|default='—'}</td>
+        </tr>
+        {/foreach}
+      </tbody>
+    </table>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/merchant_risk_level.js?v=1.1.0"></script>
+<script>
+MerchantRiskLevelPage.init();
+</script>
+{/block}

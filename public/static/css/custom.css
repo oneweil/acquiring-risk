@@ -39,10 +39,6 @@
 }
 
 /* 风控规则分组卡片 header（对齐原型 #f8fafc + 图标） */
-.card-header.rule-card-head {
-  --tblr-card-cap-bg: #f8fafc;
-  background-color: #f8fafc !important;
-}
 
 .rule-card-head .card-title {
   display: flex;

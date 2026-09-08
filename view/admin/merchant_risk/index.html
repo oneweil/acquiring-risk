@@ -1,0 +1,82 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <h3 class="card-title mb-1">商户评估规则</h3>
+        <div class="text-secondary">各维度评分与权重；等级映射见「商户风险等级规则」</div>
+      </div>
+      <div class="btn-list">
+        <button type="button" class="btn" id="maReassessBtn">重新评估全部商户</button>
+        <button type="button" class="btn btn-primary" id="maSaveBtn">保存评估规则</button>
+      </div>
+    </div>
+    <div class="alert alert-info mt-3 mb-0 flex-column align-items-start gap-1" role="alert">
+      <div>
+        <b>入网评估</b>：外部系统同步后，依据行业、网站合规、合规筛查、注册地等可获取信息计分，
+        <b>不含拒付率/欺诈率/退款率/交易放量</b>（尚无交易历史）。<br>
+        <b>已入网复评</b>：产生交易后按完整规则集定期复评。综合评分与风险等级映射请配置
+        <a href="/admin/merchant_risk_level">商户风险等级规则</a>。
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge bg-blue-lt">入网评估</span>
+        <span class="badge bg-blue-lt">Visa VAMP</span>
+        <span class="badge bg-blue-lt">VFMP / EFM</span>
+        <span class="badge bg-blue-lt">KYC/AML</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h3 class="card-title">入网评估维度（无交易历史）</h3>
+  </div>
+  <div class="card-body">
+    <p class="text-secondary small mb-3" id="maOnboardingHint">
+      排除拒付率/欺诈率/退款率/交易放量；入网权重可独立配置，合计须为 100%。
+    </p>
+    <div class="row g-2" id="maOnboardingWeights"></div>
+    <div class="mt-3 d-flex justify-content-end">
+      <div class="alert mb-0 py-2 px-3" id="maOnboardSumBar" role="status">
+        入网权重合计：<strong id="maOnboardSum">0</strong>% / 100%
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="maRuleGroups" class="row row-cards">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body text-center text-secondary py-5">
+        <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="alert mb-0 py-2 px-3" id="maWeightSumBar" role="status">
+      复评维度权重合计：<strong id="maWeightSum">0</strong>% / 100%
+    </div>
+    <div class="btn-list">
+      <button type="button" class="btn" id="maReassessBtn2">重新评估全部商户</button>
+      <button type="button" class="btn btn-primary" id="maSaveBtn2">保存评估规则</button>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+window.__MERCHANT_ASSESS_CONFIG__ = {$config_json|raw};
+</script>
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/merchant_risk.js?v=1.0.5"></script>
+<script>
+MerchantRiskPage.init();
+</script>
+{/block}
