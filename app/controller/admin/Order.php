@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace app\controller\admin;
 
-use app\service\mock\OrderMockService;
+use app\service\risk\OrderAdminService;
+use app\validate\Order as OrderValidate;
+use think\exception\ValidateException;
 use think\response\Json;
 use think\response\View;
 
@@ -14,61 +16,70 @@ class Order extends AdminBase
 
     protected string $pageTitle = '订单监控';
 
-    /** @var list<string> */
-    private const FILTER_KEYS = ['merchant_id', 'order_no', 'currency', 'risk_level', 'status'];
-
-    private const LIST_PATH = '/admin/order';
-
-    /**
-     * 页面壳（筛选选项由服务端输出，列表数据走 AJAX）
-     */
     public function index(): View
     {
+        $options = (new OrderAdminService())->filterOptions();
+
         return $this->renderList('/admin/order/index', [
-            'filter_options'  => OrderMockService::filterOptions(),
-            'list_path'       => self::LIST_PATH,
+            'filter_options'  => $options,
             'list_card_title' => '订单实时监控',
         ]);
     }
 
-    /**
-     * 订单列表 JSON
-     */
     public function list(): Json
     {
-        $filters  = $this->listFilters(self::FILTER_KEYS);
-        $page     = $this->listPage();
-        $pageSize = (int) config('paginate.list_rows', 10);
-        $result   = OrderMockService::search($filters, $page, $pageSize);
-        $total    = $result['total'];
-        $lastPage = max(1, (int) ceil($total / max(1, $pageSize)));
-        $page     = min($page, $lastPage);
+        $params = $this->request->get();
 
-        return json([
-            'code' => 0,
-            'msg'  => 'ok',
-            'data' => [
-                'items'     => $result['items'],
-                'total'     => $total,
-                'page'      => $page,
-                'page_size' => $pageSize,
-                'last_page' => $lastPage,
-            ],
-        ]);
+        try {
+            validate(OrderValidate::class)
+                ->scene('list')
+                ->failException(true)
+                ->check($params);
+        } catch (ValidateException $e) {
+            return $this->fail($this->validateErrorMessage($e), 422, null, 422);
+        }
+
+        $filters  = OrderValidate::toListFilters($params);
+        $page     = (int) ($params['page'] ?? 1);
+        $pageSize = OrderValidate::toListPageSize($params);
+
+        try {
+            $payload = (new OrderAdminService())->search($filters, $page, $pageSize);
+        } catch (\Throwable $e) {
+            return $this->fail('查询失败：' . $e->getMessage(), 500, null, 500);
+        }
+
+        return $this->success($payload);
     }
 
     public function detail(): Json
     {
-        $orderNo = trim((string) $this->request->get('id', ''));
-        if ($orderNo === '') {
-            return json(['code' => 400, 'msg' => '缺少订单号', 'data' => null], 400);
+        $params = $this->request->get();
+        if (!isset($params['id']) || trim((string) $params['id']) === '') {
+            $params['id'] = trim((string) ($params['order_no'] ?? $params['channel_no'] ?? ''));
         }
 
-        $order = OrderMockService::find($orderNo);
-        if ($order === null) {
-            return json(['code' => 404, 'msg' => '订单不存在', 'data' => null], 404);
+        try {
+            validate(OrderValidate::class)
+                ->scene('detail')
+                ->failException(true)
+                ->check($params);
+        } catch (ValidateException $e) {
+            return $this->fail($this->validateErrorMessage($e), 422, null, 422);
         }
 
-        return json(['code' => 0, 'msg' => 'ok', 'data' => $order]);
+        $id = trim((string) ($params['id'] ?? ''));
+
+        try {
+            $detail = (new OrderAdminService())->detail($id);
+        } catch (\Throwable $e) {
+            return $this->fail('查询失败：' . $e->getMessage(), 500, null, 500);
+        }
+
+        if ($detail === null) {
+            return $this->fail('订单不存在', 404, null, 404);
+        }
+
+        return $this->success($detail);
     }
 }

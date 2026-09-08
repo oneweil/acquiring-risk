@@ -32,16 +32,16 @@
         <div class="col-6 col-md-4 col-xl-2">
           <select form="orderFilterForm" name="risk_level" class="form-select form-select-sm">
             <option value="">全部风险等级</option>
-            {volist name="filter_options.risk_level" id="opt"}
-            <option value="{$opt}">{$opt}</option>
+            {volist name="filter_options.risk_level" id="label"}
+            <option value="{$key}">{$label}</option>
             {/volist}
           </select>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
           <select form="orderFilterForm" name="status" class="form-select form-select-sm">
             <option value="">全部状态</option>
-            {volist name="filter_options.status" id="opt"}
-            <option value="{$opt}">{$opt}</option>
+            {volist name="filter_options.status" id="label"}
+            <option value="{$key}">{$label}</option>
             {/volist}
           </select>
         </div>
@@ -60,35 +60,22 @@
     </div>
 
     <div class="table-responsive">
-      <table class="table table-vcenter table-selectable card-table table-nowrap">
+      <table class="table table-vcenter card-table table-nowrap">
         <thead>
           <tr>
-            <th class="w-1">
-              <input class="form-check-input m-0 align-middle" type="checkbox" id="orderSelectAll" aria-label="全选">
-            </th>
-            <th>
-              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">商户</button>
-            </th>
-            <th>
-              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">订单</button>
-            </th>
-            <th>
-              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">交易</button>
-            </th>
-            <th>
-              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">卡 / 地理</button>
-            </th>
+            <th>商户</th>
+            <th>订单</th>
+            <th>交易</th>
+            <th>卡 / 地理</th>
             <th>3DS</th>
             <th>风险</th>
-            <th>
-              <button class="table-sort d-flex justify-content-between w-100 border-0 bg-transparent p-0 text-start" type="button">状态</button>
-            </th>
+            <th>状态</th>
             <th class="w-1"></th>
           </tr>
         </thead>
         <tbody id="orderTableBody">
           <tr>
-            <td colspan="9" class="text-center text-secondary py-5">
+            <td colspan="8" class="text-center text-secondary py-5">
               <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
             </td>
           </tr>
@@ -97,8 +84,11 @@
     </div>
 
     <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="orderTableFooter">
-      <p class="m-0 text-secondary" id="orderTableSummary">加载中…</p>
-      <div class="ms-auto" id="orderTablePager"></div>
+      <div id="orderPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="orderTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="orderTablePager"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -126,7 +116,7 @@
 
 {block name="script"}
 <script src="/static/js/admin/list-page.js"></script>
-<script src="/static/js/admin/order.js?v=1.0.1"></script>
+<script src="/static/js/admin/order.js?v=1.1.1"></script>
 <script>
 OrderPage.init();
 
@@ -134,51 +124,72 @@ ListPage.init({
   detailUrl: '/admin/order/detail',
   renderDetail: function (data) {
     var esc = ListPage.escapeHtml;
+    var dash = function (val) {
+      if (val === null || val === undefined || val === '') return '—';
+      return esc(String(val));
+    };
     var row = function (label, val) {
       return '<div class="col-sm-6 col-lg-4"><div class="detail-item"><div class="datagrid-title">' + esc(label) + '</div><div class="datagrid-content">' + val + '</div></div></div>';
     };
-    var riskBadge = '<span class="badge ' + esc(data._risk_badge || '') + '">' + esc(data.risk_level) + '</span>';
-    var statusBadge = '<span class="badge ' + esc(data._status_badge || '') + '">' + esc(data.status) + '</span>';
+    var riskText = data.risk_level_label || '未评估';
+    var statusText = data.status_label || data.status || '—';
+    var riskBadge = '<span class="badge ' + esc(data._risk_badge || '') + '">' + esc(riskText) + '</span>';
+    var statusBadge = '<span class="badge ' + esc(data._status_badge || '') + '">' + esc(statusText) + '</span>';
+    var amountText = (data.currency || '') + ' ' + (data.amount != null
+      ? Number(data.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })
+      : '—');
 
     return ''
       + '<section class="detail-section"><h3 class="detail-section-title">基本信息</h3><div class="row g-3">'
-      + row('商户订单号', '<span class="font-monospace">' + esc(data.order_no) + '</span>')
-      + row('通道订单号', '<span class="font-monospace">' + esc(data.channel_no) + '</span>')
-      + row('商户号', esc(data.merchant_id))
-      + row('商户名称', esc(data.merchant_name))
-      + row('交易时间', esc(data.trade_time))
-      + row('交易金额', esc(data.currency + ' ' + Number(data.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })))
+      + row('商户订单号', '<span class="font-monospace">' + dash(data.order_no) + '</span>')
+      + row('通道订单号', '<span class="font-monospace">' + dash(data.channel_no) + '</span>')
+      + row('商户号', dash(data.merchant_id))
+      + row('商户名称', dash(data.merchant_name))
+      + row('交易时间', dash(data.trade_time))
+      + row('交易金额', esc(amountText.trim()))
       + row('交易状态', statusBadge)
-      + row('交易网站', esc(data.website))
+      + row('交易网站', dash(data.website))
       + '</div></section>'
       + '<section class="detail-section"><h3 class="detail-section-title">卡信息与持卡人</h3><div class="row g-3">'
-      + row('卡号', esc(data.card_no))
-      + row('卡 BIN', esc(data.card_bin))
-      + row('卡类型', esc(data.card_type))
-      + row('发卡国', esc(data.card_country))
-      + row('AVS 结果', esc(data.avs_result))
-      + row('CVV 结果', esc(data.cvv_result))
-      + row('3DS 验证', esc(data.three_ds))
-      + row('ECI 值', esc(data.eci))
-      + row('持卡人邮箱', esc(data.email))
-      + row('交易 IP', esc(data.ip))
-      + row('IP 国家', esc(data.ip_country))
-      + row('账单国家', esc(data.billing_country))
-      + row('收货国家', esc(data.shipping_country))
-      + row('MCC', esc(data.mcc))
+      + row('卡号', dash(data.card_no))
+      + row('卡 BIN', dash(data.card_bin))
+      + row('卡类型', dash(data.card_type))
+      + row('发卡国', dash(data.card_country))
+      + row('AVS 结果', dash(data.avs_result))
+      + row('CVV 结果', dash(data.cvv_result))
+      + row('3DS 验证', dash(data.three_ds))
+      + row('ECI 值', dash(data.eci))
+      + row('持卡人邮箱', dash(data.email))
+      + row('交易 IP', dash(data.ip))
+      + row('IP 国家', dash(data.ip_country))
+      + row('账单国家', dash(data.billing_country))
+      + row('收货国家', dash(data.shipping_country))
+      + row('MCC', dash(data.mcc))
       + row('VPN/Proxy', data.is_proxy ? '是' : '否')
       + '</div></section>'
       + '<section class="detail-section mb-0"><h3 class="detail-section-title">风控结果</h3><div class="row g-3">'
       + row('风险等级', riskBadge)
-      + row('命中规则', esc(data.hit_rule))
-      + row('处置策略', esc(data.action))
+      + row('命中规则', dash(data.hit_rule))
+      + row('处置策略', dash(data.action))
       + '</div></section>';
   },
   mapDetail: function (data) {
-    var riskMap = { '极高风险': 'bg-purple text-purple-fg', '高风险': 'bg-red text-red-fg', '中风险': 'bg-yellow text-yellow-fg', '低风险': 'bg-green text-green-fg' };
-    var statusMap = { '成功': 'bg-green text-green-fg', '拦截': 'bg-red text-red-fg', '审核中': 'bg-yellow text-yellow-fg', '失败': 'bg-secondary text-secondary-fg' };
-    data._risk_badge = riskMap[data.risk_level] || 'bg-secondary text-secondary-fg';
-    data._status_badge = statusMap[data.status] || 'bg-secondary text-secondary-fg';
+    var riskMap = {
+      '极高风险': 'bg-purple text-purple-fg',
+      '高风险': 'bg-red text-red-fg',
+      '中风险': 'bg-yellow text-yellow-fg',
+      '低风险': 'bg-green text-green-fg',
+      '未评估': 'bg-secondary text-secondary-fg'
+    };
+    var statusMap = {
+      '成功': 'bg-green text-green-fg',
+      '拦截': 'bg-red text-red-fg',
+      '失败': 'bg-secondary text-secondary-fg'
+    };
+    var riskLabel = data.risk_level_label || '未评估';
+    var statusLabel = data.status_label || data.status || '';
+    data._risk_badge = riskMap[riskLabel] || 'bg-secondary text-secondary-fg';
+    data._status_badge = statusMap[statusLabel] || 'bg-secondary text-secondary-fg';
     return data;
   }
 });

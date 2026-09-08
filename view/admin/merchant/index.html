@@ -1,0 +1,183 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="merchantFilterForm"></form>
+
+<div class="row row-cards mb-3" id="merchantKpiRow">
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">商户总数</div>
+        <div class="h2 mb-0" id="mKpiTotal">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">正常收单</div>
+        <div class="h2 mb-0" id="mKpiActive">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">受限 / 暂停</div>
+        <div class="h2 mb-0 text-danger" id="mKpiRestricted">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">低风险</div>
+        <div class="h2 mb-0 text-green" id="mKpiLow">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">中风险</div>
+        <div class="h2 mb-0 text-yellow" id="mKpiMid">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">高风险</div>
+        <div class="h2 mb-0 text-danger" id="mKpiHigh">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='商户列表'}</h3>
+          <div class="text-secondary small">已入网商户及风险评级结果</div>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-outline-primary btn-sm" id="merchantReassessBtn">
+            <i class="ti ti-refresh me-1"></i>重新评估
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4 col-xl-2">
+          <input type="text" form="merchantFilterForm" name="merchant_id" class="form-control form-control-sm" placeholder="商户号" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <input type="text" form="merchantFilterForm" name="name" class="form-control form-control-sm" placeholder="商户名称" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="merchantFilterForm" name="risk_level" class="form-select form-select-sm">
+            <option value="">全部风险等级</option>
+            {volist name="filter_options.risk_level" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="merchantFilterForm" name="review_status" class="form-select form-select-sm">
+            <option value="">全部审核状态</option>
+            {volist name="filter_options.review_status" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="merchantFilterForm" name="trading_status" class="form-select form-select-sm">
+            <option value="">全部收单状态</option>
+            {volist name="filter_options.trading_status" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="btn-list">
+            <button type="submit" form="merchantFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="merchantFilterReset" class="btn btn-sm">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>商户号</th>
+            <th>商户名称</th>
+            <th>行业</th>
+            <th>入网时间</th>
+            <th>综合评分</th>
+            <th>风险等级</th>
+            <th>拒付率</th>
+            <th>欺诈率</th>
+            <th>最近评估</th>
+            <th>今日笔数</th>
+            <th>今日金额</th>
+            <th>审核状态</th>
+            <th>收单状态</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="merchantTableBody">
+          <tr>
+            <td colspan="14" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="merchantTableFooter">
+      <div id="merchantPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="merchantTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="merchantTablePager"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="merchantDetailModal" tabindex="-1" aria-labelledby="merchantDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="merchantDetailModalLabel">商户详情</h5>
+          <div class="text-secondary small" id="merchantDetailSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <div class="modal-body" id="merchantDetailBody">
+        <div class="text-center text-secondary py-4">加载中…</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/merchant.js?v=1.0.0"></script>
+<script>
+MerchantPage.init();
+</script>
+{/block}

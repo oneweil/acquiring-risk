@@ -34,6 +34,10 @@ Route::group('admin', function () {
     Route::get('order', 'admin.Order/index');
     Route::get('alert', 'admin.Alert/index');
     Route::get('onboarding', 'admin.Onboarding/index');
+    Route::get('merchant/stats', 'admin.Merchant/stats');
+    Route::get('merchant/list', 'admin.Merchant/list');
+    Route::get('merchant/detail', 'admin.Merchant/detail');
+    Route::post('merchant/reassess', 'admin.Merchant/reassess');
     Route::get('merchant', 'admin.Merchant/index');
     Route::post('merchant_risk_level/save', 'admin.MerchantRiskLevel/save');
     Route::post('merchant_risk_level/reassess', 'admin.MerchantRiskLevel/reassess');
