@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace app\controller;
 
 use app\BaseController;
+use app\model\SysUser;
+use app\service\risk\PermissionService;
 use think\Response;
 
 /**
@@ -12,13 +14,6 @@ use think\Response;
  */
 class Login extends BaseController
 {
-    /**
-     * 演示账号（无业务逻辑，仅用于开发阶段登录）
-     */
-    private const DEMO_USER = 'admin';
-
-    private const DEMO_PASS = 'admin123';
-
     public function index(): Response
     {
         if (admin_is_logged_in()) {
@@ -35,16 +30,31 @@ class Login extends BaseController
         $username = trim((string) $this->request->post('username', ''));
         $password = (string) $this->request->post('password', '');
 
-        if ($username === self::DEMO_USER && $password === self::DEMO_PASS) {
-            session('admin_user', [
-                'username' => $username,
-                'login_at' => date('Y-m-d H:i:s'),
-            ]);
-
-            return redirect('/admin/dashboard');
+        if ($username === '' || $password === '') {
+            return redirect('/login?error=1');
         }
 
-        return redirect('/login?error=1');
+        /** @var SysUser|null $user */
+        $user = SysUser::where('account', $username)->find();
+        if ($user === null) {
+            return redirect('/login?error=1');
+        }
+
+        if ((string) $user->status !== SysUser::STATUS_ENABLED) {
+            return redirect('/login?error=1');
+        }
+
+        // 需读取隐藏字段 password
+        $hash = (string) $user->getData('password');
+        if ($hash === '' || !password_verify($password, $hash)) {
+            return redirect('/login?error=1');
+        }
+
+        $permService = new PermissionService();
+        session('admin_user', $permService->buildSessionPayload($user));
+        $permService->touchLastLogin((int) $user->id);
+
+        return redirect('/admin/dashboard');
     }
 
     public function logout(): Response

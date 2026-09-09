@@ -1,0 +1,216 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="eddFilterForm"></form>
+
+<div class="row row-cards mb-3" id="eddKpiRow">
+  <div class="col-6 col-md-3">
+    <div class="card card-sm border-danger">
+      <div class="card-body">
+        <div class="text-secondary">进行中 EDD</div>
+        <div class="h2 mb-0 text-danger" id="eddKpiActive">—</div>
+        <div class="text-secondary small">资料收集 / 审核中</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">待启动</div>
+        <div class="h2 mb-0" id="eddKpiPending">—</div>
+        <div class="text-secondary small">触发待处理</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">已通过</div>
+        <div class="h2 mb-0 text-green" id="eddKpiPassed">—</div>
+        <div class="text-secondary small">强化尽调完成</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">未通过 / 过期</div>
+        <div class="h2 mb-0" id="eddKpiFailed">—</div>
+        <div class="text-secondary small">需重新评估</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='EDD 强化尽职调查'}</h3>
+          <div class="text-secondary small">Enhanced Due Diligence — 高风险商户与可疑关联主体</div>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-success btn-sm" id="eddAddBtn">
+            <i class="ti ti-plus me-1"></i>新建 EDD
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="alert alert-info mb-3" role="alert">
+        <div>
+          当商户命中<strong>高风险行业</strong>、<strong>PEP/制裁筛查</strong>、<strong>可疑交易关联</strong>或<strong>交易量异常</strong>等触发条件时，系统自动创建 EDD 工单。合规团队按清单收集受益所有人证明、资金来源说明、业务模式文档等材料，完成审核后方可恢复或维持收单权限。
+        </div>
+      </div>
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-4 col-xl-3">
+          <input type="text" form="eddFilterForm" name="keyword" class="form-control form-control-sm" placeholder="商户号 / 名称 / EDD编号" value="">
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="eddFilterForm" name="trigger" class="form-select form-select-sm">
+            <option value="">全部触发原因</option>
+            {volist name="filter_options.trigger" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <select form="eddFilterForm" name="status" class="form-select form-select-sm">
+            <option value="">全部状态</option>
+            {volist name="filter_options.status" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 col-xl-3">
+          <div class="btn-list">
+            <button type="submit" form="eddFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="eddFilterReset" class="btn btn-sm">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>EDD编号</th>
+            <th>商户号</th>
+            <th>商户名称</th>
+            <th>触发原因</th>
+            <th>风险等级</th>
+            <th>资料进度</th>
+            <th>截止日期</th>
+            <th>状态</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="eddTableBody">
+          <tr>
+            <td colspan="9" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="eddTableFooter">
+      <div id="eddPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="eddTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="eddTablePager"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="eddCreateModal" tabindex="-1" aria-labelledby="eddCreateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="eddCreateModalLabel">新建 EDD 工单</h5>
+          <div class="text-secondary small">Enhanced Due Diligence</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <form id="eddCreateForm">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required" for="eddFormMerchantId">关联商户号</label>
+              <input type="text" class="form-control" name="merchant_id" id="eddFormMerchantId" required placeholder="如 M100001" value="">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="eddFormTrigger">触发原因</label>
+              <select class="form-select" name="trigger" id="eddFormTrigger" required>
+                {volist name="filter_options.trigger" id="label"}
+                <option value="{$key}">{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="eddFormDeadline">截止日期</label>
+              <input type="date" class="form-control" name="deadline" id="eddFormDeadline" required value="{$default_deadline|default=''}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="eddFormAssignee">负责人</label>
+              <input type="text" class="form-control" name="assignee" id="eddFormAssignee" placeholder="合规专员姓名" value="">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="eddFormNotes">备注说明</label>
+              <textarea class="form-control" name="notes" id="eddFormNotes" rows="3" placeholder="EDD 触发背景及需重点关注事项"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary" id="eddCreateSubmit">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="eddDetailModal" tabindex="-1" aria-labelledby="eddDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" id="eddDetailDialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="eddDetailModalLabel">EDD 详情</h5>
+          <div class="text-secondary small" id="eddDetailSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <div class="modal-body" id="eddDetailBody">
+        <div class="text-center text-secondary py-4">加载中…</div>
+      </div>
+      <div class="modal-footer" id="eddDetailActions">
+        <button type="button" class="btn" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-warning d-none" id="eddCollectBtn">确认启动</button>
+        <button type="button" class="btn btn-primary d-none" id="eddUploadHintBtn">上传资料</button>
+        <button type="button" class="btn btn-primary d-none" id="eddSubmitBtn">提交审核</button>
+        <button type="button" class="btn btn-success d-none" id="eddApproveBtn">审核通过</button>
+        <button type="button" class="btn btn-danger d-none" id="eddRejectBtn">审核拒绝</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="eddFileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.zip,.xlsx" class="d-none">
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/edd.js?v=1.0.0"></script>
+<script>
+window.EDD_CHECKLIST_ITEMS = {:json_encode($checklist_items)};
+EddPage.init();
+</script>
+{/block}

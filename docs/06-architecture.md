@@ -43,8 +43,14 @@ risk_order_hit (
 
 -- 预警工单（交易级）
 risk_alert (
-  id, scope DEFAULT 'order', order_no, merchant_id, evaluation_id,
-  ...
+  id, alert_no UNIQUE, scope DEFAULT 'order', alerted_at,
+  merchant_id, order_no, amount_display, risk_level,
+  rule_name, measure_code, action_name, hit_details JSON,
+  status, handle_remark, inquiry_desc, evaluation_id,
+  str_report_id, operator_id, handled_at, created_at, updated_at
+)
+risk_alert_attachment (
+  id, alert_id, file_name, file_size, storage_path, file_type, uploaded_at, ...
 )
 
 -- 商户预警 / 商户人工审核
@@ -59,8 +65,8 @@ risk_merchant_alert (
 -- 风控规则
 risk_rule (
   id, rule_id UNIQUE, category, name, description,
-  config JSON, measure_code, risk_level,
-  enabled, sort, updated_at
+  config JSON, measure_code,
+  enabled, push_str, sort, updated_at
 )
 
 -- 处置策略
@@ -107,8 +113,9 @@ risk_onboarding (
 ### P2 合规
 
 ```sql
-risk_str_report (...)
-risk_str_push_config (...)
+risk_str_report (report_no, type, trigger_mode, merchant_*, order_no, amount_*, status, …)
+risk_str_attachment (str_report_id, file_*, is_auto, …)
+risk_str_push_config (enabled, push_by_risk_level, risk_levels JSON, push_ltr, ltr_threshold_*)
 risk_edd_case (...)
 ```
 
@@ -116,9 +123,10 @@ risk_edd_case (...)
 
 ```sql
 sys_user, sys_role, sys_role_user, sys_role_permission
-audit_log
+-- audit_log（未落地）
 ```
 
+权限码目录在代码 `PermissionCatalog`（无权限主表）。后台登录查 `sys_user`；user/role 路由挂 `permission` 中间件。
 ---
 
 ## 3. doopsun 订单字段映射（建议）
@@ -188,6 +196,8 @@ Repository
 | 数据库双连接 | `config/database.php` | mysql + doopsun |
 | 分页 | `config/paginate.php` | list_rows = 10 |
 | API Key | env / config | api_auth 中间件 |
+| 权限码目录 | `app/support/PermissionCatalog.php` | 固定权限点；无权限主表 |
+| 权限中间件 | `permission` 别名 | 仅 user/role 路由强制校验 |
 
 ---
 

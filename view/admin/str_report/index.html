@@ -1,0 +1,243 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="strFilterForm"></form>
+
+<div class="row row-cards mb-3" id="strKpiRow">
+  <div class="col-6 col-md-3">
+    <div class="card card-sm border-warning">
+      <div class="card-body">
+        <div class="text-secondary">待人工确认</div>
+        <div class="h2 mb-0 text-warning" id="strKpiPending">—</div>
+        <div class="text-secondary small">可疑 STR 待审核是否上报</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">本月大额 (LTR)</div>
+        <div class="h2 mb-0" id="strKpiLtr">—</div>
+        <div class="text-secondary small">Large Transaction Report</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">本月可疑 (STR)</div>
+        <div class="h2 mb-0" id="strKpiStr">—</div>
+        <div class="text-secondary small">Suspicious Transaction Report</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="text-secondary">已提交监管</div>
+        <div class="h2 mb-0" id="strKpiSubmitted">—</div>
+        <div class="text-secondary small">本季度累计</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <div class="row w-100 align-items-center g-2">
+        <div class="col">
+          <h3 class="card-title mb-0">{$list_card_title|default='大额 / 可疑交易 STR 报送'}</h3>
+          <div class="text-secondary small">符合 AML/CFT 监管要求，支持生成、上传与提交</div>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-success btn-sm" id="strAddBtn">
+            <i class="ti ti-plus me-1"></i>新建报送
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="alert alert-info mb-3" role="alert">
+        <div>
+          交易命中<strong>可疑 STR 规则</strong>后，系统<strong>自动生成列表记录</strong>（状态：待确认），合规专员审核后选择「确认上报」或「无需上报」。推送范围由
+          <a href="/admin/str_push_rule" class="fw-bold">STR 推送规则</a> 配置。
+        </div>
+      </div>
+
+      <ul class="nav nav-tabs mb-3" id="strSubTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link active" data-str-tab="all">全部</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link" data-str-tab="pending">待确认</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link" data-str-tab="ltr">大额交易 (LTR)</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button type="button" class="nav-link" data-str-tab="str">可疑交易 (STR)</button>
+        </li>
+      </ul>
+
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3 col-xl-2">
+          <input type="text" form="strFilterForm" name="merchant_id" class="form-control form-control-sm" placeholder="商户号" value="">
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+          <input type="text" form="strFilterForm" name="order_no" class="form-control form-control-sm" placeholder="订单号" value="">
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+          <select form="strFilterForm" name="status" class="form-select form-select-sm">
+            <option value="">全部状态</option>
+            {volist name="filter_options.status" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <input type="hidden" form="strFilterForm" name="tab" id="strTabInput" value="all">
+        <div class="col-6 col-md-3 col-xl-3">
+          <div class="btn-list">
+            <button type="submit" form="strFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" id="strFilterReset" class="btn btn-sm">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>报送编号</th>
+            <th>类型</th>
+            <th>触发方式</th>
+            <th>商户号</th>
+            <th>订单号</th>
+            <th>金额</th>
+            <th>触发原因</th>
+            <th>创建时间</th>
+            <th>报送状态</th>
+            <th>附件</th>
+            <th class="w-1">操作</th>
+          </tr>
+        </thead>
+        <tbody id="strTableBody">
+          <tr>
+            <td colspan="11" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="strTableFooter">
+      <div id="strPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="strTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="strTablePager"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="strCreateModal" tabindex="-1" aria-labelledby="strCreateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="strCreateModalLabel">新建 STR 报送</h5>
+          <div class="text-secondary small">选择报送类型并填写交易信息</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <form id="strCreateForm">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label required" for="strFormType">报送类型</label>
+              <select class="form-select" name="type" id="strFormType" required>
+                {volist name="filter_options.type" id="label"}
+                <option value="{$key}">{$label}</option>
+                {/volist}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label required" for="strFormOrderNo">订单号</label>
+              <input type="text" class="form-control" name="order_no" id="strFormOrderNo" required placeholder="商户订单号，将自动关联商户" value="">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label required" for="strFormCurrency">币种</label>
+              <select class="form-select" name="currency" id="strFormCurrency" required>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="HKD">HKD</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label required" for="strFormAmount">金额</label>
+              <input type="number" class="form-control" name="amount_val" id="strFormAmount" required min="0.01" step="0.01" value="">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="strFormTrigger">触发原因</label>
+              <input type="text" class="form-control" name="trigger_reason" id="strFormTrigger" placeholder="如：单笔大额 / 命中规则 R013" value="">
+            </div>
+            <div class="col-12" id="strSuspiciousWrap">
+              <label class="form-label required" for="strFormDesc">可疑交易描述（STR 必填）</label>
+              <textarea class="form-control" name="suspicious_desc" id="strFormDesc" rows="3" placeholder="描述可疑行为特征、关联关系及判断依据"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="strFormFile">上传报送附件（可选）</label>
+              <input type="file" class="form-control" name="file" id="strFormFile" accept=".xml,.pdf,.zip,.xlsx">
+              <div class="form-hint">支持 XML / PDF / ZIP / XLSX，单文件 ≤ 10MB</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">取消</button>
+          <button type="submit" class="btn btn-primary" id="strCreateSubmit">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal modal-blur fade" id="strDetailModal" tabindex="-1" aria-labelledby="strDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="strDetailModalLabel">STR 报送详情</h5>
+          <div class="text-secondary small" id="strDetailSub"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+      </div>
+      <div class="modal-body" id="strDetailBody">
+        <div class="text-center text-secondary py-4">加载中…</div>
+      </div>
+      <div class="modal-footer" id="strDetailActions">
+        <button type="button" class="btn" data-bs-dismiss="modal">关闭</button>
+        <button type="button" class="btn btn-outline-secondary d-none" id="strDismissBtn">无需上报</button>
+        <button type="button" class="btn btn-success d-none" id="strConfirmBtn">确认上报</button>
+        <button type="button" class="btn btn-warning d-none" id="strUploadBtn">上传附件</button>
+        <button type="button" class="btn btn-success d-none" id="strSubmitBtn">提交监管</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="strFileInput" accept=".xml,.pdf,.zip,.xlsx" class="d-none">
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/str_report.js?v=1.0.3"></script>
+<script>
+StrReportPage.init();
+</script>
+{/block}

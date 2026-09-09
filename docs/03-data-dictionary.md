@@ -88,28 +88,45 @@
 
 ### 2.1 交易预警 `risk_alert`（scope = order）
 
-单笔订单命中规则产生，**不表示订单挂起待审**。
+单笔订单命中规则产生，**不表示订单挂起待审**。物理表逻辑名 `alert`（前缀后 `risk_alert`）。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| id | string | 如 AL2026060001 |
+| id | bigint | 主键 |
+| alert_no | string(32) | 业务编号，如 AL2026060001（UNIQUE） |
 | scope | string | 固定 `order` |
-| time | datetime | 预警时间 |
+| alerted_at | datetime | 预警时间 |
 | merchant_id | string | |
-| order_no | string | 关联订单（可空仅预警场景） |
-| amount | string | 展示用 |
-| risk_level | enum | |
-| rule_name | string | |
-| action | string | 实际执行的**交易级**策略名 |
-| measure_code | string | DECLINE / ALERT_ONLY / CHARGEBACK_INQUIRY 等 |
-| hit_details | json | |
-| status | enum | 待处理 / 处理中 / 已关闭 |
-| handle_remark | text | |
+| order_no | string | 关联订单（可空） |
+| amount_display | string | 金额展示串，如 `USD 1,250.00` |
+| risk_level | enum | 英文：`low` / `mid` / `high` / `critical` |
+| rule_name | string | 主命中规则名称快照 |
+| measure_code | string | `DECLINE` / `ALERT_ONLY` / `CHARGEBACK_INQUIRY` 等 |
+| action_name | string | 策略名称快照 |
+| hit_details | json | `[{id,name,risk_level,measure}]` |
+| status | enum | 英文：`pending` / `processing` / `closed`（待处理/处理中/已关闭） |
+| handle_remark | string | 处理备注 |
 | inquiry_desc | text | 调单说明 |
-| inquiry_attachments | json | |
-| str_report_id | string | |
-| operator_id | int | |
+| evaluation_id | bigint | 关联 `order_evaluation.id`（可空） |
+| str_report_id | string | 关联 STR 报送编号（可空） |
+| operator_id | int | 处置人（可空） |
 | handled_at | datetime | |
+| created_at / updated_at | datetime | |
+
+#### 2.1.1 调单附件 `risk_alert_attachment`
+
+逻辑表名 `alert_attachment`。调单材料存独立附件表（非 JSON 内嵌）。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | bigint | PK |
+| alert_id | bigint | 关联 `alert.id` |
+| file_name | string | 原始文件名 |
+| file_size | int | 字节 |
+| storage_path | string | 相对 public 盘路径，如 `alert/20260909/xxx.pdf` |
+| file_type | string | pdf / jpg / png / doc / docx / zip |
+| uploaded_at | datetime | |
+| created_at / updated_at | datetime | |
 
 ### 2.2 商户预警 `risk_merchant_alert`（scope = merchant）
 
@@ -174,9 +191,11 @@
 | description | text | |
 | config | json | 阈值、时间窗等 |
 | measure_code | string | 关联处置策略 |
-| risk_level | enum | 可由策略带出 |
 | enabled | bool | |
+| push_str | bool | 命中后是否自动推送 STR |
 | sort | int | |
+
+风险等级由关联处置策略带出，非本表字段。
 
 ---
 
@@ -256,72 +275,122 @@
 
 ---
 
-## 10. STR 报送 `risk_str_report`
+## 10. STR 报送
 
-| 字段 | 说明 |
-|------|------|
-| id | STR202606001 |
-| type | LTR / STR |
-| trigger_mode | auto / manual |
-| merchant_id, merchant_name | |
-| order_no | |
-| currency, amount_val, amount | |
-| trigger_reason | |
-| suspicious_desc | STR 必填 |
-| create_time, submit_time | |
-| status | 待确认/已生成/已上传/已提交监管/无需上报/已归档/已退回 |
-| submitter, reviewer | |
-| review_remark, dismiss_reason | |
-| attachments[] | name, size, upload_time, type, auto |
-| linked_alert_id | |
-| hit_rule_ids | json |
+### `risk_str_report`（逻辑表 `str_report`）
 
-**LTR 默认阈值**：USD 10000，HKD 50000
+| 字段 | 类型 | 空 | 默认 | 注释 |
+|------|------|----|------|------|
+| id | bigint unsigned PK | NO | — | 主键 |
+| report_no | string(32) UNIQUE | NO | — | 业务编号，如 STR20260909001 |
+| type | string(8) | NO | — | ltr / str |
+| trigger_mode | string(16) | NO | manual | auto / manual |
+| merchant_id | string(32) | NO | — | 商户号 |
+| merchant_name | string(128) | NO | '' | 商户名称快照 |
+| order_no | string(64) | NO | — | 关联订单号 |
+| currency | string(8) | NO | USD | USD / EUR / GBP / HKD |
+| amount_val | decimal(18,2) | NO | 0 | 交易金额数值 |
+| amount_display | string(64) | NO | '' | 金额展示串 |
+| trigger_reason | string(512) | NO | '' | 触发原因 |
+| suspicious_desc | text | YES | NULL | 可疑描述（type=str 业务必填） |
+| status | string(32) | NO | generated | pending_confirm / generated / uploaded / submitted / dismissed / archived / rejected |
+| submitter | string(64) | YES | NULL | 报送人 |
+| reviewer | string(64) | YES | NULL | 审核人 |
+| review_remark | string(1000) | YES | NULL | 确认上报说明 |
+| dismiss_reason | string(1000) | YES | NULL | 无需上报理由 |
+| reject_reason | string(1000) | YES | NULL | 退回原因 |
+| linked_alert_id | string(64) | YES | NULL | 关联预警编号 |
+| hit_rule_ids | text/json | YES | NULL | 命中规则编号 JSON 数组 |
+| reviewed_at | datetime | YES | NULL | 审核时间 |
+| submitted_at | datetime | YES | NULL | 提交监管时间 |
+| created_at / updated_at | datetime | NO | — | |
+
+**LTR 默认阈值**（推送配置）：USD 10000，HKD 50000
+
+### `risk_str_attachment`（逻辑表 `str_attachment`）
+
+| 字段 | 类型 | 空 | 默认 | 注释 |
+|------|------|----|------|------|
+| id | bigint unsigned PK | NO | — | 主键 |
+| str_report_id | bigint unsigned | NO | — | 关联 str_report.id |
+| file_name | string(255) | NO | — | 原始文件名 |
+| file_size | int unsigned | NO | 0 | 字节 |
+| storage_path | string(512) | NO | — | public 盘相对路径 |
+| file_type | string(16) | NO | xml | xml / pdf / zip / xlsx |
+| is_auto | bool | NO | 0 | 系统自动生成 |
+| uploaded_at | datetime | NO | — | 上传时间 |
+| created_at / updated_at | datetime | NO | — | |
 
 ---
 
-## 11. EDD `risk_edd_case`
+## 11. EDD
+
+### `risk_edd_case`（逻辑表 `edd_case`）
 
 | 字段 | 说明 |
 |------|------|
-| id | EDD202606001 |
-| merchant_id, merchant_name | |
-| trigger | 触发原因 enum |
-| risk_level | |
-| status | 待启动/资料收集中/审核中/已通过/未通过/已过期 |
-| deadline | |
-| assignee | |
-| progress | 0–100 |
-| checklist | json，7 项 key→bool |
-| notes | |
-| linked_str_id | |
+| id | bigint PK |
+| case_no | 业务编号，如 EDD20260908001（唯一） |
+| merchant_id, merchant_name | 商户号；名称创建时快照 |
+| trigger | 英文：high_risk_merchant / suspicious_txn / pep_sanction / high_risk_industry / volume_anomaly / str_link |
+| risk_level | 快照 low / mid / high |
+| status | pending / collecting / reviewing / passed / rejected / expired |
+| deadline | date |
+| assignee | 负责人，可空 |
+| progress | 0–100（按勾选项附件齐备度计算） |
+| checklist | json，7 项 key→bool：ubo/source/business/site/bank/pep/visit |
+| notes | 备注 |
+| linked_str_id | 关联 STR 编号（展示用，可空） |
+| review_remark, reviewed_at | 审核备注与时间 |
+| created_at, updated_at | |
+
+### `risk_edd_attachment`（逻辑表 `edd_attachment`）
+
+| 字段 | 说明 |
+|------|------|
+| id | bigint PK |
+| edd_case_id | 关联工单 |
+| checklist_key | 清单项 key |
+| file_name, file_size, storage_path | 原始名、字节数、public 盘相对路径 |
+| file_type | pdf / img / doc / zip |
+| uploaded_at, created_at, updated_at | |
 
 ---
 
 ## 12. 用户 / 角色
+
+> 薄 RBAC：无 `sys_permission` 主表；权限码固定于 `app/support/PermissionCatalog.php`，角色权限存 `sys_role_permission.perm_code`。无部门字段。
 
 ### 用户 `sys_user`
 
 | 字段 | 说明 |
 |------|------|
 | id, account, name | account: 小写+数字+下划线 3–32 |
-| dept | 风控管理部、合规部… |
+| password | `password_hash` 哈希，不对外返回 |
 | title | 岗位 |
 | phone, email | |
-| status | 启用/停用/锁定 |
-| last_login, updated | |
-| remark | |
+| status | enabled / disabled / locked（UI：启用/停用/锁定） |
+| last_login_at, remark | |
+| created_at, updated_at | |
 
 ### 角色 `sys_role`
 
 | 字段 | 说明 |
 |------|------|
 | id, code, name | code: 大写+下划线 |
-| type | 内置/自定义 |
-| status | 启用/停用 |
-| sort, desc | |
-| perms | string[] 权限 ID |
-| user_ids | 关联用户 |
+| type | builtin / custom（内置/自定义） |
+| status | enabled / disabled |
+| sort, description | |
+| created_at, updated_at | |
+
+### 关联表
+
+| 表 | 说明 |
+|----|------|
+| `sys_role_user` | role_id + user_id |
+| `sys_role_permission` | role_id + perm_code（固定权限码字符串） |
+
+内置角色：`SYS_ADMIN`（全权限）、`AUDITOR`（只读集）不可删除。
 
 ### 权限点 ID 清单
 
@@ -391,13 +460,14 @@
 
 ---
 
-## 15. STR 推送配置 `str_push_config`（JSON）
+## 15. STR 推送配置 `risk_str_push_config`（单行全局）
 
-| 键 | 说明 |
-|----|------|
-| enabled | 总开关 |
-| push_by_risk_level | |
-| risk_levels | string[] |
-| push_ltr | |
-| ltr_threshold_usd / hkd | |
-| rule_push | { R001: true, … } |
+按规则开关在 `risk_rule.push_str`，本表仅存全局策略。
+
+| 字段 | 说明 |
+|------|------|
+| enabled | STR 自动推送总开关 |
+| push_by_risk_level | 是否按综合风险等级推送 |
+| risk_levels | string[]（英文枚举，如 high/critical） |
+| push_ltr | 大额 LTR 自动推送 |
+| ltr_threshold_usd / hkd | LTR 金额阈值 |

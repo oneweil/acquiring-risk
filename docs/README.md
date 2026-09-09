@@ -29,7 +29,7 @@
 | 阶段 | 范围 | 交付标准 |
 |------|------|----------|
 | **P0** | evaluate → 订单监控 → 交易/商户预警 → 规则/黑名单 | evaluate 可调、订单见风险结果、商户异常可审核 |
-| **P1** | 商户列表、评估规则、真实用户登录 | 商户可评；完整 RBAC 可后置 |
+| **P1** | 商户列表、评估规则、真实用户登录 / 用户角色 | 商户可评；用户+角色薄 RBAC 已落地，审计日志可后置 |
 | **P2** | STR / EDD / 总览真实 KPI | 合规工作流可跑通 |
 
 ## 当前实现进度（截至文档生成时）
@@ -38,7 +38,7 @@
 |------|------|------|
 | 风控总览 | `/admin/dashboard` | UI 完成，数据 Mock |
 | 订单监控 | `/admin/order` | UI + AJAX 列表，Mock 数据 |
-| 预警中心 | `/admin/alert` | 占位页 |
+| 预警中心 | `/admin/alert` | 交易预警已实现（Seed 演示）；商户预警未做 |
 | 规则/处置/黑名单等 | 各 `/admin/*` | 占位页 |
 | 评估 API | `POST /api/v1/risk/evaluate` | 骨架，未接规则引擎 |
 
@@ -67,5 +67,5 @@
 3. 前后端联调时，按 **04-apis** 定 URL 与 JSON 结构。
 4. 规则引擎实现时，以 **05-rules-catalog** 为初始规则集。
 5. 建表与读 doopsun 时，参考 **06-architecture**。
-6. **单人开发**按 **[07-solo-dev-roadmap](./07-solo-dev-roadmap.md)** 执行，不要先做用户/角色。
+6. **单人开发**按 **[07-solo-dev-roadmap](./07-solo-dev-roadmap.md)** 执行；用户/角色已可用，勿再优先做审计日志全套。
 7. 写 ThinkPHP 框架代码时，先查 **[thinkphp/](./thinkphp/README.md)**（或对话里 `@docs/thinkphp`），细则不要塞进 `.cursor/rules`。

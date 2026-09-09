@@ -183,16 +183,38 @@ CRM 推送入网资料或风控定时拉取。
 
 ### 2.3 预警中心（P0）
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/admin/alert/list` | 交易预警列表 |
-| GET | `/admin/merchant_alert/list` | **商户预警**列表（人工审核） |
-| GET | `/admin/alert/detail` | 交易预警详情 |
-| GET | `/admin/merchant_alert/detail` | 商户预警详情 |
-| POST | `/admin/alert/handle` | 交易预警处置（调单/关闭） |
-| POST | `/admin/merchant_alert/handle` | **商户人工审核**提交 |
+**本阶段已实现交易预警**；`merchant_alert` 接口尚未实现。
 
-**POST /admin/merchant_alert/handle**
+| 方法 | 路径 | 说明 | 状态 |
+|------|------|------|------|
+| GET | `/admin/alert` | 交易预警列表页 | 已实现 |
+| GET | `/admin/alert/list` | 交易预警列表（AJAX） | 已实现 |
+| GET | `/admin/alert/detail` | 交易预警详情 | 已实现 |
+| POST | `/admin/alert/handle` | 交易预警处置（调单/关闭） | 已实现 |
+| POST | `/admin/alert/upload` | 调单附件上传 | 已实现 |
+| GET | `/admin/alert/attachment/download` | 附件下载（`attachment_id`） | 已实现 |
+| GET | `/admin/merchant_alert/list` | **商户预警**列表（人工审核） | 未实现 |
+| GET | `/admin/merchant_alert/detail` | 商户预警详情 | 未实现 |
+| POST | `/admin/merchant_alert/handle` | **商户人工审核**提交 | 未实现 |
+
+**GET /admin/alert/list** query：`risk_level` / `status` / `measure_code` / `page` / `pageSize`(10\|20\|50)。无 `status` 时默认排除 `closed`。
+
+**POST /admin/alert/handle**
+
+```json
+{
+  "id": 1,
+  "action": "close",
+  "remark": "已阅关闭",
+  "inquiry_desc": "可选，调单说明"
+}
+```
+
+`action`：`close` | `false_positive` | `submit_materials` | `complete`  
+- `submit_materials` / `complete` 仅 `measure_code=CHARGEBACK_INQUIRY`；非误报须已有附件  
+- 处置**不改变**订单授权终态
+
+**POST /admin/merchant_alert/handle**（规划）
 
 ```json
 {
@@ -256,60 +278,75 @@ CRM 推送入网资料或风控定时拉取。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/admin/str_report/list` | STR 列表 |
-| GET | `/admin/str_report/detail` | 详情 |
-| POST | `/admin/str_report/create` | 新建 |
-| POST | `/admin/str_report/confirm` | 确认上报 |
-| POST | `/admin/str_report/dismiss` | 无需上报 |
-| POST | `/admin/str_report/submit` | 提交监管 |
-| POST | `/admin/str_report/upload` | 上传附件 |
-| GET | `/admin/str_push_rule/config` | 推送规则 |
-| POST | `/admin/str_push_rule/save` | 保存推送规则 |
-| GET | `/admin/edd/list` | EDD 列表 |
-| GET | `/admin/edd/detail` | EDD 详情 |
-| POST | `/admin/edd/create` | 新建 |
-| POST | `/admin/edd/collect` | 启动资料收集 |
-| POST | `/admin/edd/review` | 提交/通过/拒绝 |
+| GET | `/admin/str_report/stats` | KPI：待确认 / 本月 LTR / 本月 STR / 本季已提交（**已实现**） |
+| GET | `/admin/str_report/list` | 列表（tab/merchant_id/order_no/status + page/pageSize）（**已实现**） |
+| GET | `/admin/str_report/detail` | 详情（含 attachments + linked_edd）（**已实现**） |
+| POST | `/admin/str_report/create` | 新建（可选 multipart file；STR 必填 suspicious_desc）（**已实现**） |
+| POST | `/admin/str_report/confirm` | 确认上报（pending_confirm → uploaded + 自动附件；STR 联动 EDD）（**已实现**） |
+| POST | `/admin/str_report/dismiss` | 无需上报（**已实现**） |
+| POST | `/admin/str_report/upload` | 上传附件（generated/rejected → uploaded）（**已实现**） |
+| GET | `/admin/str_report/attachment/download` | 下载附件（**已实现**） |
+| POST | `/admin/str_report/submit` | 提交监管（uploaded → submitted）（**已实现**） |
+| GET | `/admin/str_push_rule/list` | 规则表分页（category/push_str/keyword） |
+| POST | `/admin/str_push_rule/save` | 保存全局配置 + 批量 push_str |
+| POST | `/admin/str_push_rule/reset` | 恢复默认全局配置与 push_str |
+| GET | `/admin/edd/stats` | KPI：进行中 / 待启动 / 已通过 / 未通过过期 |
+| GET | `/admin/edd/list` | EDD 列表（keyword/trigger/status + page/pageSize） |
+| GET | `/admin/edd/detail` | EDD 详情（含 docs 分组附件） |
+| POST | `/admin/edd/create` | 新建（pending） |
+| POST | `/admin/edd/collect` | 启动资料收集（勾选 checklist） |
+| POST | `/admin/edd/upload` | 上传附件（multipart：id/checklist_key/file） |
+| POST | `/admin/edd/attachment/delete` | 删除附件 |
+| GET | `/admin/edd/attachment/download` | 下载附件 |
+| POST | `/admin/edd/submit` | 资料齐备后进入审核中 |
+| POST | `/admin/edd/review` | 审核通过/拒绝（action=approve\|reject + review_remark） |
 
 ---
 
 ### 2.7 系统管理（P1）
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/admin/user/list` | 用户列表 |
-| POST | `/admin/user/save` | 新增/编辑 |
-| POST | `/admin/user/reset_password` | 重置密码 |
-| POST | `/admin/user/toggle_status` | 启用/停用/解锁 |
-| GET | `/admin/role/list` | 角色列表 |
-| POST | `/admin/role/save` | 新增/编辑 |
-| POST | `/admin/role/permissions` | 保存权限 |
-| POST | `/admin/role/users` | 分配用户 |
-| GET | `/admin/audit_log/list` | 日志列表 |
-| GET | `/admin/audit_log/export` | 导出 |
+| 方法 | 路径 | 说明 | 权限码 |
+|------|------|------|--------|
+| GET | `/admin/user/list` | 用户列表（含 stats） | `users:view` |
+| GET | `/admin/user/role_options` | 启用角色选项 | `users:view` |
+| POST | `/admin/user/save` | 新增/编辑 | `users:edit` |
+| POST | `/admin/user/reset_password` | 重置密码 | `users:edit` |
+| POST | `/admin/user/toggle_status` | 启用/停用/解锁 | `users:edit` |
+| POST | `/admin/user/roles` | 分配角色 | `users:edit` |
+| GET | `/admin/role/list` | 角色列表（含 stats） | `roles:view` |
+| GET | `/admin/role/permission_catalog` | 权限树目录 | `roles:view` |
+| GET | `/admin/role/users_assign` | 角色分配用户弹窗数据 | `roles:view` |
+| POST | `/admin/role/save` | 新增/编辑 | `roles:edit` |
+| POST | `/admin/role/permissions` | 保存权限 | `roles:edit` |
+| POST | `/admin/role/users` | 分配用户 | `roles:edit` |
+| POST | `/admin/role/delete` | 删除自定义空角色 | `roles:edit` |
+| GET | `/admin/audit_log/list` | 日志列表 | 未实现 |
+| GET | `/admin/audit_log/export` | 导出 | 未实现 |
+
+本轮仅对 user/role 路由强制权限中间件；其它业务模块写操作暂未挂权限码。`SYS_ADMIN` 全放行。角色/权限变更后需重新登录生效。
 
 ---
 
-## 3. 页面路由（已实现，仅 HTML）
+## 3. 页面路由
 
-| GET 路径 | Controller |
-|----------|------------|
-| `/admin/dashboard` | Dashboard/index |
-| `/admin/order` | Order/index |
-| `/admin/alert` | Alert/index |
-| `/admin/onboarding` | Onboarding/index |
-| `/admin/merchant` | Merchant/index |
-| `/admin/merchant_risk_level` | MerchantRiskLevel/index |
-| `/admin/merchant_risk` | MerchantRisk/index |
-| `/admin/str_report` | StrReport/index |
-| `/admin/str_push_rule` | StrPushRule/index |
-| `/admin/edd` | Edd/index |
-| `/admin/rule` | Rule/index |
-| `/admin/disposition` | Disposition/index |
-| `/admin/blacklist` | Blacklist/index |
-| `/admin/user` | User/index |
-| `/admin/role` | Role/index |
-| `/admin/audit_log` | AuditLog/index |
+| GET 路径 | Controller | 说明 |
+|----------|------------|------|
+| `/admin/dashboard` | Dashboard/index | 占位/部分实现 |
+| `/admin/order` | Order/index | 已实现列表 |
+| `/admin/alert` | Alert/index | 已实现 |
+| `/admin/onboarding` | Onboarding/index | 占位 |
+| `/admin/merchant` | Merchant/index | 已实现列表 |
+| `/admin/merchant_risk_level` | MerchantRiskLevel/index | 已实现 |
+| `/admin/merchant_risk` | MerchantRisk/index | 已实现 |
+| `/admin/str_report` | StrReport/index | 已实现 KPI+列表+状态机+附件 |
+| `/admin/str_push_rule` | StrPushRule/index | 已实现 |
+| `/admin/edd` | Edd/index | 已实现 KPI+列表+工作流 |
+| `/admin/rule` | Rule/index | 已实现 |
+| `/admin/disposition` | Disposition/index | 已实现 |
+| `/admin/blacklist` | Blacklist/index | 已实现 |
+| `/admin/user` | User/index | 已实现 |
+| `/admin/role` | Role/index | 已实现 |
+| `/admin/audit_log` | AuditLog/index | 占位 |
 
 ---
 
@@ -317,9 +354,11 @@ CRM 推送入网资料或风控定时拉取。
 
 | 场景 | 方式 |
 |------|------|
-| 后台登录 | POST `/login`，Session |
-| 后台业务 | Session + `auth` 中间件 |
+| 后台登录 | POST `/login`，校验 `sys_user`（仅 `enabled`），Session |
+| Session | `admin_user`：`id` / `username` / `name` / `role_codes` / `perm_codes` / `login_at` |
+| 后台业务 | Session + `auth`；user/role 另挂 `permission` 权限码 |
 | 开放 API | Header API Key，`api_auth` 中间件 |
+| 种子账号 | `admin` / `admin123`（`SYS_ADMIN`） |
 
 ---
 

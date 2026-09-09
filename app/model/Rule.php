@@ -18,6 +18,7 @@ use think\Model;
  * @property array|string|null $config
  * @property string      $measure_code
  * @property int|bool    $enabled
+ * @property int|bool    $push_str
  * @property int         $sort
  * @property string      $created_at
  * @property string      $updated_at
@@ -34,9 +35,10 @@ class Rule extends Model
 
     /** @var array<string, string> */
     protected $type = [
-        'config'  => 'json',
-        'enabled' => 'boolean',
-        'sort'    => 'integer',
+        'config'   => 'json',
+        'enabled'  => 'boolean',
+        'push_str' => 'boolean',
+        'sort'     => 'integer',
     ];
 
     /** @var list<string> 展示顺序 */

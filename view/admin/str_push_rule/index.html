@@ -1,0 +1,156 @@
+{extend name="/admin/layout/admin" /}
+
+{block name="content"}
+<form id="strPushFilterForm"></form>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h3 class="card-title mb-1">STR 推送规则配置</h3>
+    <div class="text-secondary">配置哪些风控规则命中后自动推送 STR / LTR 报送</div>
+    <div class="alert alert-info mt-3 mb-0" role="alert">
+      <div>
+        订单风控评估完成后，若命中已启用<strong>推送 STR</strong>的规则，系统自动在 STR 报送列表生成<strong>待确认</strong>记录；大额 LTR 按金额阈值独立判断。修改后请点击「保存配置」生效。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    <h3 class="card-title">全局设置</h3>
+    <div class="card-actions">
+      <div class="btn-list">
+        <button type="button" class="btn" id="strPushResetBtn">恢复默认</button>
+        <button type="button" class="btn btn-primary" id="strPushSaveBtn">保存配置</button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="strPushEnabled">STR 自动推送总开关</label>
+        <select id="strPushEnabled" class="form-select">
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="strPushByRisk">按综合风险等级推送</label>
+        <select id="strPushByRisk" class="form-select">
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="strPushLtr">大额 LTR 自动推送</label>
+        <select id="strPushLtr" class="form-select">
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="strPushRiskLevels">触发 STR 的风险等级</label>
+        <select id="strPushRiskLevels" class="form-select">
+          {volist name="risk_level_options" id="label"}
+          <option value="{$key}">{$label}</option>
+          {/volist}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="strPushLtrUsd">LTR 阈值 (USD)</label>
+        <input id="strPushLtrUsd" type="number" class="form-control" min="1" step="1" value="{$config.ltr_threshold_usd|default=10000}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="strPushLtrHkd">LTR 阈值 (HKD)</label>
+        <input id="strPushLtrHkd" type="number" class="form-control" min="1" step="1" value="{$config.ltr_threshold_hkd|default=50000}">
+      </div>
+    </div>
+    <div class="mt-3 text-secondary small">
+      已启用推送规则：<strong class="text-primary" id="strPushEnabledCount">{$config.enabled_count|default=0}</strong>
+      / <span id="strPushTotalCount">{$config.total_count|default=0}</span> 条
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-table">
+    <div class="card-header">
+      <h3 class="card-title mb-0">规则推送开关</h3>
+    </div>
+
+    <div class="card-body border-bottom py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3 col-xl-2">
+          <select form="strPushFilterForm" name="category" class="form-select form-select-sm">
+            <option value="">全部类别</option>
+            {volist name="category_options" id="label"}
+            <option value="{$key}">{$label}</option>
+            {/volist}
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+          <select form="strPushFilterForm" name="push_str" class="form-select form-select-sm">
+            <option value="">全部推送状态</option>
+            <option value="1">已启用推送</option>
+            <option value="0">未启用推送</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4 col-xl-3">
+          <input type="text" form="strPushFilterForm" name="keyword" class="form-control form-control-sm" placeholder="搜索规则名称 / 编号" value="">
+        </div>
+        <div class="col-12 col-md-auto">
+          <div class="btn-list">
+            <button type="submit" form="strPushFilterForm" class="btn btn-primary btn-sm">
+              <i class="ti ti-search me-1"></i>查询
+            </button>
+            <button type="button" class="btn btn-sm" id="strPushFilterReset">重置</button>
+            <button type="button" class="btn btn-sm" id="strPushEnableAllBtn">全部启用</button>
+            <button type="button" class="btn btn-sm" id="strPushDisableAllBtn">全部停用</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-nowrap">
+        <thead>
+          <tr>
+            <th>规则编号</th>
+            <th>规则名称</th>
+            <th>类别</th>
+            <th>风险等级</th>
+            <th>处置策略</th>
+            <th>推送 STR</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody id="strPushTableBody">
+          <tr>
+            <td colspan="7" class="text-center text-secondary py-5">
+              <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>加载中…
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex flex-wrap align-items-center gap-2" id="strPushTableFooter">
+      <div id="strPushPageSize"></div>
+      <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <p class="m-0" id="strPushTableSummary" style="color: var(--tblr-pagination-disabled-color, var(--bs-pagination-disabled-color, var(--tblr-secondary)));">加载中…</p>
+        <div id="strPushTablePager"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="strPushConfigBoot">{$config_json|raw}</script>
+{/block}
+
+{block name="script"}
+<script src="/static/js/admin/list-page.js?v=1.2.0"></script>
+<script src="/static/js/admin/str_push_rule.js?v=1.0.1"></script>
+<script>
+StrPushRulePage.init();
+</script>
+{/block}

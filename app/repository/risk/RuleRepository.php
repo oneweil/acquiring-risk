@@ -112,7 +112,7 @@ class RuleRepository
                     $config  = is_array($decoded) ? $decoded : [];
                 }
 
-                $model->save([
+                $save = [
                     'category'         => $row['category'],
                     'name'             => $row['name'],
                     'description'      => $row['description'],
@@ -121,8 +121,92 @@ class RuleRepository
                     'measure_code'     => $row['measure_code'],
                     'enabled'          => !empty($row['enabled']) ? 1 : 0,
                     'sort'             => (int) ($row['sort'] ?? 0),
-                ]);
+                ];
+                if (array_key_exists('push_str', $row)) {
+                    $save['push_str'] = !empty($row['push_str']) ? 1 : 0;
+                }
+
+                $model->save($save);
             }
         });
+    }
+
+    /**
+     * STR 推送规则列表（分页）
+     *
+     * @param array{category?: string, push_str?: int|bool, keyword?: string} $filters
+     *
+     * @throws DbException
+     */
+    public function searchForStrPush(array $filters, int $page, int $pageSize): \think\Paginator
+    {
+        $query = Rule::order('sort', 'asc')->order('id', 'asc');
+
+        if (isset($filters['category']) && $filters['category'] !== '') {
+            $query->where('category', $filters['category']);
+        }
+        if (isset($filters['push_str'])) {
+            $query->where('push_str', (int) ((bool) $filters['push_str']));
+        }
+        if (isset($filters['keyword']) && $filters['keyword'] !== '') {
+            $like = '%' . $filters['keyword'] . '%';
+            $query->where(function ($q) use ($like): void {
+                $q->whereLike('name', $like)->whereLike('rule_id', $like, 'OR');
+            });
+        }
+
+        return $query->paginate([
+            'list_rows' => $pageSize,
+            'page'      => $page,
+        ]);
+    }
+
+    public function countPushStrEnabled(): int
+    {
+        return (int) Rule::where('push_str', 1)->count();
+    }
+
+    public function countAll(): int
+    {
+        return (int) Rule::count();
+    }
+
+    /**
+     * @param list<array{rule_id: string, push_str: bool}> $items
+     *
+     * @throws DbException
+     */
+    public function batchUpdatePushStr(array $items): void
+    {
+        foreach ($items as $item) {
+            $model = Rule::where('rule_id', $item['rule_id'])->find();
+            if ($model === null) {
+                throw new \RuntimeException('规则不存在：' . $item['rule_id']);
+            }
+            $model->save([
+                'push_str' => !empty($item['push_str']) ? 1 : 0,
+            ]);
+        }
+    }
+
+    /**
+     * @param list<string> $ruleIds
+     * @return array<string, bool> rule_id => push_str
+     *
+     * @throws DbException
+     */
+    public function mapPushStrByRuleIds(array $ruleIds): array
+    {
+        if ($ruleIds === []) {
+            return [];
+        }
+
+        $rows = Rule::whereIn('rule_id', $ruleIds)->field(['rule_id', 'push_str'])->select();
+        $map  = [];
+        foreach ($rows as $row) {
+            $map[(string) $row->rule_id] = (bool) $row->push_str;
+        }
+
+        return $map;
     }
 }

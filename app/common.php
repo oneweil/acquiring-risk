@@ -4,13 +4,33 @@ declare(strict_types=1);
 // 应用公共文件
 
 /**
- * 是否已登录后台（演示阶段）
+ * 是否已登录后台（Session 含 username）
  */
 function admin_is_logged_in(): bool
 {
     $user = session('admin_user');
 
     return is_array($user) && !empty($user['username']);
+}
+
+/**
+ * 当前登录用户 Session 数组（未登录返回 null）
+ *
+ * @return array<string, mixed>|null
+ */
+function admin_user(): ?array
+{
+    $user = session('admin_user');
+
+    return is_array($user) && !empty($user['username']) ? $user : null;
+}
+
+/**
+ * 当前用户是否拥有权限码（SYS_ADMIN 全放行）
+ */
+function admin_can(string $permCode): bool
+{
+    return (new \app\service\risk\PermissionService())->can(admin_user(), $permCode);
 }
 
 /**

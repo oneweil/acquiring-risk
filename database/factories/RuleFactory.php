@@ -49,6 +49,7 @@ class RuleFactory
                 'config'           => json_encode($def['config'], JSON_UNESCAPED_UNICODE),
                 'measure_code'     => $code,
                 'enabled'          => !empty($def['enabled']) ? 1 : 0,
+                'push_str'         => StrPushConfigFactory::defaultPushStr($def['category'], $code) ? 1 : 0,
                 'sort'             => ($i + 1) * 10,
                 'created_at'       => $now,
                 'updated_at'       => $now,
