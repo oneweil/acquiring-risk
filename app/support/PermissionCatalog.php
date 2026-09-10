@@ -35,8 +35,6 @@ final class PermissionCatalog
                 'id'    => 'merchant',
                 'name'  => '商户管理',
                 'perms' => [
-                    ['id' => 'onboarding:view', 'name' => '商户入网-查看'],
-                    ['id' => 'onboarding:review', 'name' => '商户入网-审核'],
                     ['id' => 'merchants:view', 'name' => '商户列表-查看'],
                     ['id' => 'merchants:edit', 'name' => '商户信息-编辑'],
                     ['id' => 'merchant-risk:view', 'name' => '评估规则-查看'],
@@ -113,7 +111,6 @@ final class PermissionCatalog
             'dashboard:view',
             'orders:view',
             'alerts:view',
-            'onboarding:view',
             'merchants:view',
             'merchant-risk:view',
             'str:view',

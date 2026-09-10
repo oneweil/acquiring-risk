@@ -38,7 +38,6 @@ Route::group('admin', function () {
     Route::post('alert/upload', 'admin.Alert/upload');
     Route::get('alert/attachment/download', 'admin.Alert/downloadAttachment');
     Route::get('alert', 'admin.Alert/index');
-    Route::get('onboarding', 'admin.Onboarding/index');
     Route::get('merchant/stats', 'admin.Merchant/stats');
     Route::get('merchant/list', 'admin.Merchant/list');
     Route::get('merchant/detail', 'admin.Merchant/detail');
@@ -111,5 +110,8 @@ Route::group('admin', function () {
 Route::group('api', function () {
     Route::group('v1', function () {
         Route::post('risk/evaluate', 'api.Risk/evaluate');
+        Route::post('merchant/upsert', 'api.Merchant/upsert');
+        Route::post('merchant/upsert_batch', 'api.Merchant/upsertBatch');
+        Route::get('merchant/:merchant_id', 'api.Merchant/read');
     });
 })->middleware(['api_auth']);

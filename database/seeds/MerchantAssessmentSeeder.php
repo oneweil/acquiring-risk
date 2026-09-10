@@ -2,36 +2,26 @@
 
 declare(strict_types=1);
 
-use database\factories\MerchantAssessmentFactory;
-use think\facade\Db;
 use think\migration\Seeder;
 
+/**
+ * @deprecated 请使用 MerchantSeeder（本地投影 + 评估）
+ */
 class MerchantAssessmentSeeder extends Seeder
 {
     public function run(): void
     {
-        Db::name('merchant_assessment')->delete(true);
-
-        $merchantIds = [];
-        try {
-            $merchantIds = Db::connect('doopsun_db')
-                ->table('doopsun_merchants')
-                ->order('merchantId', 'desc')
-                ->limit(30)
-                ->column('merchantId');
-        } catch (\Throwable $e) {
-            $this->output->writeln(' == MerchantAssessmentSeeder: skip (doopsun_db unavailable): ' . $e->getMessage());
-
-            return;
+        if ($this->output !== null) {
+            $this->output->writeln(' == MerchantAssessmentSeeder: deprecated — use MerchantSeeder');
         }
-
-        if ($merchantIds === []) {
-            $this->output->writeln(' == MerchantAssessmentSeeder: no merchants in doopsun_merchants, skipped');
-
-            return;
+        require_once __DIR__ . '/MerchantSeeder.php';
+        $seeder = new MerchantSeeder();
+        if (method_exists($seeder, 'setAdapter') && method_exists($this, 'getAdapter')) {
+            $seeder->setAdapter($this->getAdapter());
         }
-
-        $rows = (new MerchantAssessmentFactory())->demoRows($merchantIds);
-        $this->table('merchant_assessment')->insert($rows)->saveData();
+        if ($this->output !== null && method_exists($seeder, 'setOutput')) {
+            $seeder->setOutput($this->output);
+        }
+        $seeder->run();
     }
 }

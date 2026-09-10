@@ -45,12 +45,12 @@ class CreateRiskDisposition extends Migrator
             ->addColumn('risk_level', 'string', [
                 'limit'   => 16,
                 'null'    => false,
-                'comment' => '风险等级英文枚举：low/medium/high/critical',
+                'comment' => '风险等级英文枚举：low/mid/high/critical',
             ])
             ->addColumn('scope', 'string', [
                 'limit'   => 16,
                 'null'    => false,
-                'comment' => '作用域英文枚举：transaction/merchant',
+                'comment' => 'transaction=本笔决策；merchant=商户状态动作（非人审队列）',
             ])
             ->addColumn('priority', 'integer', [
                 'signed'  => false,
@@ -61,12 +61,12 @@ class CreateRiskDisposition extends Migrator
             ->addColumn('is_block', 'boolean', [
                 'null'    => false,
                 'default' => false,
-                'comment' => '是否阻断：1是 0否',
+                'comment' => '是否阻断本笔交易：1→decline；0→pass（3DS 另映射）',
             ])
             ->addColumn('push_alert', 'boolean', [
                 'null'    => false,
                 'default' => true,
-                'comment' => '是否推送预警：1是 0否',
+                'comment' => '是否写订单预警 risk_alert：1是 0否',
             ])
             ->addColumn('status', 'boolean', [
                 'null'    => false,

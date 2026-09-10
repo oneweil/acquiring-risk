@@ -12,12 +12,12 @@ namespace database\factories;
  */
 class RuleFactory
 {
-    /** @var array<string, string> 原型策略名 → disposition.code */
+    /** @var array<string, string> 原型策略名 → disposition.code（人工审核→仅预警，无订单挂起） */
     private const MEASURE_NAME_MAP = [
         '拒绝交易'    => 'DECLINE',
         '暂停收单'    => 'SUSPEND_MERCHANT',
         '3DS强验'     => '3DS_CHALLENGE',
-        '人工审核'    => 'MANUAL_REVIEW',
+        '人工审核'    => 'ALERT_ONLY',
         '延迟结算'    => 'DELAY_SETTLE',
         '限制单笔额度' => 'LIMIT_AMOUNT',
         '加入观察'    => 'WATCHLIST',

@@ -109,6 +109,7 @@ class CreateEddCase extends Migrator
             ->addIndex(['merchant_id'], ['name' => 'idx_merchant_id'])
             ->addIndex(['status'], ['name' => 'idx_status'])
             ->addIndex(['deadline'], ['name' => 'idx_deadline'])
+            ->addIndex(['linked_str_id'], ['name' => 'idx_linked_str_id'])
             ->create();
     }
 

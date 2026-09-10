@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace app\repository\risk;
 
 use app\model\SysRole;
-use app\model\SysRolePermission;
 use app\model\SysRoleUser;
 use app\model\SysUser;
 use think\db\exception\DataNotFoundException;

@@ -20,7 +20,7 @@ class StrReport extends Validate
         'currency'       => 'require|checkCurrency',
         'amount_val'     => 'require|float|gt:0',
         'trigger_reason' => 'max:512',
-        'suspicious_desc'=> 'max:5000',
+        'suspicious_desc' => 'max:5000',
         'status'         => 'checkStatus',
         'tab'            => 'checkTab',
         'review_remark'  => 'require|max:1000',

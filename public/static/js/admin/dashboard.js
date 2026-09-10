@@ -38,88 +38,12 @@
       { merchantName: 'LatAm Market', currency: 'USD', amount: 760.25, orderNo: 'MO20260901010', action: '通过', hitRule: '低风险放行', status: '成功' },
       { merchantName: 'Nordic Outdoor', currency: 'EUR', amount: 1120.0, orderNo: 'MO20260901011', action: '人工审核', hitRule: 'Test-then-Buy模式', status: '审核中' },
       { merchantName: 'HK Beauty Lab', currency: 'HKD', amount: 980.0, orderNo: 'MO20260901012', action: '通过', hitRule: '低风险放行', status: '成功' }
-    ],
-    alerts: [
-      {
-        id: 'AL2026090001',
-        time: '2026-09-01 10:42:18',
-        merchantId: 'M10086',
-        orderNo: 'MO20260658222',
-        amount: 'USD 1,280.00',
-        riskLevel: '高风险',
-        ruleName: '发卡国与IP不一致；高风险收货国家',
-        action: '人工审核',
-        status: '待处理',
-        strReport: '—',
-        orderStatus: '审核中',
-        hitRules: [
-          { id: 'R016', name: '发卡国与IP不一致' },
-          { id: 'R020', name: '高风险收货国家' }
-        ]
-      },
-      {
-        id: 'AL2026090002',
-        time: '2026-09-01 10:28:05',
-        merchantId: 'M10012',
-        orderNo: 'MO20260901006',
-        amount: 'USD 5,120.00',
-        riskLevel: '中风险',
-        ruleName: '单笔大额交易',
-        action: '人工审核',
-        status: '待处理',
-        strReport: 'LTR待确认',
-        orderStatus: '审核中',
-        hitRules: [{ id: 'R013', name: '单笔大额交易' }]
-      },
-      {
-        id: 'AL2026090003',
-        time: '2026-09-01 09:55:41',
-        merchantId: 'M10045',
-        orderNo: 'MO20260901003',
-        amount: 'USD 89.99',
-        riskLevel: '极高风险',
-        ruleName: '黑名单卡号',
-        action: '拒绝交易',
-        status: '已关闭',
-        strReport: '—',
-        orderStatus: '拦截',
-        hitRules: [{ id: 'R031', name: '黑名单卡号' }]
-      },
-      {
-        id: 'AL2026090004',
-        time: '2026-09-01 09:31:12',
-        merchantId: 'M10078',
-        orderNo: 'MO20260901011',
-        amount: 'EUR 1,120.00',
-        riskLevel: '高风险',
-        ruleName: 'Test-then-Buy模式',
-        action: '人工审核',
-        status: '处理中',
-        strReport: '—',
-        orderStatus: '审核中',
-        hitRules: [{ id: 'R009', name: 'Test-then-Buy模式' }]
-      },
-      {
-        id: 'AL2026090005',
-        time: '2026-09-01 08:47:33',
-        merchantId: 'M10033',
-        orderNo: 'MO20260901009',
-        amount: 'USD 320.00',
-        riskLevel: '高风险',
-        ruleName: 'VPN/Proxy 交易',
-        action: '拒绝交易',
-        status: '已关闭',
-        strReport: 'STR草稿',
-        orderStatus: '拦截',
-        hitRules: [{ id: 'R018', name: 'VPN/Proxy 交易' }]
-      }
     ]
   };
 
   var riskChart = null;
   var feedCursor = 0;
   var feedTimer = null;
-  var alertModal = null;
 
   function escapeHtml(str) {
     return String(str == null ? '' : str)
@@ -128,34 +52,6 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-  function riskBadge(level) {
-    var map = {
-      '极高风险': 'bg-purple text-purple-fg',
-      '高风险': 'bg-red text-red-fg',
-      '中风险': 'bg-yellow text-yellow-fg',
-      '低风险': 'bg-green text-green-fg'
-    };
-    return '<span class="badge ' + (map[level] || 'bg-secondary text-secondary-fg') + '">' + escapeHtml(level) + '</span>';
-  }
-
-  function statusBadge(status) {
-    var map = {
-      '待处理': 'bg-red text-red-fg',
-      '处理中': 'bg-yellow text-yellow-fg',
-      '已关闭': 'bg-secondary text-secondary-fg'
-    };
-    return '<span class="badge ' + (map[status] || 'bg-secondary text-secondary-fg') + '">' + escapeHtml(status) + '</span>';
-  }
-
-  function measureBadge(name) {
-    var cls = 'bg-azure text-azure-fg';
-    if (name === '拒绝交易') cls = 'bg-red text-red-fg';
-    else if (name === '人工审核' || name === '调单') cls = 'bg-purple text-purple-fg';
-    else if (name === '仅预警') cls = 'bg-green text-green-fg';
-    else if (name === '3DS强验') cls = 'bg-blue text-blue-fg';
-    return '<span class="badge ' + cls + '">' + escapeHtml(name) + '</span>';
   }
 
   function feedStatusBadge(status) {
@@ -287,104 +183,15 @@
     riskChart.render();
   }
 
-  function renderAlerts() {
-    var body = document.getElementById('dashAlertBody');
-    if (!body) return;
-    var list = MOCK.alerts;
-    if (!list.length) {
-      body.innerHTML = '<tr><td colspan="10" class="text-center text-secondary py-5">暂无预警</td></tr>';
-      return;
-    }
-    body.innerHTML = list.map(function (a) {
-      return ''
-        + '<tr>'
-        +   '<td>' + escapeHtml(a.time) + '</td>'
-        +   '<td><span class="font-monospace">' + escapeHtml(a.merchantId) + '</span></td>'
-        +   '<td><span class="font-monospace">' + escapeHtml(a.orderNo) + '</span></td>'
-        +   '<td>' + escapeHtml(a.amount) + '</td>'
-        +   '<td>' + riskBadge(a.riskLevel) + '</td>'
-        +   '<td class="text-wrap" style="max-width:14rem;">' + escapeHtml(a.ruleName) + '</td>'
-        +   '<td>' + measureBadge(a.action) + '</td>'
-        +   '<td>' + statusBadge(a.status) + '</td>'
-        +   '<td>' + escapeHtml(a.strReport) + '</td>'
-        +   '<td class="text-center">'
-        +     '<button type="button" class="btn btn-sm btn-primary js-alert-handle" data-id="' + escapeHtml(a.id) + '">处理</button>'
-        +   '</td>'
-        + '</tr>';
-    }).join('');
-  }
-
-  function findAlert(id) {
-    for (var i = 0; i < MOCK.alerts.length; i++) {
-      if (MOCK.alerts[i].id === id) return MOCK.alerts[i];
-    }
-    return null;
-  }
-
-  function openAlertModal(alertId) {
-    var a = findAlert(alertId);
-    if (!a || !alertModal) return;
-
-    document.getElementById('alertHandleModalLabel').textContent =
-      a.action === '人工审核' ? '人工审核' : '预警处理';
-    document.getElementById('alertHandleModalSub').textContent =
-      a.orderNo + ' · ' + a.ruleName;
-
-    var hits = a.hitRules || [];
-    document.getElementById('alertHitRulesBody').innerHTML = hits.length
-      ? hits.map(function (h) {
-          return '<tr><td><span class="badge bg-secondary-lt">' + escapeHtml(h.id) + '</span></td><td>' + escapeHtml(h.name) + '</td></tr>';
-        }).join('')
-      : '<tr><td colspan="2" class="text-secondary">暂无命中规则</td></tr>';
-
-    document.getElementById('alertExecNotice').innerHTML =
-      '<div><b>步骤 1 · 已自动执行：</b>处置策略「' + escapeHtml(a.action) + '」已生效，交易已挂起，订单状态 <b>' + escapeHtml(a.orderStatus) + '</b>。</div>'
-      + '<div class="mt-1"><b>步骤 2 · 人工复核：</b>请核查交易信息后，选择审核通过放行、审核拒绝拦截或标记误报。</div>';
-
-    document.getElementById('alertCurrentMeasure').innerHTML = measureBadge(a.action);
-    document.getElementById('alertResult').selectedIndex = 0;
-    document.getElementById('alertRemark').value = '';
-
-    alertModal.show();
-  }
-
-  function bindEvents() {
-    var body = document.getElementById('dashAlertBody');
-    if (body) {
-      body.addEventListener('click', function (e) {
-        var btn = e.target.closest('.js-alert-handle');
-        if (!btn) return;
-        openAlertModal(btn.getAttribute('data-id'));
-      });
-    }
-
-    var submitBtn = document.getElementById('alertSubmitBtn');
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function () {
-        // 演示页：不落库、不改状态，仅关闭弹窗
-        if (alertModal) alertModal.hide();
-      });
-    }
-  }
-
   function startFeedTimer() {
     if (feedTimer) clearInterval(feedTimer);
     feedTimer = setInterval(renderLiveFeed, FEED_INTERVAL_MS);
   }
 
   function init() {
-    var modalEl = document.getElementById('alertHandleModal');
-    var ModalCtor = (window.bootstrap && window.bootstrap.Modal)
-      || (window.tabler && window.tabler.Modal);
-    if (modalEl && ModalCtor) {
-      alertModal = ModalCtor.getOrCreateInstance(modalEl);
-    }
-
     renderKpi();
     renderLiveFeed();
     renderRiskChart();
-    renderAlerts();
-    bindEvents();
     startFeedTimer();
   }
 

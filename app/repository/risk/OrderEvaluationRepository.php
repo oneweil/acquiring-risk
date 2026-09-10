@@ -108,4 +108,51 @@ class OrderEvaluationRepository
 
         return array_values(array_map('strval', OrderEvaluation::where('decision', $decision)->column('order_no')));
     }
+
+    /**
+     * 当日评估笔数（风控已见订单）；金额暂无主数据，固定 0。
+     *
+     * @param list<string|int> $merchantIds
+     * @return array<string, array{today_count: int, today_amount: float}>
+     */
+    public function todayAggByMerchantIds(array $merchantIds): array
+    {
+        $ids = [];
+        foreach ($merchantIds as $id) {
+            $id = trim((string) $id);
+            if ($id !== '') {
+                $ids[] = $id;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return [];
+        }
+
+        $dayStart = date('Y-m-d 00:00:00');
+        $dayEnd   = date('Y-m-d 00:00:00', strtotime('+1 day'));
+
+        $rows = OrderEvaluation::whereIn('merchant_id', $ids)
+            ->where('evaluated_at', '>=', $dayStart)
+            ->where('evaluated_at', '<', $dayEnd)
+            ->field('merchant_id')
+            ->fieldRaw('COUNT(*) AS today_count')
+            ->group('merchant_id')
+            ->select()
+            ->toArray();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $mid = (string) ($row['merchant_id'] ?? '');
+            if ($mid === '') {
+                continue;
+            }
+            $map[$mid] = [
+                'today_count'  => (int) ($row['today_count'] ?? 0),
+                'today_amount' => 0.0,
+            ];
+        }
+
+        return $map;
+    }
 }

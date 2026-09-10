@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace database\factories;
 
 /**
- * 商户评估演示数据（对真实 doopsun merchantId 生成；无商户则空）
+ * 商户评估演示数据（配合 MerchantFactory 的 merchant_id）
  */
 class MerchantAssessmentFactory
 {

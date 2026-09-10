@@ -8,10 +8,10 @@ use app\model\EddCase;
 use app\model\MerchantAssessment;
 use app\model\StrAttachment;
 use app\model\StrReport;
-use app\repository\doopsun\DoopsunMerchantRepository;
 use app\repository\doopsun\DoopsunOrderRepository;
 use app\repository\risk\EddCaseRepository;
 use app\repository\risk\MerchantAssessmentRepository;
+use app\repository\risk\MerchantRepository;
 use app\repository\risk\StrAttachmentRepository;
 use app\repository\risk\StrReportRepository;
 use app\resource\StrReportResource;
@@ -28,7 +28,7 @@ class StrReportAdminService
         private readonly StrReportRepository $reportRepo = new StrReportRepository(),
         private readonly StrAttachmentRepository $attachRepo = new StrAttachmentRepository(),
         private readonly EddCaseRepository $eddCaseRepo = new EddCaseRepository(),
-        private readonly DoopsunMerchantRepository $doopsunRepo = new DoopsunMerchantRepository(),
+        private readonly MerchantRepository $merchantRepo = new MerchantRepository(),
         private readonly DoopsunOrderRepository $orderRepo = new DoopsunOrderRepository(),
         private readonly MerchantAssessmentRepository $assessRepo = new MerchantAssessmentRepository(),
     ) {
@@ -107,9 +107,9 @@ class StrReportAdminService
         }
 
         $merchantName = $merchantId;
-        $merchant     = $this->doopsunRepo->findByMerchantId($merchantId);
+        $merchant     = $this->merchantRepo->findByMerchantId($merchantId);
         if ($merchant !== null) {
-            $merchantName = (string) ($merchant['name'] ?? $merchantId);
+            $merchantName = (string) ($merchant->name ?: $merchantId);
         }
 
         $currency = strtoupper((string) $data['currency']);

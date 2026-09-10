@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace app\service\risk;
 
+use app\model\StrPushConfig;
 use app\repository\risk\RuleRepository;
 use app\repository\risk\StrPushConfigRepository;
-use app\model\StrPushConfig;
 
 /**
  * STR/LTR 自动推送判定（供后续 evaluate / 报送模块调用）

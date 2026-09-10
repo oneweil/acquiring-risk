@@ -16,8 +16,6 @@ class DoopsunOrderRepository
 
     private const TABLE = 'doopsun_order';
 
-    private const MERCHANT_TABLE = 'doopsun_merchants';
-
     /** doopsun 成功态（与商户当日聚合约定一致） */
     public const DOOPSUN_STATUS_SUCCESS = 1;
 
@@ -96,42 +94,6 @@ class DoopsunOrderRepository
             ->find();
 
         return is_array($row) ? $row : null;
-    }
-
-    /**
-     * @param list<string|int> $merchantIds
-     * @return array<string, string> merchantId => name
-     */
-    public function mapMerchantNames(array $merchantIds): array
-    {
-        $ids = [];
-        foreach ($merchantIds as $id) {
-            $id = trim((string) $id);
-            if ($id !== '') {
-                $ids[] = $id;
-            }
-        }
-        $ids = array_values(array_unique($ids));
-        if ($ids === []) {
-            return [];
-        }
-
-        $rows = $this->db()->table(self::MERCHANT_TABLE)
-            ->whereIn('merchantId', $ids)
-            ->field(['merchantId', 'name'])
-            ->select()
-            ->toArray();
-
-        $map = [];
-        foreach ($rows as $row) {
-            $mid = (string) ($row['merchantId'] ?? '');
-            if ($mid === '') {
-                continue;
-            }
-            $map[$mid] = trim((string) ($row['name'] ?? ''));
-        }
-
-        return $map;
     }
 
     /**

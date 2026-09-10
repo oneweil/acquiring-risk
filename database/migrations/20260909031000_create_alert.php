@@ -48,8 +48,8 @@ class CreateAlert extends Migrator
             ])
             ->addColumn('order_no', 'string', [
                 'limit'   => 64,
-                'null'    => true,
-                'comment'  => '关联订单号（可空）',
+                'null'    => false,
+                'comment'  => '关联订单号（预警一律挂订单）',
             ])
             ->addColumn('amount_display', 'string', [
                 'limit'   => 64,
@@ -131,6 +131,8 @@ class CreateAlert extends Migrator
             ->addIndex(['measure_code'], ['name' => 'idx_measure_code'])
             ->addIndex(['merchant_id'], ['name' => 'idx_merchant_id'])
             ->addIndex(['order_no'], ['name' => 'idx_order_no'])
+            ->addIndex(['evaluation_id'], ['name' => 'idx_evaluation_id'])
+            ->addIndex(['str_report_id'], ['name' => 'idx_str_report_id'])
             ->addIndex(['alerted_at'], ['name' => 'idx_alerted_at'])
             ->create();
     }

@@ -58,6 +58,10 @@ class CreateOrderHit extends Migrator
             ])
             ->addIndex(['evaluation_id'], ['name' => 'idx_evaluation_id'])
             ->addIndex(['rule_id'], ['name' => 'idx_rule_id'])
+            ->addForeignKey('evaluation_id', 'order_evaluation', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

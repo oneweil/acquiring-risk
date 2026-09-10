@@ -65,7 +65,6 @@ class SysRbacSeeder extends Seeder
             'alerts:view',
             'alerts:handle',
             'merchants:view',
-            'onboarding:view',
             'blacklist:view',
             'blacklist:edit',
             'rules:view',

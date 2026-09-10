@@ -7,10 +7,10 @@ namespace app\service\risk;
 use app\model\EddAttachment;
 use app\model\EddCase;
 use app\model\MerchantAssessment;
-use app\repository\doopsun\DoopsunMerchantRepository;
 use app\repository\risk\EddAttachmentRepository;
 use app\repository\risk\EddCaseRepository;
 use app\repository\risk\MerchantAssessmentRepository;
+use app\repository\risk\MerchantRepository;
 use app\resource\EddCaseResource;
 use think\exception\ValidateException;
 use think\facade\Filesystem;
@@ -24,7 +24,7 @@ class EddAdminService
     public function __construct(
         private readonly EddCaseRepository $caseRepo = new EddCaseRepository(),
         private readonly EddAttachmentRepository $attachRepo = new EddAttachmentRepository(),
-        private readonly DoopsunMerchantRepository $doopsunRepo = new DoopsunMerchantRepository(),
+        private readonly MerchantRepository $merchantRepo = new MerchantRepository(),
         private readonly MerchantAssessmentRepository $assessRepo = new MerchantAssessmentRepository(),
     ) {
     }
@@ -77,12 +77,12 @@ class EddAdminService
     public function create(array $data): array
     {
         $merchantId = (string) $data['merchant_id'];
-        $merchant   = $this->doopsunRepo->findByMerchantId($merchantId);
+        $merchant   = $this->merchantRepo->findByMerchantId($merchantId);
         if ($merchant === null) {
             throw new ValidateException('商户不存在');
         }
 
-        $merchantName = (string) ($merchant['name'] ?? $merchantId);
+        $merchantName = (string) ($merchant->name ?: $merchantId);
         $riskLevel    = MerchantAssessment::RISK_LEVEL_MID;
         $assess       = $this->assessRepo->findByMerchantId($merchantId);
         if ($assess !== null) {

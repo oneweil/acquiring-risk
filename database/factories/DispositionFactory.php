@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace database\factories;
 
-use app\model\Disposition;
 use Faker\Factory as FakerFactory;
 use Faker\Generator;
 
 /**
- * 处置策略模拟数据工厂（Faker）
+ * 处置策略：内置 8 条（无订单挂起人审；原型 MANUAL_REVIEW 已废弃）
  */
 class DispositionFactory
 {
@@ -28,40 +27,22 @@ class DispositionFactory
     {
         $now = date('Y-m-d H:i:s');
 
-        $row = [
-            'code'        => strtoupper($this->faker->unique()->bothify('CUSTOM_???_##')),
-            'name'        => mb_substr($this->faker->words(2, true), 0, 64),
-            'description' => mb_substr($this->faker->sentence(8), 0, 255),
-            'risk_level'  => $this->faker->randomElement(Disposition::RISK_LEVELS),
-            'scope'       => $this->faker->randomElement(Disposition::SCOPES),
+        return array_merge([
+            'code'        => strtoupper($this->faker->unique()->lexify('??????')),
+            'name'        => $this->faker->words(2, true),
+            'description' => $this->faker->sentence(),
+            'risk_level'  => $this->faker->randomElement(['low', 'mid', 'high', 'critical']),
+            'scope'       => $this->faker->randomElement(['transaction', 'merchant']),
             'priority'    => $this->faker->numberBetween(1, 100),
             'is_block'    => $this->faker->boolean(30) ? 1 : 0,
             'push_alert'  => $this->faker->boolean(85) ? 1 : 0,
-            'status'      => $this->faker->boolean(90) ? 1 : 0,
+            'status'      => 1,
             'created_at'  => $now,
             'updated_at'  => $now,
-        ];
-
-        return array_merge($row, $overrides);
+        ], $overrides);
     }
 
     /**
-     * @param array<string, mixed> $overrides
-     * @return list<array<string, mixed>>
-     */
-    public function times(int $count, array $overrides = []): array
-    {
-        $rows = [];
-        for ($i = 0; $i < $count; $i++) {
-            $rows[] = $this->definition($overrides);
-        }
-
-        return $rows;
-    }
-
-    /**
-     * 原型 9 条内置策略（xsdfk.html DISPOSITION_MEASURES）
-     *
      * @return list<array<string, mixed>>
      */
     public function builtinRows(): array
@@ -81,7 +62,7 @@ class DispositionFactory
             [
                 'code'        => 'SUSPEND_MERCHANT',
                 'name'        => '暂停收单',
-                'description' => '冻结商户收单权限，禁止新交易接入',
+                'description' => '冻结商户收单权限，禁止新交易接入（商户状态动作，非订单挂起）',
                 'risk_level'  => 'critical',
                 'scope'       => 'merchant',
                 'priority'    => 2,
@@ -97,19 +78,10 @@ class DispositionFactory
                 'is_block'    => 0,
             ],
             [
-                'code'        => 'MANUAL_REVIEW',
-                'name'        => '人工审核',
-                'description' => '交易挂起，推送风控专员队列，限时内复核决策',
-                'risk_level'  => 'high',
-                'scope'       => 'transaction',
-                'priority'    => 10,
-                'is_block'    => 0,
-            ],
-            [
                 'code'        => 'DELAY_SETTLE',
                 'name'        => '延迟结算',
                 'description' => '授权成功但延长结算周期（T+7 / T+14），观察拒付情况',
-                'risk_level'  => 'medium',
+                'risk_level'  => 'mid',
                 'scope'       => 'transaction',
                 'priority'    => 15,
                 'is_block'    => 0,
@@ -117,7 +89,7 @@ class DispositionFactory
             [
                 'code'        => 'LIMIT_AMOUNT',
                 'name'        => '限制单笔额度',
-                'description' => '动态降低该商户/卡号单笔授权上限',
+                'description' => '动态降低该商户/卡号单笔授权上限（商户侧限制，非人审队列）',
                 'risk_level'  => 'high',
                 'scope'       => 'merchant',
                 'priority'    => 20,
@@ -127,7 +99,7 @@ class DispositionFactory
                 'code'        => 'WATCHLIST',
                 'name'        => '加入观察',
                 'description' => '加入观察名单，后续交易加强监控但不立即阻断',
-                'risk_level'  => 'medium',
+                'risk_level'  => 'mid',
                 'scope'       => 'transaction',
                 'priority'    => 25,
                 'is_block'    => 0,
@@ -135,7 +107,7 @@ class DispositionFactory
             [
                 'code'        => 'CHARGEBACK_INQUIRY',
                 'name'        => '调单',
-                'description' => '发起调单（Retrieval Request），要求商户提供交易凭证',
+                'description' => '发起调单（Retrieval Request），要求商户提供交易凭证；订单已终态',
                 'risk_level'  => 'high',
                 'scope'       => 'transaction',
                 'priority'    => 30,
@@ -144,8 +116,8 @@ class DispositionFactory
             [
                 'code'        => 'ALERT_ONLY',
                 'name'        => '仅预警',
-                'description' => '记录风险事件并推送预警，不阻断当前交易',
-                'risk_level'  => 'medium',
+                'description' => '记录风险事件并推送订单预警，不阻断当前交易',
+                'risk_level'  => 'mid',
                 'scope'       => 'transaction',
                 'priority'    => 50,
                 'is_block'    => 0,

@@ -67,6 +67,11 @@ class CreateRiskRule extends Migrator
                 'default' => true,
                 'comment' => '是否启用：1启用 0停用',
             ])
+            ->addColumn('push_str', 'boolean', [
+                'null'    => false,
+                'default' => false,
+                'comment' => '命中后是否自动推送 STR：1是 0否',
+            ])
             ->addColumn('sort', 'integer', [
                 'signed'  => false,
                 'null'    => false,

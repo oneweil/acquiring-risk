@@ -18,7 +18,7 @@ var StrPushRulePage = (function () {
   };
 
   /** 风险等级由低到高；单选表示「该等级及以上」 */
-  var RISK_ORDER = ['low', 'medium', 'high', 'critical'];
+  var RISK_ORDER = ['low', 'mid', 'high', 'critical'];
 
   var state = {
     page: 1,

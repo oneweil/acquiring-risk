@@ -148,6 +148,7 @@ class CreateStrReport extends Migrator
             ->addIndex(['type'], ['name' => 'idx_type'])
             ->addIndex(['merchant_id'], ['name' => 'idx_merchant_id'])
             ->addIndex(['order_no'], ['name' => 'idx_order_no'])
+            ->addIndex(['linked_alert_id'], ['name' => 'idx_linked_alert_id'])
             ->addIndex(['created_at'], ['name' => 'idx_created_at'])
             ->create();
     }

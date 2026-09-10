@@ -90,4 +90,22 @@ class MerchantAssessmentRepository
 
         return $out;
     }
+
+    /**
+     * @param array<string, mixed> $data
+     *
+     * @throws DbException
+     */
+    public function upsertByMerchantId(array $data): MerchantAssessment
+    {
+        $merchantId = (string) $data['merchant_id'];
+        $existing   = $this->findByMerchantId($merchantId);
+        if ($existing === null) {
+            return MerchantAssessment::create($data);
+        }
+
+        $existing->save($data);
+
+        return $existing;
+    }
 }

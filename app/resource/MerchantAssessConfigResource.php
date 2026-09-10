@@ -46,7 +46,7 @@ class MerchantAssessConfigResource extends JsonResource
                 'weight'             => (int) $dim->weight,
                 'onboarding_weight'  => (int) $dim->onboarding_weight,
                 'sort'               => (int) $dim->sort,
-                'onboarding_excluded'=> in_array($dimKey, MerchantAssessDimension::ONBOARDING_EXCLUDED_DIMS, true),
+                'onboarding_excluded' => in_array($dimKey, MerchantAssessDimension::ONBOARDING_EXCLUDED_DIMS, true),
             ];
         }
 

@@ -41,6 +41,10 @@ class CreateSysRolePermission extends Migrator
             ])
             ->addIndex(['role_id', 'perm_code'], ['unique' => true, 'name' => 'uk_role_perm'])
             ->addIndex(['perm_code'], ['name' => 'idx_perm_code'])
+            ->addForeignKey('role_id', 'sys_role', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

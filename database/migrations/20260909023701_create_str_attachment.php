@@ -70,6 +70,10 @@ class CreateStrAttachment extends Migrator
                 'comment'  => '最后更新时间',
             ])
             ->addIndex(['str_report_id'], ['name' => 'idx_str_report_id'])
+            ->addForeignKey('str_report_id', 'str_report', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

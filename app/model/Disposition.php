@@ -42,12 +42,12 @@ class Disposition extends Model
     ];
 
     /** @var list<string> */
-    public const RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
+    public const RISK_LEVELS = ['low', 'mid', 'high', 'critical'];
 
     /** @var array<string, string> */
     public const RISK_LEVEL_LABELS = [
         'low'      => '低风险',
-        'medium'   => '中风险',
+        'mid'      => '中风险',
         'high'     => '高风险',
         'critical' => '极高风险',
     ];
@@ -58,14 +58,13 @@ class Disposition extends Model
      * @var array<string, int>
      */
     public const FAKE_TODAY_TRIGGER_COUNTS = [
-        'DECLINE'             => 12,
-        'SUSPEND_MERCHANT'    => 3,
-        '3DS_CHALLENGE'       => 28,
-        'MANUAL_REVIEW'       => 9,
-        'DELAY_SETTLE'        => 5,
-        'LIMIT_AMOUNT'        => 2,
-        'WATCHLIST'           => 7,
-        'CHARGEBACK_INQUIRY'  => 4,
-        'ALERT_ONLY'          => 31,
+        'DECLINE'            => 12,
+        'SUSPEND_MERCHANT'   => 3,
+        '3DS_CHALLENGE'      => 28,
+        'DELAY_SETTLE'       => 5,
+        'LIMIT_AMOUNT'       => 2,
+        'WATCHLIST'          => 7,
+        'CHARGEBACK_INQUIRY' => 4,
+        'ALERT_ONLY'         => 31,
     ];
 }

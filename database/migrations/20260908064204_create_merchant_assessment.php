@@ -29,7 +29,7 @@ class CreateMerchantAssessment extends Migrator
             ->addColumn('merchant_id', 'string', [
                 'limit'   => 32,
                 'null'    => false,
-                'comment' => '对应 doopsun_merchants.merchantId 字符串',
+                'comment' => '外部商户号，对应 risk_merchant.merchant_id',
             ])
             ->addColumn('risk_score', 'integer', [
                 'signed'  => false,

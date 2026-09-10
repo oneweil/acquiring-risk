@@ -17,7 +17,7 @@ var RulePage = (function () {
 
   var RISK_LT = {
     low: 'bg-green-lt',
-    medium: 'bg-yellow-lt',
+    mid: 'bg-yellow-lt',
     high: 'bg-red-lt',
     critical: 'bg-purple-lt'
   };

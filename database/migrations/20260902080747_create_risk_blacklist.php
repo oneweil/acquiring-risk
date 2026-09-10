@@ -46,11 +46,6 @@ class CreateRiskBlacklist extends Migrator
                 'null'    => false,
                 'comment' => '加入原因说明',
             ])
-            ->addColumn('risk_level', 'string', [
-                'limit'   => 16,
-                'null'    => false,
-                'comment' => '风险等级英文枚举：low/medium/high/critical',
-            ])
             ->addColumn('effective_date', 'date', [
                 'null'    => false,
                 'comment' => '生效日期',

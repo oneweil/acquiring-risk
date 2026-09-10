@@ -51,16 +51,15 @@ Auth: API Key
   "code": 0,
   "data": {
     "decision": "decline",
-    "risk_level": "中风险",
+    "risk_level": "high",
     "action": "拒绝交易",
     "measure_code": "DECLINE",
-    "score": 72,
     "hit_rules": [
       {
         "rule_id": "R013",
         "name": "单笔大额交易",
-        "risk_level": "中风险",
-        "measure": "人工审核"
+        "risk_level": "high",
+        "measure": "DECLINE"
       }
     ],
     "alert_id": "AL2026061001",
@@ -70,7 +69,7 @@ Auth: API Key
 }
 ```
 
-**decision 枚举（交易级，无 manual_review）**
+**decision 枚举（交易级，无挂起 / 无 manual_review）**
 
 | 值 | 说明 |
 |----|------|
@@ -80,53 +79,17 @@ Auth: API Key
 
 ---
 
-### 1.2 商户状态回调（待实现，doopsun 接收）
+### 1.2 （不做）风控 → 主站商户状态回调
 
-风控在**商户人工审核**或**交易量异常**命中后调用。
+~~`POST {doopsun}/api/risk/callback/merchant`~~ — **不实现**。
 
-```
-POST {doopsun}/api/risk/callback/merchant
-```
-
-**Request（示例：暂停）**
-
-```json
-{
-  "merchant_id": "M100005",
-  "action": "pause_trading_and_settlement",
-  "reason": "交易量暴涨：当日为近30日均值620%",
-  "merchant_alert_id": "MA2026060001",
-  "rule_id": "R026"
-}
-```
-
-**action 枚举**
-
-| action | 说明 |
-|--------|------|
-| pause_trading | 暂停交易（新单拒绝） |
-| pause_settlement | 暂停结算 |
-| pause_trading_and_settlement | 暂停交易 + 暂停结算 |
-| resume_trading | 恢复交易 |
-| resume_settlement | 恢复结算 |
-| resume_all | 审核通过，全部恢复 |
+暂停/恢复收单与结算由**人工在主站处理**；风控侧只做发现、本地投影/预警记录与 evaluate 决策，**不自动回调主站改状态**。
 
 ---
 
-### 1.3 商户人工审核回调（待实现）
+### 1.3 （已取消）商户人工审核结案回调
 
-商户预警处理完成后调用，配合 `resume_*` 或维持暂停。
-
-```json
-{
-  "merchant_id": "M100005",
-  "merchant_alert_id": "MA2026060001",
-  "decision": "approve",
-  "remark": "促销季正常放量，已核实"
-}
-```
-
-**decision**：`approve` | `keep_paused` | `false_positive`
+~~独立 `merchant_alert` 结案回调~~ — **不实现**。
 
 ---
 
@@ -136,14 +99,46 @@ POST {doopsun}/api/risk/callback/merchant
 
 ---
 
-### 1.5 商户同步（可选，P1+）
+### 1.5 商户投影 Upsert（主站推送）
 
 ```
-POST /api/v1/merchant/sync
-GET  /api/v1/merchant/{merchant_id}
+POST /api/v1/merchant/upsert
+POST /api/v1/merchant/upsert_batch
+GET  /api/v1/merchant/:merchant_id
 ```
 
-CRM 推送入网资料或风控定时拉取。
+主站/CRM **主动推送**商户档案到风控本地投影；风控**不**直连主站商户库、**不**做入网审核队列。
+
+**POST /api/v1/merchant/upsert** body：
+
+```json
+{
+  "merchant_id": "M100001",
+  "name": "GlobalShop Inc.",
+  "status": "normal",
+  "industry": "跨境电商",
+  "country": "US",
+  "register_at": "2020-06-12",
+  "onboard_at": "2024-03-15",
+  "website": "https://example.com",
+  "website_status": "compliant",
+  "compliance_hits": 0,
+  "review_status": "approved",
+  "source_version": 1710000000,
+  "assess": false,
+  "extra": {}
+}
+```
+
+- 必填：`merchant_id`, `name`, `status`, `source_version`（单调；旧版本不覆盖，`skipped=true`）
+- `status`：`normal` / `watch` / `restricted` / `suspended` / `not_opened`
+- **新建投影**：自动执行入网型评估并写 `risk_merchant_assessment`
+- **更新投影**：默认不重评；`assess=true` 可强制再跑入网型评估
+- 响应：投影摘要 + `created` / `skipped`；若有评估含 `risk_score` / `risk_level` / `assess_type` / `assessed_at`
+
+**POST /api/v1/merchant/upsert_batch**：`{ "items": [ /* upsert 对象 */ ] }`，逐条幂等（每条同样：新建自动评估）。
+
+~~`POST /api/v1/merchant/assess`~~ — **已去除**；重评用 upsert 的 `assess=true`，或后台重评接口。
 
 ---
 
@@ -183,7 +178,7 @@ CRM 推送入网资料或风控定时拉取。
 
 ### 2.3 预警中心（P0）
 
-**本阶段已实现交易预警**；`merchant_alert` 接口尚未实现。
+**仅交易预警**（`risk_alert`，`order_no` 必填）。**不实现** `merchant_alert` 接口。
 
 | 方法 | 路径 | 说明 | 状态 |
 |------|------|------|------|
@@ -193,9 +188,6 @@ CRM 推送入网资料或风控定时拉取。
 | POST | `/admin/alert/handle` | 交易预警处置（调单/关闭） | 已实现 |
 | POST | `/admin/alert/upload` | 调单附件上传 | 已实现 |
 | GET | `/admin/alert/attachment/download` | 附件下载（`attachment_id`） | 已实现 |
-| GET | `/admin/merchant_alert/list` | **商户预警**列表（人工审核） | 未实现 |
-| GET | `/admin/merchant_alert/detail` | 商户预警详情 | 未实现 |
-| POST | `/admin/merchant_alert/handle` | **商户人工审核**提交 | 未实现 |
 
 **GET /admin/alert/list** query：`risk_level` / `status` / `measure_code` / `page` / `pageSize`(10\|20\|50)。无 `status` 时默认排除 `closed`。
 
@@ -213,18 +205,6 @@ CRM 推送入网资料或风控定时拉取。
 `action`：`close` | `false_positive` | `submit_materials` | `complete`  
 - `submit_materials` / `complete` 仅 `measure_code=CHARGEBACK_INQUIRY`；非误报须已有附件  
 - 处置**不改变**订单授权终态
-
-**POST /admin/merchant_alert/handle**（规划）
-
-```json
-{
-  "alert_id": "MA2026060001",
-  "decision": "approve",
-  "remark": "已核实为正常促销",
-  "resume_trading": true,
-  "resume_settlement": true
-}
-```
 
 `decision`: `approve` | `keep_paused` | `false_positive`
 
@@ -249,26 +229,15 @@ CRM 推送入网资料或风控定时拉取。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/admin/onboarding/list` | 入网待审列表 |
-| POST | `/admin/onboarding/sync` | 触发同步 |
-| GET | `/admin/onboarding/detail` | 入网详情 |
-| POST | `/admin/onboarding/review` | 审核决策 |
-| GET | `/admin/merchant/list` | 商户列表 |
+| GET | `/admin/merchant/list` | 商户列表（读本地投影） |
 | GET | `/admin/merchant/detail` | 商户详情 |
-| POST | `/admin/merchant/reassess` | 单个/批量重评 |
+| GET | `/admin/merchant/stats` | KPI |
+| POST | `/admin/merchant/reassess` | 单个/批量重评（引擎未就绪可 501） |
 | GET | `/admin/merchant_risk/config` | 评估规则配置 |
 | POST | `/admin/merchant_risk/save` | 保存评估规则 |
 | POST | `/admin/merchant_risk_level/save` | 保存等级规则（首屏配置由页面 render 注入，无独立 config 接口） |
 
-**POST /admin/onboarding/review**
-
-```json
-{
-  "app_id": "OB202606001",
-  "decision": "approve",
-  "remark": "KYC 通过"
-}
-```
+~~`/admin/onboarding/*`（list/sync/detail/review）~~ — **不实现**；入网审核在主站。
 
 `decision`: `approve` | `conditional` | `reject`
 
@@ -334,8 +303,7 @@ CRM 推送入网资料或风控定时拉取。
 | `/admin/dashboard` | Dashboard/index | 占位/部分实现 |
 | `/admin/order` | Order/index | 已实现列表 |
 | `/admin/alert` | Alert/index | 已实现 |
-| `/admin/onboarding` | Onboarding/index | 占位 |
-| `/admin/merchant` | Merchant/index | 已实现列表 |
+| `/admin/merchant` | Merchant/index | 已实现列表（本地投影） |
 | `/admin/merchant_risk_level` | MerchantRiskLevel/index | 已实现 |
 | `/admin/merchant_risk` | MerchantRisk/index | 已实现 |
 | `/admin/str_report` | StrReport/index | 已实现 KPI+列表+状态机+附件 |

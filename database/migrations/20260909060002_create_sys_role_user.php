@@ -41,6 +41,14 @@ class CreateSysRoleUser extends Migrator
             ])
             ->addIndex(['role_id', 'user_id'], ['unique' => true, 'name' => 'uk_role_user'])
             ->addIndex(['user_id'], ['name' => 'idx_user_id'])
+            ->addForeignKey('role_id', 'sys_role', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
+            ->addForeignKey('user_id', 'sys_user', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

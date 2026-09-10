@@ -65,6 +65,10 @@ class CreateAlertAttachment extends Migrator
                 'comment'  => '最后更新时间',
             ])
             ->addIndex(['alert_id'], ['name' => 'idx_alert_id'])
+            ->addForeignKey('alert_id', 'alert', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

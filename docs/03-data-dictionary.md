@@ -20,7 +20,7 @@
 | order_no | string | [D] | id | `doopsun_order.orderid` |
 | channel_no | string | [D] | channelNo | `doopsun_order.doopsun_orderid` |
 | merchant_id | string | [D] | merchantId | `doopsun_order.merchantid` |
-| merchant_name | string | [D] | merchantName | 联表 `doopsun_merchants` |
+| merchant_name | string | [P] | merchantName | 本地 `risk_merchant` 投影组装 |
 | trade_time | datetime | [D] | time / ts | `doopsun_order.doopsun_orderdate` |
 | currency | string | [D] | currency | `doopsun_order.currency` |
 | amount | decimal | [D] | amount | `doopsun_order.orderamount` |
@@ -97,7 +97,7 @@
 | scope | string | 固定 `order` |
 | alerted_at | datetime | 预警时间 |
 | merchant_id | string | |
-| order_no | string | 关联订单（可空） |
+| order_no | string | 关联订单号（**必填**；预警一律挂订单） |
 | amount_display | string | 金额展示串，如 `USD 1,250.00` |
 | risk_level | enum | 英文：`low` / `mid` / `high` / `critical` |
 | rule_name | string | 主命中规则名称快照 |
@@ -128,30 +128,9 @@
 | uploaded_at | datetime | |
 | created_at / updated_at | datetime | |
 
-### 2.2 商户预警 `risk_merchant_alert`（scope = merchant）
+### 2.2 商户预警表（明确不建）
 
-商户级异常与**商户人工审核**工单（交易量暴涨/暴跌、存续风险等）。
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | string | 如 MA2026060001 |
-| scope | string | 固定 `merchant` |
-| merchant_id | string | |
-| merchant_name | string | |
-| trigger_type | enum | 交易量暴涨 / 交易量暴跌 / 拒付超标 / 入网审核 / … |
-| trigger_rule_id | string | 如 R026 |
-| trigger_metrics | json | `{today_count, avg_30d, ratio_pct, today_amount…}` |
-| risk_level | enum | |
-| status | enum | 待处理 / 处理中 / 已关闭 |
-| trading_paused | bool | 是否已暂停交易 |
-| settlement_paused | bool | 是否已暂停结算 |
-| review_decision | enum | 审核通过 / 维持暂停 / 误报关闭 |
-| handle_remark | text | |
-| operator_id | int | |
-| handled_at | datetime | |
-| created_at | datetime | |
-
-**展示**：预警中心需分 Tab 或类型筛选「交易预警 / 商户预警」，或商户预警独立入口在商户列表。
+**不建** `risk_merchant_alert`。商户放量/暂停收单走 `risk_merchant.status` + 主站回调；跟进使用订单预警（§2.1）或商户列表。卡号/IP/邮箱管控见黑名单（§7），不另建实体预警表。
 
 ---
 
@@ -230,48 +209,35 @@
 
 ---
 
-## 8. 商户 `merchant`（列表）
+## 8. 商户投影 `risk_merchant`（逻辑表名 `merchant`）
+
+主站/CRM 推送的本地副本；**不是**入网审核主数据。图例：`[P]`=投影推送，`[R]`=风控计算。
 
 | 字段 | 来源 | 说明 |
 |------|------|------|
-| merchant_id | [D]/[E] | |
-| name | [D]/[E] | |
-| industry | [E] | 跨境电商、虚拟商品… |
-| country | [E] | 注册国家 |
-| onboard_date | [D] | 入网时间 |
-| risk_score | [R] | 0–100 |
-| risk_level | [R] | |
-| chargeback_rate | [D] | % |
-| fraud_rate | [D] | % |
-| refund_rate | [D] | % |
-| last_assess_time | [R] | |
-| today_count / today_amount | [D] | 当日统计 |
-| review_status | [R] | 批准入驻/条件通过/拒绝入驻 |
-| status | [D] | 正常/观察/受限/暂停/未开通 |
-| trading_paused | [R] | 是否暂停交易（doopsun 同步） |
-| settlement_paused | [R] | 是否暂停结算 |
-| kyc_score | [E] | |
-| website_status | [E] | compliant/unverified/mismatch |
-| pci_level | [E] | L1/L2/SAQ-A/NONE |
-| compliance_hits | [E] | 筛查命中数 |
+| merchant_id | [P] | UK，外部商户号 |
+| name | [P] | |
+| status | [P] | 收单状态：normal / watch / restricted / suspended / not_opened |
+| industry | [P] | |
+| country | [P] | |
+| register_at | [P] | 注册日期 |
+| onboard_at | [P] | 入网日期 |
+| website | [P] | 可选 |
+| email / mobile / address | [P] | 可选展示 |
+| website_status | [P] | compliant / mismatch / unverified |
+| compliance_hits | [P] | 制裁/PEP 命中数 |
+| review_status | [P] | 可选：approved / rejected（主站审核结果快照，非风控人审） |
+| source_version | [P] | 乱序保护（主站 updated_at 时间戳或单调版本） |
+| extra | [P] | JSON 扩展 |
+| synced_at | [R] | 最近成功写入投影时间 |
+| risk_score / risk_level | [R] | 来自 `risk_merchant_assessment`（列表组装） |
+| today_count / today_amount | [R] | 当日 `risk_order_evaluation` 按商户聚合（金额暂无则 0） |
 
 ---
 
-## 9. 入网申请 `onboarding`
+## 9. 入网申请 `onboarding`（不实现）
 
-| 字段 | 说明 |
-|------|------|
-| app_id | OB202606001 |
-| merchant_id | 预分配或同步 |
-| sync_time | 同步时间 |
-| name, industry, country, website | 基本信息 |
-| kyc_status | PASS/REJECT/REVIEW/PENDING |
-| kyc_score | |
-| risk_score, risk_level | 评估结果 |
-| status | 待审核/已通过/已拒绝 |
-| assess_time, review_time | |
-| attachments[] | id, category, name, size, upload_time, status, type |
-| assess_details[] | 维度评分明细 |
+入网审核与资料主档由**主站**承载。风控不建 `risk_onboarding`、不提供 `/admin/onboarding/*`。主站开通后推送 §8 投影；**新建投影时自动入网评估**；已有商户重评用 upsert 带 `assess=true` 或后台重评。
 
 ---
 
@@ -402,7 +368,6 @@
 
 **商户管理**
 
-- `onboarding:view`, `onboarding:review`
 - `merchants:view`, `merchants:edit`
 - `merchant-risk:view`, `merchant-risk:edit`
 - `merchant-risk-level:edit`

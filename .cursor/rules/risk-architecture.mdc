@@ -1,5 +1,5 @@
 ---
-description: 风控双库边界、evaluate 决策与人工审核约定
+description: 风控双库边界、evaluate 决策与预警约定
 alwaysApply: true
 ---
 
@@ -7,24 +7,43 @@ alwaysApply: true
 
 详细说明见 `docs/`（尤其 `06-architecture.md`、`README.md`）；本规则只约束实现时不可违反的约定。
 
-## 双库
+## 双库与数据接入
 
 - 默认连接 `mysql`：风控库（`.env` 中 `DB_PREFIX=risk_`）
-- 连接 `doopsun_db`：收单主站只读/联查源
+- 连接 `doopsun_db`：仅过渡期订单列表等只读；**禁止**运行时直读 `doopsun_merchants`
 - **禁止跨库 SQL JOIN**；需要关联时在应用层分别查询后组装（类似预加载）
-- 订单监控主源 = `doopsun` 订单表；评估结果存风控库，用 `order_no` 关联，不冗余主站已有字段
+- **商户主数据**：主站/CRM 经 `POST /api/v1/merchant/upsert` 推送，落本地投影 `risk_merchant`；**新建投影自动入网评估**；更新可用 `assess=true` 强制重评（无独立 `/merchant/assess`）
+- 订单监控主源（过渡）：`doopsun` 订单表；评估结果存风控库，用 `order_no` 关联，不冗余主站已有字段
+- **不对主站做暂停/恢复自动回调**；收单/结算状态变更由人工在主站处理，风控只读本地投影做 evaluate
 
-## evaluate
+## evaluate（同步决策，无挂起）
 
 - 入口：`POST /api/v1/risk/evaluate`
+- 订单**不存在挂起**；命中规则后按处置策略当场决定交易能否继续
 - 同步决策仅：`pass` / `decline` / `challenge_3ds`
-- **单笔订单不挂起待人工审核**（无 `manual_review` 订单态）
+  - `disposition.is_block=1` → `decline`
+  - 策略为 `3DS_CHALLENGE` → `challenge_3ds`
+  - 其余非阻断 → `pass`（可同时写预警）
+- **禁止** `manual_review` / 订单挂起待审；原型 `MANUAL_REVIEW` 不入库
 - 调用时机：订单已有稳定 `orderid` 之后、授权完成之前
+- 须读本地商户投影：未知商户或收单状态为暂停 → `decline`（不查主站库）
 
-## 人工审核
+## 预警（一律挂订单）
 
-- **仅商户级**（入网、交易量暴涨/暴跌暂停交易与结算等）
-- 不针对单笔订单人审
+- 唯一预警主表：`risk_alert`（`scope=order`，`order_no` 必填）
+- 由 `disposition.push_alert` 决定是否写入；预警是决策后的记录/调单跟进，**不参与**同步放行
+- **不建**卡号/IP/邮箱/商户独立预警人审表；实体管控用 `risk_blacklist`，维度在规则条件里
+- **不建** `risk_merchant_alert`；商户级策略（如 `SUSPEND_MERCHANT`）仅本地/人工处理语义，**不**自动回调主站
+
+## 处置策略 scope
+
+- `transaction`：参与本笔 evaluate 最终决策
+- `merchant`：商户状态动作（暂停收单、限额等），**不是**人工审核工单表
+
+## 入网与评分
+
+- **入网审核 / 开通收单在主站**；风控只做风险评估与定级，不做入网批准/拒绝队列
+- 新商户：`upsert` 写入投影时**自动**入网型评估；已有商户重评用 upsert `assess=true` 或后台重评
 
 ## 文档 vs 规则
 

@@ -14,7 +14,7 @@ use think\Model;
  * @property string      $scope
  * @property string      $alerted_at
  * @property string      $merchant_id
- * @property string|null $order_no
+ * @property string      $order_no
  * @property string      $amount_display
  * @property string      $risk_level
  * @property string      $rule_name

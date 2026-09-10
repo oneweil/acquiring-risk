@@ -70,6 +70,10 @@ class CreateEddAttachment extends Migrator
                 'comment'  => '最后更新时间',
             ])
             ->addIndex(['edd_case_id', 'checklist_key'], ['name' => 'idx_case_key'])
+            ->addForeignKey('edd_case_id', 'edd_case', 'id', [
+                'delete' => 'CASCADE',
+                'update' => 'CASCADE',
+            ])
             ->create();
     }
 

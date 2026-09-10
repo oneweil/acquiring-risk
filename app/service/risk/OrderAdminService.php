@@ -6,6 +6,7 @@ namespace app\service\risk;
 
 use app\model\OrderEvaluation;
 use app\repository\doopsun\DoopsunOrderRepository;
+use app\repository\risk\MerchantRepository;
 use app\repository\risk\OrderEvaluationRepository;
 use app\resource\OrderResource;
 
@@ -17,6 +18,7 @@ class OrderAdminService
     public function __construct(
         private readonly DoopsunOrderRepository $orderRepo = new DoopsunOrderRepository(),
         private readonly OrderEvaluationRepository $evalRepo = new OrderEvaluationRepository(),
+        private readonly MerchantRepository $merchantRepo = new MerchantRepository(),
     ) {
     }
 
@@ -143,7 +145,7 @@ class OrderAdminService
             }
         }
 
-        $nameMap = $this->orderRepo->mapMerchantNames($merchantIds);
+        $nameMap = $this->merchantRepo->mapNamesByIds($merchantIds);
         $evalMap = $this->evalRepo->mapByOrderNos($orderNos, $withDetails);
 
         $out = [];

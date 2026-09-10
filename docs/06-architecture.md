@@ -3,23 +3,24 @@
 ## 1. 系统边界
 
 ```
-┌─────────────────┐     evaluate API      ┌─────────────────┐
-│  doopsun 收单    │ ───────────────────► │  doopsun-risk   │
-│  (主库)          │ ◄── 人审回调(待建) ── │  (风控库)        │
-└─────────────────┘                       └─────────────────┘
-        │                                         │
-        │ doopsun_order                           │ risk_* 表
-        │ doopsun_merchants                       │ 规则/评估/预警
-        └─────────── 只读 ────────────────────────┘
+┌─────────────────┐  evaluate / merchant upsert  ┌─────────────────┐
+│  收单主站 / CRM  │ ───────────────────────────► │  doopsun-risk   │
+│  (主数据)        │   （无自动暂停回调）          │  (风控库)        │
+└─────────────────┘                               └─────────────────┘
+        │                                                   │
+        │ 订单（过渡期可只读）                               │ risk_merchant 投影
+        │                                                   │ risk_* 评估/预警
+        └─────────── 默认不直连商户表 ──────────────────────┘
 ```
 
 | 原则 | 说明 |
 |------|------|
-| 双库 | `mysql` = 风控库；`doopsun` = 主站只读（`config/database.php`） |
-| 订单不镜像 | 列表/详情读 `doopsun_order`，评估结果写风控库后 JOIN |
+| 双库 | `mysql` = 风控库；`doopsun_db` = 过渡期订单只读（`config/database.php`） |
+| 商户投影 | 主站 `POST /api/v1/merchant/upsert` → `risk_merchant`；**禁止**直读 `doopsun_merchants` |
+| 入网审核 | 主站负责；风控只评分，不建 `risk_onboarding` 审核表 |
+| 订单不镜像 | 列表/详情过渡期读 `doopsun_order`，评估结果写风控库后应用层组装 |
 | 历史不回灌 | 仅处理接入 evaluate 后的新单 |
-| 决策走 API | 不跨库直写 doopsun 核心表；人审结论回调接口 |
-| 商户 | 短期只读 `doopsun_merchants`；入网资料可 CRM 推送或定时同步 |
+| 决策走 API | 不跨库直写主站；暂停/恢复由人工在主站处理，风控不自动回调 |
 
 ---
 
@@ -41,25 +42,16 @@ risk_order_hit (
   risk_level, measure, created_at
 )
 
--- 预警工单（交易级）
+-- 预警（交易级；order_no 必填；不建 merchant_alert）
 risk_alert (
   id, alert_no UNIQUE, scope DEFAULT 'order', alerted_at,
-  merchant_id, order_no, amount_display, risk_level,
+  merchant_id, order_no NOT NULL, amount_display, risk_level,
   rule_name, measure_code, action_name, hit_details JSON,
   status, handle_remark, inquiry_desc, evaluation_id,
   str_report_id, operator_id, handled_at, created_at, updated_at
 )
 risk_alert_attachment (
-  id, alert_id, file_name, file_size, storage_path, file_type, uploaded_at, ...
-)
-
--- 商户预警 / 商户人工审核
-risk_merchant_alert (
-  id, merchant_id, trigger_type, trigger_rule_id,
-  trigger_metrics JSON, risk_level, status,
-  trading_paused, settlement_paused,
-  review_decision, handle_remark,
-  operator_id, handled_at, created_at, updated_at
+  id, alert_id FK→alert CASCADE, file_name, file_size, storage_path, file_type, uploaded_at, ...
 )
 
 -- 风控规则
@@ -69,11 +61,11 @@ risk_rule (
   enabled, push_str, sort, updated_at
 )
 
--- 处置策略
+-- 处置策略（无 MANUAL_REVIEW；risk_level 用 mid 非 medium）
 risk_disposition (
   id, code UNIQUE, name, description,
   risk_level, scope, priority,
-  is_block, push_alert, extra_config JSON,
+  is_block, push_alert,
   status, updated_at
 )
 
@@ -88,6 +80,16 @@ risk_blacklist (
 ### P1 商户
 
 ```sql
+-- 主站推送投影（逻辑表 merchant → risk_merchant）
+risk_merchant (
+  id, merchant_id UNIQUE, name, status,
+  industry, country, register_at, onboard_at,
+  website, email, mobile, address,
+  website_status, compliance_hits, review_status,
+  source_version, extra JSON, synced_at,
+  created_at, updated_at
+)
+
 risk_merchant_assessment (
   id, merchant_id, risk_score, risk_level,
   assess_type, -- onboarding / periodic
@@ -101,14 +103,9 @@ risk_merchant_assess_config ( -- 或 JSON 文件/单表 key-value
 risk_merchant_level_config (
   config_json, updated_at
 )
-
-risk_onboarding (
-  id, app_id, merchant_id, sync_data JSON,
-  kyc_status, risk_score, risk_level,
-  status, review_decision, review_remark,
-  reviewed_at, created_at
-)
 ```
+
+~~`risk_onboarding`~~ — **不建**；入网审核在主站。
 
 ### P2 合规
 
@@ -151,21 +148,15 @@ sys_user, sys_role, sys_role_user, sys_role_permission
 
 ---
 
-## 4. 列表查询模式（订单监控）
+## 4. 列表查询模式（订单监控，过渡期）
 
-```sql
-SELECT o.*, m.name AS merchant_name,
-       e.risk_level, e.action, e.measure_code
-FROM doopsun.doopsun_order o
-LEFT JOIN doopsun.doopsun_merchants m ON m.merchantid = o.merchantid
-LEFT JOIN risk_order_evaluation e ON e.order_no = o.orderid
-WHERE ...
-ORDER BY o.doopsun_orderdate DESC
-LIMIT ...
-```
+应用层分查组装（禁止跨库 SQL JOIN）：
 
-- 无评估记录的订单：可不在列表展示，或展示为「未评估」（产品定）
-- 筛选 `risk_level` / `status`：评估表 + 订单状态组合条件
+1. 读 `doopsun_order`（过渡）
+2. 读本地 `risk_merchant` 取商户名（`MerchantRepository::mapNamesByIds`）
+3. 读 `risk_order_evaluation` 取风险结果
+
+商户列表**只读** `risk_merchant` + `risk_merchant_assessment`，不访问主站商户表。
 
 ---
 
@@ -207,6 +198,7 @@ Repository
 |------|------|
 | 原型 localStorage 存规则 | 改为风控库 + 后台 save API |
 | 原型 Math.random 模拟命中 | 改为真实 check + Redis 计数 |
-| 原型订单「人工审核/审核中」 | **不实现**；交易级用 pass/decline/3ds |
-| 原型 MANUAL_REVIEW | 拆为交易级策略 + 商户级 MERCHANT_MANUAL_REVIEW |
-| 侧栏无入网 | 文档保留；路由已有，按需恢复菜单 |
+| 原型订单「人工审核/审核中」 | **不实现**；交易级用 pass/decline/3ds（`is_block` 映射） |
+| 原型 MANUAL_REVIEW | **不入库**；规则映射为 ALERT_ONLY / DECLINE / 3DS |
+| 商户预警人审表 | **不建** `risk_merchant_alert`；商户级策略只做状态动作 |
+| 侧栏/入网页 | **不实现**入网审核；主站推送投影 + 风控评分 |

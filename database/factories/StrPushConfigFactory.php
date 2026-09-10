@@ -52,12 +52,11 @@ class StrPushConfigFactory
             'DECLINE'            => 'critical',
             'SUSPEND_MERCHANT'   => 'critical',
             '3DS_CHALLENGE'      => 'high',
-            'MANUAL_REVIEW'      => 'high',
-            'DELAY_SETTLE'       => 'medium',
+            'DELAY_SETTLE'       => 'mid',
             'LIMIT_AMOUNT'       => 'high',
-            'WATCHLIST'          => 'medium',
+            'WATCHLIST'          => 'mid',
             'CHARGEBACK_INQUIRY' => 'high',
-            'ALERT_ONLY'         => 'medium',
+            'ALERT_ONLY'         => 'mid',
         ];
         $level = $map[$measureCode] ?? '';
 
