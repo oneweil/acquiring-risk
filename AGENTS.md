@@ -39,3 +39,18 @@
 验收：<Postman / 页面字段 / 命令>
 先查：<不确定点；查清再改>
 ```
+
+## Agent skills
+
+### Issue tracker
+
+Issues 存放在本仓 GitHub Issues（`oneweil/acquiring-risk`，用 `gh` CLI）。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+五个 canonical roles 与 GitHub label 同名：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+Single-context：仓库根目录 `CONTEXT.md` + `docs/adr/`。详见 `docs/agents/domain.md`。
+

@@ -1,6 +1,6 @@
 ---
-description: 后台列表 CRUD（Validate/Repo/Resource + Tabler AJAX + pageSize）
-globs: view/admin/**/*,public/static/js/admin/**/*,app/controller/admin/**/*,app/validate/**/*,app/repository/**/*,app/resource/**/*,route/app.php
+description: 后台列表 CRUD + 前端优先 Tabler 组件（Validate/Repo/Resource + AJAX）
+globs: view/**/*,public/static/js/**/*,public/static/css/**/*,app/controller/admin/**/*,app/validate/**/*,app/repository/**/*,app/resource/**/*,route/app.php
 alwaysApply: false
 ---
 
@@ -8,6 +8,14 @@ alwaysApply: false
 
 参考实现：黑名单 + 处置策略（`Blacklist` / `Disposition` 全套）。  
 脚手架：`.cursor/skills/admin-list-crud/SKILL.md`。
+
+## 前端 UI（Tabler）
+
+- **尽量只用 Tabler UI 组件与工具类**（`/static/tabler/`：card、btn、form、modal、alert、table、nav、badge、dropdown 等；图标用 `ti ti-*`）。对照 [Tabler 文档](https://docs.tabler.io)
+- **禁止**再引入 Bootstrap / Ant Design / Element 等第二套 UI，或自造与 Tabler 平行的组件皮肤
+- **例外**：风控总览仪表盘可用 ApexCharts（`/static/apexcharts/` + `dashboard.js`）做图表；仅限图表，页面壳与控件仍用 Tabler；勿扩到其它模块或另引 Chart.js/ECharts 等
+- 项目增量样式只放 `public/static/css/custom.css`，仅做布局微调/主题色，不另起组件体系
+- 交互优先复用已有封装：`public/static/js/admin/ui.js`（确认框、Alert）、`list-page.js`
 
 ## 分层
 
@@ -31,9 +39,9 @@ alwaysApply: false
 - 保存：`POST .../save`；校验失败 `fail(..., 422, null, 422)`
 - 路由：**更长路径写在短路径前**
 
-## 前端
+## 列表页前端
 
-- Tabler；`ListPage.escapeHtml` / `ListPage.renderPageSizeDropdown`（`list-page.js`）
+- `ListPage.escapeHtml` / `ListPage.renderPageSizeDropdown`（`list-page.js`）
 - 页脚：左侧每页条数下拉（`20 条/页`）；右侧「共 N 条记录」+ 分页（左右 chevron）
 - 分页 UI 用 `ListPage.renderPaginationHtml` / `renderPageSizeDropdown`
 - 请求与 URL query 同步：`page`、`pageSize`、筛选字段
