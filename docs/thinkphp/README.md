@@ -17,7 +17,7 @@
 ## Agent / 开发者怎么用
 
 1. 涉及框架 API 时先 `@docs/thinkphp` 或打开下表对应文件，再写代码。  
-2. 不要整本贴进 `.cursor/rules`；rules 只保留短约束（见 `.cursor/rules/thinkphp-docs.mdc`）。  
+2. 不要整本贴进 `.cursor/rules`；rules 只保留短约束（见 `.cursor/rules/thinkphp.mdc`）。  
 3. 业务约定仍在上级 [`docs/README.md`](../README.md)（01–07），与框架手册分开。
 
 ## 常用章节速查（本仓库高频）

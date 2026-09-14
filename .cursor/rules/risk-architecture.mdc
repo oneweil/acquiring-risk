@@ -44,8 +44,3 @@ alwaysApply: true
 
 - **入网审核 / 开通收单在主站**；风控只做风险评估与定级，不做入网批准/拒绝队列
 - 新商户：`upsert` 写入投影时**自动**入网型评估；已有商户重评用 upsert `assess=true` 或后台重评
-
-## 文档 vs 规则
-
-- 长文、字段表、路线图 → `docs/`
-- Agent 短指令 → `.cursor/rules/`，勿把整份 docs 复制进 rules

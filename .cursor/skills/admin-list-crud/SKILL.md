@@ -14,7 +14,7 @@ description: >-
 用户要新增/对齐一个后台管理列表页（筛选 + 分页 + 同页 Modal 保存）时执行本流程。  
 权威参考：`app/controller/admin/Blacklist.php` 及同名 validate/repository/resource/view/js。
 
-相关短规则（勿整份复制进本 skill）：`.cursor/rules/admin-ui.mdc`、`db-migration-seed.mdc`、`thinkphp-naming.mdc`、`thinkphp-docs.mdc`。
+相关短规则（勿整份复制进本 skill）：`.cursor/rules/admin-ui.mdc`、`db-migration-seed.mdc`、`thinkphp.mdc`。
 
 ## 交付清单
 

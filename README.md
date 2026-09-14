@@ -62,7 +62,7 @@ composer update topthink/framework
 
 - 编辑器缩进与换行：`.editorconfig`
 - 自动格式化：`composer cs-fix`（检查：`composer cs-check`）
-- 命名与目录约定：`.cursor/rules/thinkphp-naming.mdc`
+- 命名与目录约定：`.cursor/rules/thinkphp.mdc`
 
 ## 参与开发
 
