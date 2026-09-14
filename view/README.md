@@ -12,7 +12,7 @@ view/
         header.html
         footer.html
     page.html            # 占位页
-    dashboard/index.html # 风控总览（前端 mock）
+    dashboard/index.html # 风控总览（待办/决策/来源/姿态/合规，Mock）
     order/index.html     # 业务页（直接 extend admin 布局）
 ```
 

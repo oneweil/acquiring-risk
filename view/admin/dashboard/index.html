@@ -1,83 +1,173 @@
 {extend name="/admin/layout/admin" /}
 
 {block name="content"}
+<!-- 顶栏 KPI -->
 <div class="row row-cards mb-3" id="dashKpiRow">
-  <div class="col-6 col-md-3">
+  <div class="col-6 col-md-4 col-xl">
     <div class="card card-sm">
       <div class="card-body">
-        <div class="text-secondary">今日交易笔数</div>
+        <div class="text-secondary">今日评估笔数</div>
         <div class="h1 mb-0 mt-1" id="kpiOrders">—</div>
-        <div class="text-secondary small mt-1">实时累计</div>
+        <div class="text-secondary small mt-1">同步决策</div>
       </div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-6 col-md-4 col-xl">
     <div class="card card-sm">
       <div class="card-body">
-        <div class="text-secondary">今日交易金额 (USD)</div>
+        <div class="text-secondary">今日评估金额 (USD)</div>
         <div class="h1 mb-0 mt-1" id="kpiAmount">—</div>
         <div class="text-secondary small mt-1">等值汇总</div>
       </div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-6 col-md-4 col-xl">
     <div class="card card-sm border-danger">
       <div class="card-body">
         <div class="text-secondary">待处理预警</div>
         <div class="h1 mb-0 mt-1 text-danger" id="kpiAlerts">—</div>
-        <div class="text-secondary small mt-1">需人工介入</div>
+        <div class="text-secondary small mt-1">需人工跟进</div>
       </div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-6 col-md-4 col-xl">
     <div class="card card-sm">
       <div class="card-body">
-        <div class="text-secondary">拦截率</div>
-        <div class="h1 mb-0 mt-1" id="kpiBlockRate">—</div>
-        <div class="text-secondary small mt-1">今日拦截 / 总笔数</div>
+        <div class="text-secondary">待确认 STR</div>
+        <div class="h1 mb-0 mt-1" id="kpiStr">—</div>
+        <div class="text-secondary small mt-1">合规待办</div>
       </div>
     </div>
   </div>
-  <div class="col-6 col-md-3">
+  <div class="col-6 col-md-4 col-xl">
     <div class="card card-sm">
       <div class="card-body">
-        <div class="text-secondary">待审商户</div>
-        <div class="h1 mb-0 mt-1" id="kpiPendingMerchants">—</div>
-        <div class="text-secondary small mt-1">同步后待风控审核</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="card card-sm">
-      <div class="card-body">
-        <div class="text-secondary">活跃商户数</div>
-        <div class="h1 mb-0 mt-1" id="kpiActiveMerchants">—</div>
-        <div class="text-secondary small mt-1">状态正常</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="card card-sm">
-      <div class="card-body">
-        <div class="text-secondary">高风险订单</div>
-        <div class="h1 mb-0 mt-1" id="kpiHighRisk">—</div>
-        <div class="text-secondary small mt-1">今日命中</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="card card-sm">
-      <div class="card-body">
-        <div class="text-secondary">3DS 验证率</div>
-        <div class="h1 mb-0 mt-1" id="kpi3dsRate">—</div>
-        <div class="text-secondary small mt-1" id="kpi3dsHint">—</div>
+        <div class="text-secondary">临期/逾期 EDD</div>
+        <div class="h1 mb-0 mt-1" id="kpiEdd">—</div>
+        <div class="text-secondary small mt-1">需尽快跟进</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- 决策健康度 + 预警风险分布 -->
 <div class="row row-cards mb-3">
-  <div class="col-lg-7">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">今日决策健康度</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-6">
+            <div id="decisionDonutChart" class="position-relative"></div>
+          </div>
+          <div class="col-6">
+            <div class="dash-decision-legend" id="dashDecisionStats">
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-green"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">通过 pass</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0" id="decPass">—</span>
+                    <span class="text-secondary" id="decPassPct">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-red"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">拒绝 decline</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0 text-danger" id="decDecline">—</span>
+                    <span class="text-secondary" id="decDeclinePct">—</span>
+                  </div>
+                  <div class="text-secondary small" id="decDeclineDelta">—</div>
+                </div>
+              </div>
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-yellow"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">3DS 强验</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0 text-warning" id="dec3ds">—</span>
+                    <span class="text-secondary" id="dec3dsPct">—</span>
+                  </div>
+                  <div class="text-secondary small" id="dec3dsDelta">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">预警风险分布</h3>
+        <div class="card-actions">
+          <a href="/admin/alert" class="btn btn-ghost-primary btn-sm">预警中心</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-6">
+            <div id="alertRiskDonutChart" class="position-relative"></div>
+          </div>
+          <div class="col-6">
+            <div class="dash-decision-legend" id="dashAlertRiskStats">
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-green"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">低风险</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0" id="alertRiskLow">—</span>
+                    <span class="text-secondary" id="alertRiskLowPct">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-yellow"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">中风险</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0 text-warning" id="alertRiskMid">—</span>
+                    <span class="text-secondary" id="alertRiskMidPct">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-red"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">高风险</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0 text-danger" id="alertRiskHigh">—</span>
+                    <span class="text-secondary" id="alertRiskHighPct">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dash-decision-legend-item">
+                <span class="dash-decision-dot bg-purple"></span>
+                <div class="dash-decision-legend-text">
+                  <div class="text-secondary small">极高风险</div>
+                  <div class="d-flex align-items-baseline gap-2">
+                    <span class="h2 mb-0 text-purple" id="alertRiskCritical">—</span>
+                    <span class="text-secondary" id="alertRiskCriticalPct">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 实时订单流 + Top 命中规则 -->
+<div class="row row-cards mb-3">
+  <div class="col-lg-8">
     <div class="card h-100">
       <div class="card-header">
         <h3 class="card-title">
@@ -92,13 +182,59 @@
       </div>
     </div>
   </div>
-  <div class="col-lg-5">
+  <div class="col-lg-4">
     <div class="card h-100">
       <div class="card-header">
-        <h3 class="card-title">今日风险分布</h3>
+        <h3 class="card-title">今日 Top 命中规则</h3>
+        <div class="card-actions">
+          <a href="/admin/rule" class="btn btn-ghost-primary btn-sm">规则配置</a>
+        </div>
       </div>
-      <div class="card-body">
-        <div id="riskDonutChart" class="position-relative"></div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush" id="dashTopRules"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 最新预警 + 风险集中商户 -->
+<div class="row row-cards mb-3">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">最新待处理预警</h3>
+        <div class="card-actions">
+          <a href="/admin/alert" class="btn btn-ghost-primary btn-sm">预警中心</a>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table mb-0 dash-alert-table">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>商户</th>
+              <th>订单号</th>
+              <th>规则</th>
+              <th>处置</th>
+              <th>风险</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="dashAlertBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">今日风险集中商户</h3>
+        <div class="card-actions">
+          <a href="/admin/merchant" class="btn btn-ghost-primary btn-sm">商户列表</a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush" id="dashRiskMerchants"></div>
       </div>
     </div>
   </div>
@@ -107,5 +243,5 @@
 
 {block name="script"}
 <script src="/static/apexcharts/apexcharts.min.js"></script>
-<script src="/static/js/admin/dashboard.js"></script>
+<script src="/static/js/admin/dashboard.js?v=2.3.1"></script>
 {/block}

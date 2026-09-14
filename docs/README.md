@@ -39,7 +39,7 @@
 
 | 模块 | 路由 | 状态 |
 |------|------|------|
-| 风控总览 | `/admin/dashboard` | UI 完成，数据 Mock |
+| 风控总览 | `/admin/dashboard` | UI 重设计完成，数据 Mock |
 | 订单监控 | `/admin/order` | UI + AJAX 列表，Mock 数据 |
 | 预警中心 | `/admin/alert` | 交易预警已实现（Seed 演示）；预警一律挂订单 |
 | 规则/处置/黑名单等 | 各 `/admin/*` | 占位页 |

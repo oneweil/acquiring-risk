@@ -166,13 +166,13 @@ GET  /api/v1/merchant/:merchant_id
 
 ---
 
-### 2.2 监控中心（待实现）
+### 2.2 监控中心（待实现；总览当前为前端 Mock）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/admin/dashboard/stats` | KPI + 风险分布 |
-| GET | `/admin/dashboard/feed` | 实时订单流 |
-| GET | `/admin/dashboard/alerts` | 最新预警 Top N |
+| GET | `/admin/dashboard/stats` | 待办 + 决策三态 + Top 规则/商户 + 商户姿态 + 合规摘要 |
+| GET | `/admin/dashboard/alerts` | 最新待处理预警 Top N |
+| GET | `/admin/dashboard/feed` | 实时订单流（当前前端 Mock，约 4s 轮询占位） |
 
 ---
 
@@ -300,7 +300,7 @@ GET  /api/v1/merchant/:merchant_id
 
 | GET 路径 | Controller | 说明 |
 |----------|------------|------|
-| `/admin/dashboard` | Dashboard/index | 占位/部分实现 |
+| `/admin/dashboard` | Dashboard/index | UI + Mock（待办/决策/来源/姿态/合规） |
 | `/admin/order` | Order/index | 已实现列表 |
 | `/admin/alert` | Alert/index | 已实现 |
 | `/admin/merchant` | Merchant/index | 已实现列表（本地投影） |

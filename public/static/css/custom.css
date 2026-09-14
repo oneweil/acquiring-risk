@@ -57,6 +57,31 @@
 }
 
 /* 风控总览 */
+.dash-decision-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.dash-decision-legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.dash-decision-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.45rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dash-decision-legend-text {
+  min-width: 0;
+}
+
 .dash-live-feed {
   max-height: 320px;
   overflow-y: auto;
@@ -99,6 +124,47 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dash-rank-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+}
+
+.dash-rank-main {
+  min-width: 0;
+}
+
+.dash-rank-metric {
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dash-rank-metric span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--tblr-secondary, #667382);
+}
+
+.dash-alert-row {
+  cursor: pointer;
+}
+
+.dash-alert-row:hover {
+  background: color-mix(in srgb, transparent, var(--tblr-primary) 4%);
+}
+
+.dash-alert-table > :not(caption) > * > * {
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
 }
 
 /* 分页微调 */
